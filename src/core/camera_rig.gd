@@ -81,6 +81,19 @@ func aim_point(shooter: Vector3, exclude: Array[RID], max_distance := 150.0) -> 
 	return hit.position if hit else start + dir * max_distance
 
 
+## The yaw a shooter at `from` should face to look at `aim_point`. The camera
+## sits off-shoulder, so near targets need a different yaw than the camera's
+## own: without this, an enemy under the crosshair at sword range can sit far
+## outside your swing. Falls back to the camera yaw for points too close or
+## off to the side.
+func body_yaw(from: Vector3, aim_point: Vector3) -> float:
+	var flat := Vector3(aim_point.x - from.x, 0.0, aim_point.z - from.z)
+	if flat.length() < 1.0:
+		return yaw
+	var toward := CombatRules.dir_to_yaw(flat)
+	return toward if absf(wrapf(toward - yaw, -PI, PI)) < deg_to_rad(70.0) else yaw
+
+
 func _process(delta: float) -> void:
 	if target == null:
 		return

@@ -12,6 +12,7 @@ extends Node
 ##   --player_rune=blink / --bot_rune=leap           starting runes
 ##   --player_hp=40    start the player hurt
 ##   --menu            open the loadout menu at start
+##   --hitboxes / --combat_log / --tuning   start with that debug view open
 ##   --bot_mode=4 --bot_skill=0.7   bot behaviour (BotBrain.Mode) and difficulty
 ##   --autotest=120    bot vs bot for this many seconds, then print stats and quit
 ##   --player_skill=0.5  the player-side bot's difficulty in an autotest
@@ -60,57 +61,29 @@ func _ready() -> void:
 		CombatEvents.fighter_died.connect(func(f: Node, k: Node) -> void: print("[%6.2f] %s killed %s" % [time, _name(k), _name(f)]))
 
 
-## Counts what happens in a bot-vs-bot run and prints a summary at the end.
-## Two TTKs per kill: wall-clock (first damage since spawning -> death, which
-## includes retreats and orb runs) and time under fire (only the stretches
-## where damage kept coming, each gap capped at 1s), the spec's "4-6s of
-## sustained hits".
+## Counts what happens in a bot-vs-bot run and prints a summary at the end
+## (TTK numbers come from TtkTracker).
 var _stats := {}
-var _engaged := {}
-var _under_fire := {}
-var _last_damage := {}
-var _ttks: Array[float] = []
-var _fire_ttks: Array[float] = []
 var _kills := {}
+var _ttk: TtkTracker
 
 
 func start_autotest(seconds: float) -> void:
 	quit_at = seconds
-	CombatEvents.hit_resolved.connect(func(_a: Node, d: Node, r: HitResult, _p: Vector3) -> void:
+	_ttk = TtkTracker.new()
+	add_child(_ttk)
+	CombatEvents.hit_resolved.connect(func(_a: Node, _d: Node, r: HitResult, _p: Vector3) -> void:
 		var key: String = HitResult.Outcome.keys()[r.outcome]
 		if r.reaction != &"":
 			_count(String(r.reaction))
 		if not r.periodic:
 			_count(key)
-			_count("%s:%s" % [key, r.source])
-		if r.damage > 0.0:
-			_note_damage(d))
-	CombatEvents.status_damage.connect(func(f: Node, _amount: float, _e: int) -> void: _note_damage(f))
-	CombatEvents.fighter_died.connect(func(f: Node, killer: Node) -> void:
-		if _engaged.has(f):
-			_ttks.append(time - float(_engaged[f]))
-			_fire_ttks.append(float(_under_fire[f]))
-		_forget(f)
+			_count("%s:%s" % [key, r.source]))
+	CombatEvents.fighter_died.connect(func(_f: Node, killer: Node) -> void:
 		var name := _name(killer)
 		_kills[name] = _kills.get(name, 0) + 1)
-	CombatEvents.fighter_respawned.connect(_forget)
 	CombatEvents.orb_taken.connect(func(_f: Node) -> void: _count("orb"))
 	CombatEvents.spell_cast.connect(func(_f: Node, spell: Resource) -> void: _count("cast:%s" % (spell as SpellData).id))
-
-
-func _note_damage(fighter: Node) -> void:
-	if not _engaged.has(fighter):
-		_engaged[fighter] = time
-		_under_fire[fighter] = 0.0
-	else:
-		_under_fire[fighter] += minf(time - float(_last_damage[fighter]), 1.0)
-	_last_damage[fighter] = time
-
-
-func _forget(fighter: Node) -> void:
-	_engaged.erase(fighter)
-	_under_fire.erase(fighter)
-	_last_damage.erase(fighter)
 
 
 func _count(key: String) -> void:
@@ -120,24 +93,12 @@ func _count(key: String) -> void:
 func _print_autotest_summary() -> void:
 	print("=== autotest: %.0fs of bot-vs-bot ===" % time)
 	print("kills: ", _kills)
-	_print_spread("TTK, first damage -> death", _ttks)
-	_print_spread("TTK, time under fire", _fire_ttks)
+	print(TtkTracker.summary("TTK, first damage -> death", _ttk.wall_clock))
+	print(TtkTracker.summary("TTK, time under fire", _ttk.under_fire))
 	var keys := _stats.keys()
 	keys.sort()
 	for key in keys:
 		print("  %-28s %d" % [key, _stats[key]])
-
-
-static func _print_spread(label: String, values: Array[float]) -> void:
-	if values.is_empty():
-		return
-	var sorted := values.duplicate()
-	sorted.sort()
-	var total := 0.0
-	for value in sorted:
-		total += value
-	print("%s: avg %.1fs, median %.1fs, min %.1fs, max %.1fs over %d kills" % [
-			label, total / sorted.size(), sorted[sorted.size() / 2], sorted[0], sorted[-1], sorted.size()])
 
 
 func _log_hit(attacker: Node, defender: Node, result: HitResult, _at: Vector3) -> void:
@@ -165,8 +126,25 @@ func spectate(a: Node3D, b: Node3D) -> void:
 	camera.current = true
 
 
+var _next_trace := 0.0
+
+
+## --trace: print every fighter's action state four times a second.
+func _trace() -> void:
+	if not args.has("trace") or time < _next_trace:
+		return
+	_next_trace = time + 0.25
+	for node in get_tree().get_nodes_in_group(&"fighters"):
+		var f := node as Fighter
+		var s := f.state
+		print("[%6.2f] %-4s %-7s t=%.2f atk=%s combo=%d stam=%.0f hp=%.0f pos=(%.1f,%.1f) buf=%s" % [time, f.display_name,
+				FighterState.Action.keys()[s.action], s.action_time, s.attack.id if s.attack else "-", s.combo_index,
+				s.stamina, s.hp, f.global_position.x, f.global_position.z, s.buffer.keys()])
+
+
 func _process(delta: float) -> void:
 	time += delta
+	_trace()
 	while not shots.is_empty() and time >= shots[0]:
 		var at: float = shots.pop_front()
 		_capture("shot_%05.2f.png" % at)

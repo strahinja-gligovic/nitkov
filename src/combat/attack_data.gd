@@ -6,14 +6,14 @@ extends Resource
 
 @export var id := &"light_1"
 @export var damage := 8.0
-@export var stamina_cost := 12.0
+@export var stamina_cost := 10.0
 
 @export_group("Timing")
 @export var windup := 0.15
 @export var active := 0.08
 @export var recovery := 0.3
 ## Seconds into recovery after which the next attack can cancel it.
-@export var chain_after := 0.17
+@export var chain_after := 0.13
 ## Seconds into recovery after which a dash or rune can cancel it.
 @export var dodge_cancel_after := 0.1
 

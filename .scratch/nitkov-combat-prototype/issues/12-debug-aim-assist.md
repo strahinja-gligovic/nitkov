@@ -1,6 +1,6 @@
 # 12 — Debug tools and controller aim assist
 
-Status: ready-for-agent
+Status: done
 Blocked by: 11
 
 ## What

@@ -83,6 +83,12 @@ static func get_timeline(scenario: String) -> Array:
 		"orb":
 			# walk west into the orb (--player_at=-14,0 --player_yaw=90 --player_hp=30)
 			return [{"at": 0.2, "for": 1.0, "move": Vector2(0, 1)}]
+		"spam_lights":
+			# mash light attacks on a target in reach: sustained-damage TTK check
+			var presses: Array = [{"at": 0.0, "for": 30.0, "track": true}]
+			for i in 40:
+				presses.append({"at": 0.3 + i * 0.2, "press": L})
+			return presses
 		"melee":
 			# light chain into a heavy against a target ~2m ahead (--bot_at=2.2)
 			return [

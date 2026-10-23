@@ -49,8 +49,8 @@ func get_command(fighter: Fighter) -> InputCommand:
 		camera_rig.rotate_view(turn * dt, pitch * dt)
 		if track:
 			_aim_camera_at(_nearest_enemy(fighter))
-		cmd.aim_yaw = camera_rig.yaw
 		cmd.aim_target = camera_rig.aim_point(fighter.chest_position(), [fighter.get_rid()])
+		cmd.aim_yaw = camera_rig.body_yaw(fighter.global_position, cmd.aim_target)
 	else:
 		# no camera (a scripted bot): face and aim at the nearest enemy
 		var foe := _nearest_enemy(fighter)

@@ -17,6 +17,7 @@ The Godot console binary is installed through winget: `godot_console` (`%LOCALAP
 - **Pure rules.** Rules that resolve hits, blocks, parries, statuses and reactions live in `src/combat/combat_rules.gd` as pure functions over `FighterState`, with unit tests in `tests/`.
 - **Data.** Numbers live in `Resource` scripts (`CombatTuning`, `WeaponData`, `GauntletData`, ...) whose instances are in `data/*.tres`. Read them through the `GameData` autoload, and don't hard-code tuning in logic.
 - **Events.** The simulation reports what happened through the `CombatEvents` autoload. Listeners must not mutate simulation state.
+- **VFX from the simulation.** Fire-and-forget `Vfx.*` calls in simulation code (impacts, rings) are allowed: they never read or write state, and a headless server could make them no-ops.
 - **Conventions.** Yaw follows Godot's convention: forward is -Z (`CombatRules.yaw_to_dir`). Physics layer 1 is world geometry and layer 2 is fighters.
 
 ## Agent skills

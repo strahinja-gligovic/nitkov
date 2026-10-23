@@ -78,15 +78,38 @@ func _process(delta: float) -> void:
 		camera_rig.rotate_view(-look.x * speed, -look.y * speed * 0.75)
 
 
-## Look speed multiplier; aim assist hooks in here.
+## Controller-only aim assist, part 1: the view slows down while the
+## crosshair is near an enemy, so it's easier to stay on target.
 func _look_scale() -> float:
+	if not using_gamepad or fighter == null:
+		return 1.0
+	if _enemy_near_crosshair(fighter.tuning.assist_angle) != null:
+		return fighter.tuning.assist_slowdown
 	return 1.0
 
 
-func get_command(fighter: Fighter) -> InputCommand:
+## The enemy whose chest is within `degrees` of the crosshair ray, if any.
+func _enemy_near_crosshair(degrees: float) -> Fighter:
+	var best: Fighter = null
+	var best_angle := deg_to_rad(degrees)
+	for foe in fighter.enemies():
+		var angle := camera_rig.forward().angle_to(foe.chest_position() - camera_rig.camera.global_position)
+		if angle <= best_angle:
+			best = foe
+			best_angle = angle
+	return best
+
+
+func get_command(driven: Fighter) -> InputCommand:
 	var cmd := InputCommand.new()
 	cmd.aim_yaw = camera_rig.yaw
-	cmd.aim_target = camera_rig.aim_point(fighter.chest_position(), [fighter.get_rid()])
+	cmd.aim_target = camera_rig.aim_point(driven.chest_position(), [driven.get_rid()])
+	if using_gamepad:
+		# aim assist, part 2: spells bend onto an enemy right next to the crosshair
+		var foe := _enemy_near_crosshair(driven.tuning.assist_magnet_angle)
+		if foe:
+			cmd.aim_target = foe.chest_position()
+	cmd.aim_yaw = camera_rig.body_yaw(driven.global_position, cmd.aim_target)
 	if not enabled:
 		_pressed = 0
 		return cmd

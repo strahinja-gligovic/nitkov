@@ -12,6 +12,7 @@ var bot: Fighter
 var camera_rig: CameraRig
 var player_input: PlayerInput
 var menu: LoadoutMenu
+var debug: DebugOverlay
 var bot_brain := BotBrain.new(BotBrain.Mode.DUELIST, 0.5, 7)
 
 
@@ -51,8 +52,6 @@ func _ready() -> void:
 	menu.player = player
 	menu.bot = bot
 	add_child(menu)
-	menu.opened.connect(func() -> void: player_input.enabled = false)
-	menu.closed.connect(func() -> void: player_input.enabled = true)
 	_add_bot_controls()
 
 	var hud := Hud.new()
@@ -67,6 +66,17 @@ func _ready() -> void:
 	numbers.name = "DamageNumbers"
 	add_child(numbers)
 
+	var viz := HitboxViz.new()
+	viz.name = "HitboxViz"
+	add_child(viz)
+	debug = DebugOverlay.new()
+	debug.name = "DebugOverlay"
+	debug.hitbox_viz = viz
+	add_child(debug)
+	debug.tuning_toggled.connect(func(_open: bool) -> void: _refresh_input_lock())
+	menu.opened.connect(_refresh_input_lock)
+	menu.closed.connect(_refresh_input_lock)
+
 	CombatEvents.fighter_respawned.connect(_on_respawned)
 	_apply_autopilot()
 
@@ -76,6 +86,13 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"loadout_menu"):
 		menu.toggle()
 		get_viewport().set_input_as_handled()
+
+
+## While any menu or panel is open, the player's fighter idles and the mouse is free.
+func _refresh_input_lock() -> void:
+	var locked := menu.visible or debug.tuning_panel.visible
+	player_input.enabled = not locked
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if locked else Input.MOUSE_MODE_CAPTURED
 
 
 func _physics_process(_delta: float) -> void:
@@ -181,5 +198,11 @@ func _apply_autopilot() -> void:
 		bot.rotation.y = bot.state.facing_yaw
 	if args.has("menu"):
 		menu.open_menu.call_deferred()
+	if args.has("hitboxes"):
+		debug.hitbox_viz.visible = true
+	if args.has("combat_log"):
+		debug.combat_log.visible = true
+	if args.has("tuning"):
+		debug.tuning_panel.visible = true
 	if args.has("spectate"):
 		pilot.spectate(player, bot)

@@ -1,6 +1,6 @@
 # Spec: Nitkov combat-feel prototype (milestone 1)
 
-Status: ready-for-agent
+Status: done
 
 ## Goal
 
@@ -11,7 +11,7 @@ Milestone 1 is **single-player combat feel only**: one player against a dummy or
 ## Design rules
 
 ### Camera and input
-- Over-the-shoulder, always free aim, no lock-on. The fighter turns to face the aim direction (strafe locomotion), so "block what you look at".
+- Over-the-shoulder, always free aim, no lock-on. The fighter turns to face the aim direction (strafe locomotion), so "block what you look at". The body turns toward the world point under the crosshair rather than parallel to the camera, which cancels the shoulder offset's parallax at sword range.
 - Mouse and keyboard and controller from day one.
 
 | Action | Keyboard / mouse | Controller |
@@ -39,7 +39,7 @@ Everyone is a hybrid: one melee weapon (milestone 1: **longsword**), one element
 - **Exhausted** (1.5s, triggered by an empty-stamina guard break): no regen, and no dash, sprint, cast, block or rune.
 
 ### Melee (light and heavy only)
-- **Light**: 3-hit chain, 8/8/10 damage, 12 stamina each, ~0.4s per hit. The next light can cancel the previous one's recovery. Light hits flinch for 0.25s.
+- **Light**: 3-hit chain, 8/8/10 damage, 10 stamina each (12 in the original plan; lowered after measuring so a full bar covers most of a kill), ~0.4s per hit including hit-stop. The next light can cancel the previous one's recovery. Light hits flinch for 0.25s.
 - **Heavy**: fixed 0.7s wind-up with a glowing tell, 22 damage, 25 stamina. Hyperarmor during wind-up and active frames: lights don't interrupt it. **Always breaks block.** Not chargeable.
 - Swings go toward the camera's forward direction, with a soft magnet: an enemy within ~30° and ~4.5m gets rotation and lunge assist during the wind-up.
 - Attack recovery can be cancelled into dash or rune late in recovery.
