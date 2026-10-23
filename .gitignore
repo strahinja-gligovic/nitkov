@@ -1,0 +1,12 @@
+# Godot 4
+.godot/
+/android/
+*.translation
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Local test/screenshot output
+/screenshots/
