@@ -55,6 +55,18 @@ func _ready() -> void:
 	menu.closed.connect(func() -> void: player_input.enabled = true)
 	_add_bot_controls()
 
+	var hud := Hud.new()
+	hud.name = "Hud"
+	hud.player = player
+	hud.bot = bot
+	hud.bot_brain = bot_brain
+	hud.player_input = player_input
+	hud.camera = camera_rig.camera
+	add_child(hud)
+	var numbers := DamageNumbers.new()
+	numbers.name = "DamageNumbers"
+	add_child(numbers)
+
 	CombatEvents.fighter_respawned.connect(_on_respawned)
 	_apply_autopilot()
 
