@@ -1,6 +1,6 @@
 # 14 — Expressive animation overhaul
 
-Status: in-progress
+Status: done
 Blocked by: 13
 
 ## Why
