@@ -30,9 +30,15 @@ func setup(from: Fighter, data: FlameWallSpell, centre: Vector3, facing: Vector3
 
 
 func _ready() -> void:
+	add_to_group(&"zones")
 	global_position = _centre
 	look_at(_centre + _facing, Vector3.UP)
 	_build_visual()
+
+
+## The short way out of the fire for someone standing at `point`.
+func exit_direction(point: Vector3) -> Vector3:
+	return _facing if (point - _centre).dot(_facing) >= 0.0 else -_facing
 
 
 func _physics_process(delta: float) -> void:

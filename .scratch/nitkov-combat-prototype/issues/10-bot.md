@@ -1,6 +1,6 @@
 # 10 — Dummy modes and AI duelist
 
-Status: ready-for-agent
+Status: done
 Blocked by: 09
 
 ## What

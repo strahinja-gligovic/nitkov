@@ -12,6 +12,7 @@ var bot: Fighter
 var camera_rig: CameraRig
 var player_input: PlayerInput
 var menu: LoadoutMenu
+var bot_brain := BotBrain.new(BotBrain.Mode.DUELIST, 0.5, 7)
 
 
 func _ready() -> void:
@@ -29,7 +30,8 @@ func _ready() -> void:
 	player.controller = player_input
 	player_input.fighter = player
 	bot = _spawn_fighter(1, "Bot", &"barbarian")
-	bot.set_loadout(&"frost")
+	bot.set_loadout(&"frost", &"blink")
+	bot.controller = bot_brain
 	camera_rig.follow(player)
 
 	for spot in ArenaBuilder.ORB_SPOTS:
@@ -51,6 +53,7 @@ func _ready() -> void:
 	add_child(menu)
 	menu.opened.connect(func() -> void: player_input.enabled = false)
 	menu.closed.connect(func() -> void: player_input.enabled = true)
+	_add_bot_controls()
 
 	CombatEvents.fighter_respawned.connect(_on_respawned)
 	_apply_autopilot()
@@ -75,6 +78,43 @@ func _on_respawned(fighter: Node) -> void:
 		camera_rig.follow(player)
 
 
+## Bot mode and difficulty rows in the loadout menu.
+func _add_bot_controls() -> void:
+	var mode_row := HBoxContainer.new()
+	mode_row.add_theme_constant_override(&"separation", 12)
+	var mode_label := Label.new()
+	mode_label.text = "Bot behaviour"
+	mode_row.add_child(mode_label)
+	var modes := OptionButton.new()
+	for mode_name in BotBrain.MODE_NAMES:
+		modes.add_item(mode_name)
+	modes.select(bot_brain.mode)
+	modes.item_selected.connect(func(index: int) -> void: bot_brain.mode = index as BotBrain.Mode)
+	mode_row.add_child(modes)
+	menu.bot_section.add_child(mode_row)
+
+	var skill_row := HBoxContainer.new()
+	skill_row.add_theme_constant_override(&"separation", 12)
+	var skill_label := Label.new()
+	skill_label.text = "Bot difficulty"
+	skill_row.add_child(skill_label)
+	var skill := HSlider.new()
+	skill.min_value = 0.0
+	skill.max_value = 1.0
+	skill.step = 0.05
+	skill.value = bot_brain.difficulty
+	skill.custom_minimum_size = Vector2(220, 0)
+	skill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var readout := Label.new()
+	readout.text = "%d%%" % roundi(bot_brain.difficulty * 100)
+	skill.value_changed.connect(func(value: float) -> void:
+		bot_brain.difficulty = value
+		readout.text = "%d%%" % roundi(value * 100))
+	skill_row.add_child(skill)
+	skill_row.add_child(readout)
+	menu.bot_section.add_child(skill_row)
+
+
 func _spawn_fighter(team: int, label: String, skin: StringName) -> Fighter:
 	var fighter: Fighter = FIGHTER_SCENE.instantiate()
 	fighter.team = team
@@ -97,6 +137,17 @@ func _apply_autopilot() -> void:
 		player.controller = ScriptedController.new(Scenarios.get_timeline(args["drive"]), camera_rig)
 	if args.has("bot_drive"):
 		bot.controller = ScriptedController.new(Scenarios.get_timeline(args["bot_drive"]), null)
+	if args.has("bot_mode"):
+		bot_brain.mode = String(args["bot_mode"]).to_int() as BotBrain.Mode
+	if args.has("bot_skill"):
+		bot_brain.difficulty = String(args["bot_skill"]).to_float()
+	if args.has("autotest"):
+		# bot vs bot: the player's fighter gets a duelist brain too
+		var skill := String(args.get("player_skill", "0.5")).to_float()
+		player.controller = BotBrain.new(BotBrain.Mode.DUELIST, skill, 3)
+		player.set_loadout(&"fire", &"leap")
+		camera_rig.auto_yaw = true
+		pilot.start_autotest(String(args["autotest"]).to_float())
 	if args.has("player_gauntlet") or args.has("player_rune"):
 		player.set_loadout(StringName(args.get("player_gauntlet", "")), StringName(args.get("player_rune", "")))
 	if args.has("bot_gauntlet") or args.has("bot_rune"):

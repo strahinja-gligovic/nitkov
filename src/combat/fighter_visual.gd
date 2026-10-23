@@ -339,7 +339,7 @@ func _update_status_tint(s: FighterState) -> void:
 	var color := Color.BLACK
 	if s.chill_stacks > 0:
 		color = SpellData.element_color(SpellData.Element.FROST)
-		energy = 0.22 * s.chill_stacks
+		energy = 0.15 * s.chill_stacks
 	if s.burn_time > 0.0:
 		color = SpellData.element_color(SpellData.Element.FIRE)
 		energy = maxf(energy, 0.45 + 0.3 * sin(_time * 26.0))

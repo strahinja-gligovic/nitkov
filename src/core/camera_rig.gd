@@ -17,6 +17,8 @@ extends Node3D
 @export var max_shake_roll := 1.5
 
 var target: Node3D
+## Swing around behind the target on its own (when a bot drives the player).
+var auto_yaw := false
 var yaw := 0.0
 var pitch := deg_to_rad(-12.0)
 ## 0..1; shake strength is trauma squared, so small hits stay subtle.
@@ -84,6 +86,8 @@ func _process(delta: float) -> void:
 		return
 	var t := 1.0 - exp(-follow_sharpness * delta)
 	global_position = global_position.lerp(_pivot_point(), t)
+	if auto_yaw:
+		yaw = lerp_angle(yaw, target.global_rotation.y, 1.0 - exp(-4.0 * delta))
 	rotation = Vector3(0.0, yaw, 0.0)
 	_pitch_pivot.rotation = Vector3(pitch, 0.0, 0.0)
 	_apply_shake(delta)

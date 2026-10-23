@@ -18,6 +18,7 @@ var _time := 0.0
 
 
 func _ready() -> void:
+	add_to_group(&"orbs")
 	_build_visual()
 
 

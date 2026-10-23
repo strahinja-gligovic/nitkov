@@ -24,6 +24,7 @@ func setup(from: Fighter, data: ProjectileSpell, origin: Vector3, initial_veloci
 
 
 func _ready() -> void:
+	add_to_group(&"projectiles")
 	global_position = _origin
 	_build_visual()
 
