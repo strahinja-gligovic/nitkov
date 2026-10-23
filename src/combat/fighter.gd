@@ -84,7 +84,7 @@ func _advance_action(cmd: InputCommand, delta: float) -> void:
 	match state.action:
 		FighterState.Action.ATTACK:
 			_advance_attack(cmd, delta)
-		FighterState.Action.FLINCH, FighterState.Action.STAGGER:
+		FighterState.Action.FLINCH, FighterState.Action.STAGGER, FighterState.Action.DASH:
 			state.action_time += delta
 			if state.action_time >= state.action_duration:
 				state.end_action()
@@ -94,9 +94,31 @@ func _advance_action(cmd: InputCommand, delta: float) -> void:
 
 ## Starts a new action from IDLE, highest priority first.
 func _act(cmd: InputCommand) -> void:
+	if _try_dash(cmd):
+		return
 	_try_parry()
 	if state.on_floor and _try_attack(cmd):
 		return
+
+
+# --- dash ---------------------------------------------------------------------
+
+## A quick step in the move direction (backwards with no input) with
+## invulnerability at the start.
+func _try_dash(cmd: InputCommand) -> bool:
+	if not state.on_floor or not state.can_spend() or not state.consume_buffered(InputCommand.DASH):
+		return false
+	var direction := cmd.move_3d()
+	direction = direction.normalized() if direction.length() > 0.2 else -forward()
+	state.start_action(FighterState.Action.DASH, tuning.dash_duration)
+	state.dash_dir = direction
+	state.invulnerable = maxf(state.invulnerable, tuning.dash_iframes)
+	state.spend_stamina(tuning.dash_stamina, tuning)
+	return true
+
+
+func _dash_speed() -> float:
+	return tuning.dash_distance / maxf(tuning.dash_duration, 0.01)
 
 
 # --- block and parry ----------------------------------------------------------
@@ -159,6 +181,8 @@ func _advance_attack(cmd: InputCommand, delta: float) -> void:
 		if state.action != FighterState.Action.ATTACK:
 			return  # parried mid-swing
 	var into_recovery := now - attack.windup - attack.active
+	if into_recovery >= attack.dodge_cancel_after and _try_dash(cmd):
+		return
 	if into_recovery >= attack.chain_after and _try_attack(cmd):
 		return
 	if now >= attack.duration():
@@ -275,6 +299,9 @@ func _move(cmd: InputCommand, delta: float) -> void:
 		FighterState.Action.ATTACK:
 			target = _lunge_velocity()
 			accel = 80.0
+		FighterState.Action.DASH:
+			target = state.dash_dir * _dash_speed()
+			accel = 1000.0
 	target += state.knockback
 	state.knockback = state.knockback.move_toward(Vector3.ZERO, 14.0 * delta)
 	var planar := Vector3(velocity.x, 0.0, velocity.z).move_toward(target, accel * delta)

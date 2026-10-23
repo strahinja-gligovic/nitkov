@@ -37,6 +37,16 @@ static func get_timeline(scenario: String) -> Array:
 				{"at": 2.92, "for": 0.1, "press": B},
 				{"at": 3.6, "for": 2.6, "hold": B},
 			]
+		"bot_heavy":
+			# for the bot: one heavy (lands at ~1.2s), then a light
+			return [{"at": 0.5, "press": H}, {"at": 2.4, "press": L}]
+		"dodge":
+			# for the player vs bot_heavy: dash right through the heavy's active
+			# frames, then backstep the light
+			return [
+				{"at": 1.12, "for": 0.3, "move": Vector2(1, 0), "press": D},
+				{"at": 2.45, "press": D},
+			]
 		"melee":
 			# light chain into a heavy against a target ~2m ahead (--bot_at=2.2)
 			return [

@@ -1,6 +1,6 @@
 # 05 — Dash-step
 
-Status: ready-for-agent
+Status: done
 Blocked by: 04
 
 ## What

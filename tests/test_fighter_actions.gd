@@ -37,6 +37,15 @@ func _tick(cmd: InputCommand, ticks := 1) -> void:
 		cmd.pressed = 0  # a press only counts on its first tick
 
 
+## Like _tick, but inside real physics frames. move_and_slide() takes its
+## delta from the engine, so tests that measure distance need this.
+func _tick_physics(cmd: InputCommand, ticks := 1) -> void:
+	for i in ticks:
+		await get_tree().physics_frame
+		fighter.simulate(cmd, get_physics_process_delta_time())
+		cmd.pressed = 0
+
+
 func test_tapping_block_opens_a_parry_window_and_blocks() -> void:
 	_tick(_cmd(0, InputCommand.BLOCK))
 	assert_gt(fighter.state.parry_window, 0.0)
@@ -97,6 +106,46 @@ func test_no_stamina_no_swing() -> void:
 	fighter.state.spend_stamina(1000.0, fighter.tuning)  # empty, with the regen delay pending
 	_tick(_cmd(0, InputCommand.LIGHT))
 	assert_eq(fighter.state.action, FighterState.Action.IDLE)
+
+
+func _move_cmd(direction: Vector2, pressed := 0) -> InputCommand:
+	var cmd := _cmd(0, pressed)
+	cmd.move = direction
+	return cmd
+
+
+func test_dash_covers_its_distance_with_iframes() -> void:
+	var start := fighter.global_position
+	await _tick_physics(_move_cmd(Vector2(1, 0), InputCommand.DASH))
+	assert_eq(fighter.state.action, FighterState.Action.DASH)
+	assert_gt(fighter.state.invulnerable, 0.0)
+	assert_almost_eq(fighter.state.stamina, fighter.tuning.max_stamina - fighter.tuning.dash_stamina, 0.01)
+	await _tick_physics(_move_cmd(Vector2(1, 0)), int(fighter.tuning.dash_duration / DT) - 1)
+	var travelled := fighter.global_position - start
+	assert_almost_eq(travelled.x, fighter.tuning.dash_distance, 0.5)
+	assert_almost_eq(travelled.z, 0.0, 0.05)
+
+
+func test_dash_without_input_steps_backwards() -> void:
+	_tick(_cmd(0, InputCommand.DASH))
+	assert_almost_eq(fighter.state.dash_dir.dot(fighter.forward()), -1.0, 0.001)
+
+
+func test_exhausted_fighters_cannot_dash() -> void:
+	fighter.state.exhausted = 1.0
+	_tick(_cmd(0, InputCommand.DASH))
+	assert_eq(fighter.state.action, FighterState.Action.IDLE)
+
+
+func test_dash_cancels_late_recovery_but_not_windup() -> void:
+	_tick(_cmd(0, InputCommand.HEAVY))
+	_tick(_cmd(0, InputCommand.DASH))
+	assert_eq(fighter.state.action, FighterState.Action.ATTACK, "no dodging out of a committed wind-up")
+	var heavy := fighter.weapon.heavy
+	var to_cancel := heavy.windup + heavy.active + heavy.dodge_cancel_after
+	_tick(_cmd(), int(ceil(to_cancel / DT)))
+	_tick(_cmd(0, InputCommand.DASH))
+	assert_eq(fighter.state.action, FighterState.Action.DASH)
 
 
 func test_presses_during_a_flinch_are_buffered() -> void:
