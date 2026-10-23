@@ -23,7 +23,7 @@ func _ready() -> void:
 	_bind(&"rune", [_key(KEY_R), _pad(JOY_BUTTON_B)])
 
 	_bind(&"loadout_menu", [_key(KEY_TAB), _pad(JOY_BUTTON_START)])
-	_bind(&"swap_gauntlet", [_key(KEY_T), _pad(JOY_BUTTON_DPAD_RIGHT)])
+	_bind(&"swap_primary", [_key(KEY_T), _pad(JOY_BUTTON_DPAD_RIGHT)])
 	_bind(&"show_controls", [_key(KEY_H)])
 	_bind(&"release_mouse", [_key(KEY_ESCAPE)])
 	_bind(&"debug_tuning", [_key(KEY_F1), _pad(JOY_BUTTON_BACK)])

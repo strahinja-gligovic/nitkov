@@ -7,20 +7,6 @@ extends Node3D
 ## match it. It never writes simulation state.
 
 const SWORD_SCENE := preload("res://assets/kaykit/weapons/sword_1handed.gltf")
-const SKINS := {
-	&"knight": {
-		"scene": preload("res://assets/kaykit/characters/Knight.glb"),
-		"remove": ["1H_Sword_Offhand", "Badge_Shield", "Rectangle_Shield", "Round_Shield", "Spike_Shield", "2H_Sword"],
-		"sword": "1H_Sword",
-	},
-	&"barbarian": {
-		"scene": preload("res://assets/kaykit/characters/Barbarian.glb"),
-		"remove": ["1H_Axe_Offhand", "Barbarian_Round_Shield", "1H_Axe", "2H_Axe", "Mug"],
-		"sword": "",
-	},
-}
-## KayKit characters are ~2.35 units tall; this brings them to ~1.85m.
-const MODEL_SCALE := 0.78
 const SKELETON := "Rig/Skeleton3D"
 const UPPER_BONES: Array[String] = [
 	"spine", "chest", "head",
@@ -59,24 +45,48 @@ var _clip_lengths := {}
 var _gauntlet_root: Node3D
 var _gauntlet_core: MeshInstance3D
 var _gauntlet_light: OmniLight3D
+var _built_character: CharacterData
 
 
 func _ready() -> void:
 	fighter = get_parent() as Fighter
-	var skin: Dictionary = SKINS.get(fighter.skin, SKINS[&"knight"])
-	model = (skin["scene"] as PackedScene).instantiate()
-	model.scale = Vector3.ONE * MODEL_SCALE
+	_build_model()
+	fighter.loadout_changed.connect(_on_loadout_changed)
+
+
+func _on_loadout_changed() -> void:
+	if fighter.character != _built_character:
+		_build_model()
+	else:
+		_build_gauntlet()
+
+
+## Instances the character's model, strips its props, attaches the longsword,
+## converts it to the toon look and builds its AnimationTree.
+func _build_model() -> void:
+	if model:
+		remove_child(model)
+		model.queue_free()
+		_slots.clear()
+		_clip_lengths.clear()
+		_full_key = ""
+		_gauntlet_root = null
+		_gauntlet_core = null
+	var character := fighter.character
+	_built_character = character
+	model = character.scene.instantiate()
+	model.scale = Vector3.ONE * character.model_scale
 	model.rotation.y = PI  # KayKit faces +Z; fighters face -Z
 	add_child(model)
-	for node_name: String in skin["remove"]:
+	for node_name in character.remove_nodes:
 		var node := model.find_child(node_name, true, false)
 		if node:
 			node.get_parent().remove_child(node)
 			node.free()
 	hand_slot_left = model.find_child("handslot_l", true, false)
 	hand_slot_right = model.find_child("handslot_r", true, false)
-	if skin["sword"] != "":
-		sword = model.find_child(skin["sword"], true, false)
+	if character.sword_node != "":
+		sword = model.find_child(character.sword_node, true, false)
 	else:
 		sword = SWORD_SCENE.instantiate()
 		sword.position = Vector3(0.0, 0.0333, 0.0)
@@ -89,7 +99,6 @@ func _ready() -> void:
 		anim_player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	_build_tree()
 	_build_gauntlet()
-	fighter.loadout_changed.connect(_build_gauntlet)
 
 
 func _process(delta: float) -> void:
@@ -270,14 +279,16 @@ static func _clip(clip: StringName) -> AnimationNodeAnimation:
 
 # --- gauntlet ---------------------------------------------------------------
 
-## A glowing elemental orb, bracer and light on the left fist.
+## A glowing orb (primary spell's element), a bracer (signature's element)
+## and a light on the left fist.
 func _build_gauntlet() -> void:
 	if _gauntlet_root:
 		_gauntlet_root.queue_free()
 		_gauntlet_root = null
-	if fighter.gauntlet == null or hand_slot_left == null:
+	if hand_slot_left == null:
 		return
-	var color := SpellData.element_color(fighter.gauntlet.element)
+	var color := SpellData.element_color(fighter.primary.element)
+	var accent := SpellData.element_color(fighter.signature.element)
 	_gauntlet_root = Node3D.new()
 	_gauntlet_root.name = "Gauntlet"
 	hand_slot_left.add_child(_gauntlet_root)
@@ -288,7 +299,7 @@ func _build_gauntlet() -> void:
 	torus.outer_radius = 0.24
 	bracer.mesh = torus
 	bracer.position = Vector3(0.0, -0.12, 0.0)
-	bracer.material_override = ToonMaterials.make(Color(0.24, 0.19, 0.3), {&"glow_color": color, &"glow_energy": 0.7})
+	bracer.material_override = ToonMaterials.make(Color(0.24, 0.19, 0.3), {&"glow_color": accent, &"glow_energy": 0.9})
 	_gauntlet_root.add_child(bracer)
 
 	_gauntlet_core = MeshInstance3D.new()

@@ -1,10 +1,13 @@
 class_name LoadoutMenu
 extends CanvasLayer
-## Tab / Start: choose gauntlets and runes for you and the bot. Changes apply
-## immediately. The fight keeps running underneath.
+## Tab / Start during a match: change spells, rune and character for you and
+## the bot. Changes apply immediately; the fight keeps running underneath.
 
 signal opened
 signal closed
+
+const MAIN_MENU := "res://src/ui/main_menu.tscn"
+const SLOTS := [["Character", "character"], ["Primary", "primary"], ["Signature", "signature"], ["Rune", "rune"]]
 
 var player: Fighter
 var bot: Fighter
@@ -44,15 +47,15 @@ func _ready() -> void:
 		label.text = heading
 		label.add_theme_color_override(&"font_color", UiTheme.GOLD)
 		grid.add_child(label)
-	_add_row(grid, "Gauntlet", "gauntlet", GameData.gauntlets)
-	_add_row(grid, "Rune", "rune", GameData.runes)
+	for slot: Array in SLOTS:
+		_add_row(grid, slot[0], slot[1])
 
 	bot_section = VBoxContainer.new()
 	bot_section.add_theme_constant_override(&"separation", 10)
 	box.add_child(bot_section)
 
 	var hint := Label.new()
-	hint.text = "T / D-pad right: quick-swap gauntlet mid-fight"
+	hint.text = "T / D-pad right: quick-swap your primary spell mid-fight"
 	hint.add_theme_color_override(&"font_color", UiTheme.MUTED)
 	hint.add_theme_font_size_override(&"font_size", 16)
 	box.add_child(hint)
@@ -60,6 +63,12 @@ func _ready() -> void:
 	back.text = "Back to the fight   [Tab / Start]"
 	back.pressed.connect(close_menu)
 	box.add_child(back)
+	var quit := Button.new()
+	quit.text = "Quit to main menu"
+	quit.pressed.connect(func() -> void:
+		Engine.time_scale = 1.0
+		get_tree().change_scene_to_file(MAIN_MENU))
+	box.add_child(quit)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -89,16 +98,16 @@ func close_menu() -> void:
 	closed.emit()
 
 
-func _add_row(grid: GridContainer, label_text: String, slot: String, options: Dictionary) -> void:
+func _add_row(grid: GridContainer, label_text: String, slot: String) -> void:
 	var label := Label.new()
 	label.text = label_text
 	grid.add_child(label)
 	for who in ["player", "bot"]:
 		var picker := OptionButton.new()
-		picker.custom_minimum_size = Vector2(170, 0)
-		for id: StringName in options:
-			picker.add_item(options[id].display_name)
-			picker.set_item_metadata(picker.item_count - 1, id)
+		picker.custom_minimum_size = Vector2(190, 0)
+		for item: Resource in _options(slot):
+			picker.add_item(item.display_name)
+			picker.set_item_metadata(picker.item_count - 1, item.id)
 		picker.item_selected.connect(_on_picked.bind(who, slot, picker))
 		grid.add_child(picker)
 		_pickers["%s/%s" % [who, slot]] = picker
@@ -106,21 +115,30 @@ func _add_row(grid: GridContainer, label_text: String, slot: String, options: Di
 			_first_focus = picker
 
 
+static func _options(slot: String) -> Array:
+	match slot:
+		"character":
+			return GameData.characters.values()
+		"primary":
+			return GameData.spells_for(SpellData.Slot.PRIMARY)
+		"signature":
+			return GameData.spells_for(SpellData.Slot.SIGNATURE)
+	return GameData.runes.values()
+
+
 func _on_picked(index: int, who: String, slot: String, picker: OptionButton) -> void:
 	var fighter := player if who == "player" else bot
-	var id: StringName = picker.get_item_metadata(index)
-	if slot == "gauntlet":
-		fighter.set_loadout(id)
-	else:
-		fighter.set_loadout(fighter.gauntlet.id, id)
+	var loadout := fighter.current_loadout()
+	loadout.set(slot, picker.get_item_metadata(index))
+	fighter.apply_loadout(loadout)
 
 
 ## Show what each fighter currently has (the quick-swap key may have changed it).
 func _refresh() -> void:
 	for who in ["player", "bot"]:
-		var fighter := player if who == "player" else bot
-		_select(_pickers["%s/gauntlet" % who], fighter.gauntlet.id)
-		_select(_pickers["%s/rune" % who], fighter.rune.id)
+		var loadout := (player if who == "player" else bot).current_loadout()
+		for slot: Array in SLOTS:
+			_select(_pickers["%s/%s" % [who, slot[1]]], loadout.get(slot[1]))
 
 
 static func _select(picker: OptionButton, id: StringName) -> void:

@@ -6,5 +6,6 @@
 script = ExtResource("1_blink")
 id = &"blink"
 display_name = "Blink"
+description = "Teleport 8m in the direction you are moving. Stopped by walls, works in the air."
 cooldown = 10.0
 air_use = true

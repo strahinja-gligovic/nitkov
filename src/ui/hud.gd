@@ -130,13 +130,12 @@ func _draw_player_panel(at: Vector2) -> void:
 func _draw_slots(center: Vector2) -> void:
 	var s := player.state
 	var pad := player_input != null and player_input.using_gamepad
-	var gauntlet := player.gauntlet
-	var color := SpellData.element_color(gauntlet.element)
 	var slots := [
-		[gauntlet.primary.display_name, "LT" if pad else "E", 0.0, 0.0, "%d" % roundi(gauntlet.primary.stamina_cost), s.can_spend()],
-		[gauntlet.signature.display_name, "Y" if pad else "Q", s.signature_cd, gauntlet.signature.cooldown, "", true],
+		[player.primary.display_name, "LT" if pad else "E", 0.0, 0.0, "%d" % roundi(player.primary.stamina_cost), s.can_spend()],
+		[player.signature.display_name, "Y" if pad else "Q", s.signature_cd, player.signature.cooldown, "", true],
 		[player.rune.display_name, "B" if pad else "R", s.rune_cd, player.rune.cooldown, "", s.exhausted <= 0.0],
 	]
+	var elements := [player.primary.element, player.signature.element]
 	var width := 76.0
 	var gap := 14.0
 	var left := center.x - (width * 3 + gap * 2) * 0.5
@@ -145,10 +144,10 @@ func _draw_slots(center: Vector2) -> void:
 		var rect := Rect2(Vector2(left + i * (width + gap), center.y - width * 0.5 - 6), Vector2(width, width))
 		_canvas.draw_rect(rect.grow(3), INK)
 		_canvas.draw_rect(rect, SLOT)
-		var icon_color: Color = color if i < 2 else Color(0.82, 0.68, 1.0)
+		var icon_color: Color = SpellData.element_color(elements[i]) if i < 2 else Color(0.82, 0.68, 1.0)
 		if not slot[5]:
 			icon_color = icon_color.darkened(0.6)
-		_draw_icon(rect.get_center(), i, icon_color)
+		_draw_icon(rect.get_center(), i, icon_color, elements[i] if i < 2 else SpellData.Element.NONE)
 		var remaining: float = slot[2]
 		if remaining > 0.0:
 			_pie(rect.get_center(), width * 0.5, remaining / maxf(slot[3], 0.01), Color(0, 0, 0, 0.62))
@@ -159,7 +158,7 @@ func _draw_slots(center: Vector2) -> void:
 		_text(Vector2(rect.get_center().x, rect.position.y - 8), slot[0], 14, Color(1, 1, 1, 0.85), HORIZONTAL_ALIGNMENT_CENTER)
 
 
-func _draw_icon(c: Vector2, slot: int, color: Color) -> void:
+func _draw_icon(c: Vector2, slot: int, color: Color, element: SpellData.Element) -> void:
 	if slot == 2:
 		if player.rune is LeapRune:
 			for k in 2:
@@ -170,7 +169,7 @@ func _draw_icon(c: Vector2, slot: int, color: Color) -> void:
 				var x := c.x - 8.0 + k * 14.0
 				_canvas.draw_polyline([Vector2(x - 8, c.y - 14), Vector2(x + 6, c.y), Vector2(x - 8, c.y + 14)], color, 5.0)
 		return
-	if player.gauntlet.element == SpellData.Element.FROST:
+	if element == SpellData.Element.FROST:
 		for k in 3:
 			var dir := Vector2.from_angle(k * PI / 3.0) * (20.0 if slot == 0 else 24.0)
 			_canvas.draw_line(c - dir, c + dir, color, 4.0)
@@ -296,7 +295,7 @@ func _build_controls_panel() -> Control:
 		["Signature spell", "Q", "Y"],
 		["Mobility rune", "R", "B"],
 		["Loadout menu", "Tab", "Start"],
-		["Quick-swap gauntlet", "T", "D-pad right"],
+		["Quick-swap primary spell", "T", "D-pad right"],
 		["Tuning / hitboxes / slow-mo / log", "F1 / F2 / F3 / F4", "Back / D-pad up / down / left"],
 		["Free the mouse", "Esc", ""],
 	]

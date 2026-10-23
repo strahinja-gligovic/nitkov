@@ -13,7 +13,7 @@ var camera_rig: CameraRig
 var player_input: PlayerInput
 var menu: LoadoutMenu
 var debug: DebugOverlay
-var bot_brain := BotBrain.new(BotBrain.Mode.DUELIST, 0.5, 7)
+var bot_brain := BotBrain.new(MatchConfig.bot_mode, MatchConfig.bot_difficulty, 7)
 
 
 func _ready() -> void:
@@ -27,11 +27,10 @@ func _ready() -> void:
 	player_input.camera_rig = camera_rig
 	add_child(player_input)
 
-	player = _spawn_fighter(0, "You", &"knight")
+	player = _spawn_fighter(0, "You", MatchConfig.player)
 	player.controller = player_input
 	player_input.fighter = player
-	bot = _spawn_fighter(1, "Bot", &"barbarian")
-	bot.set_loadout(&"frost", &"blink")
+	bot = _spawn_fighter(1, "Bot", MatchConfig.bot)
 	bot.controller = bot_brain
 	camera_rig.follow(player)
 
@@ -144,11 +143,11 @@ func _add_bot_controls() -> void:
 	menu.bot_section.add_child(skill_row)
 
 
-func _spawn_fighter(team: int, label: String, skin: StringName) -> Fighter:
+func _spawn_fighter(team: int, label: String, loadout: Loadout) -> Fighter:
 	var fighter: Fighter = FIGHTER_SCENE.instantiate()
 	fighter.team = team
 	fighter.display_name = label
-	fighter.skin = skin
+	fighter.apply_loadout(loadout)
 	fighter.name = label.replace(" ", "")
 	fighter.transform = arena.spawn_transform(team)
 	add_child(fighter)
@@ -174,13 +173,17 @@ func _apply_autopilot() -> void:
 		# bot vs bot: the player's fighter gets a duelist brain too
 		var skill := String(args.get("player_skill", "0.5")).to_float()
 		player.controller = BotBrain.new(BotBrain.Mode.DUELIST, skill, 3)
-		player.set_loadout(&"fire", &"leap")
+		player.apply_loadout(Loadout.make(player.character.id, &"firebolt", &"flame_wall", &"leap"))
+		bot.apply_loadout(Loadout.make(bot.character.id, &"shard_volley", &"frost_nova", &"blink"))
 		camera_rig.auto_yaw = true
 		pilot.start_autotest(String(args["autotest"]).to_float())
-	if args.has("player_gauntlet") or args.has("player_rune"):
-		player.set_loadout(StringName(args.get("player_gauntlet", "")), StringName(args.get("player_rune", "")))
-	if args.has("bot_gauntlet") or args.has("bot_rune"):
-		bot.set_loadout(StringName(args.get("bot_gauntlet", "")), StringName(args.get("bot_rune", "")))
+	for who in ["player", "bot"]:
+		var fighter := player if who == "player" else bot
+		var loadout := fighter.current_loadout()
+		for slot in ["character", "primary", "signature", "rune"]:
+			if args.has("%s_%s" % [who, slot]):
+				loadout.set(slot, StringName(args["%s_%s" % [who, slot]]))
+		fighter.apply_loadout(loadout)
 	if args.has("player_hp"):
 		player.state.hp = String(args["player_hp"]).to_float()
 	if args.has("player_yaw"):

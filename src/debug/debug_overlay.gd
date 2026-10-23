@@ -21,8 +21,8 @@ func _ready() -> void:
 	var entries: Array = [["Combat", GameData.tuning]]
 	for id: StringName in GameData.weapons:
 		entries.append([GameData.weapons[id].display_name, GameData.weapons[id]])
-	for id: StringName in GameData.gauntlets:
-		entries.append(["%s gauntlet" % GameData.gauntlets[id].display_name, GameData.gauntlets[id]])
+	for id: StringName in GameData.spells:
+		entries.append(["%s (spell)" % GameData.spells[id].display_name, GameData.spells[id]])
 	for id: StringName in GameData.runes:
 		entries.append(["%s rune" % GameData.runes[id].display_name, GameData.runes[id]])
 	tuning_panel.setup(entries)

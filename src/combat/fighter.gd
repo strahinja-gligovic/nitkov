@@ -9,10 +9,8 @@ const RADIUS := 0.4
 
 @export var team := 0
 @export var display_name := "Fighter"
-## Which character model FighterVisual shows (see FighterVisual.SKINS).
-@export var skin := &"knight"
 
-## The loadout changed (FighterVisual rebuilds the gauntlet glow).
+## The loadout changed (FighterVisual rebuilds the model or gauntlet glow).
 signal loadout_changed
 
 var state := FighterState.new()
@@ -20,8 +18,10 @@ var state := FighterState.new()
 var controller: Object
 var tuning: CombatTuning = GameData.tuning
 var weapon: WeaponData = GameData.weapons[&"longsword"]
-var gauntlet: GauntletData = GameData.gauntlets[&"fire"]
-var rune: RuneData = GameData.runes[&"leap"]
+var character: CharacterData = GameData.characters[MatchConfig.player.character]
+var primary: SpellData = GameData.spells[MatchConfig.player.primary]
+var signature: SpellData = GameData.spells[MatchConfig.player.signature]
+var rune: RuneData = GameData.runes[MatchConfig.player.rune]
 
 ## Enemy the current swing is homing on (recomputed every tick of the wind-up).
 var _magnet: Fighter
@@ -34,10 +34,22 @@ func _ready() -> void:
 	state.facing_yaw = rotation.y
 
 
-func set_loadout(gauntlet_id: StringName, rune_id := &"") -> void:
-	gauntlet = GameData.gauntlets.get(gauntlet_id, gauntlet)
-	rune = GameData.runes.get(rune_id, rune)
+## Takes a character, spells and rune by id. Unknown ids keep the current pick.
+func apply_loadout(loadout: Loadout) -> void:
+	character = GameData.characters.get(loadout.character, character)
+	primary = _spell_or(loadout.primary, SpellData.Slot.PRIMARY, primary)
+	signature = _spell_or(loadout.signature, SpellData.Slot.SIGNATURE, signature)
+	rune = GameData.runes.get(loadout.rune, rune)
 	loadout_changed.emit()
+
+
+func current_loadout() -> Loadout:
+	return Loadout.make(character.id, primary.id, signature.id, rune.id)
+
+
+static func _spell_or(id: StringName, slot: SpellData.Slot, fallback: SpellData) -> SpellData:
+	var spell: SpellData = GameData.spells.get(id)
+	return spell if spell != null and spell.slot == slot else fallback
 
 
 ## Back to full health at a spawn point, with a clean slate.
@@ -50,11 +62,13 @@ func respawn(at: Transform3D) -> void:
 	CombatEvents.fighter_respawned.emit(self)
 
 
-## Debug quick-swap (T / D-pad right): the next gauntlet in GameData order.
-## Lets one player test Frost -> Fire Shatter alone.
-func cycle_gauntlet() -> void:
-	var ids: Array = GameData.gauntlets.keys()
-	set_loadout(ids[(ids.find(gauntlet.id) + 1) % ids.size()])
+## Debug quick-swap (T / D-pad right): the next primary spell.
+func cycle_primary() -> void:
+	var options := GameData.spells_for(SpellData.Slot.PRIMARY)
+	var next: SpellData = options[(options.find(primary) + 1) % options.size()]
+	var loadout := current_loadout()
+	loadout.primary = next.id
+	apply_loadout(loadout)
 
 
 ## Publishes a resolved hit and remembers who dealt damage (for burn kill credit).
@@ -101,7 +115,7 @@ func chest_position() -> Vector3:
 	return global_position + Vector3.UP * CHEST_HEIGHT
 
 
-## Where spells leave the gauntlet (left hand, chest height). Fixed relative
+## Where spells leave the gauntlet hand (left, chest height). Fixed relative
 ## to the body rather than read from the animation, so it's deterministic.
 func cast_origin() -> Vector3:
 	var f := forward()
@@ -187,13 +201,13 @@ func _try_rune(cmd: InputCommand) -> bool:
 ## Primaries cost stamina; signatures wait for their cooldown. Casting works
 ## on the move and in the air, but not while exhausted.
 func _try_cast() -> bool:
-	if gauntlet == null or state.exhausted > 0.0:
+	if state.exhausted > 0.0:
 		return false
 	if state.can_spend() and state.consume_buffered(InputCommand.PRIMARY):
-		_start_cast(gauntlet.primary)
+		_start_cast(primary)
 		return true
 	if state.signature_cd <= 0.0 and state.consume_buffered(InputCommand.SIGNATURE):
-		_start_cast(gauntlet.signature)
+		_start_cast(signature)
 		return true
 	return false
 

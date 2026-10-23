@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://src/combat/character_data.gd" id="1_character"]
+[ext_resource type="PackedScene" path="res://assets/kaykit/characters/Knight.glb" id="2_scene"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"knight"
+display_name = "Knight"
+blurb = "Polished plate, a borrowed cape and absolute confidence."
+scene = ExtResource("2_scene")
+remove_nodes = PackedStringArray("1H_Sword_Offhand", "Badge_Shield", "Rectangle_Shield", "Round_Shield", "Spike_Shield", "2H_Sword")
+sword_node = "1H_Sword"

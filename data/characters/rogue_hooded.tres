@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://src/combat/character_data.gd" id="1_character"]
+[ext_resource type="PackedScene" path="res://assets/kaykit/characters/Rogue_Hooded.glb" id="2_scene"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"rogue_hooded"
+display_name = "Hooded Rogue"
+blurb = "The same rogue, with a better hood."
+scene = ExtResource("2_scene")
+remove_nodes = PackedStringArray("Knife_Offhand", "1H_Crossbow", "2H_Crossbow", "Knife", "Throwable")
+sword_node = ""

@@ -1,13 +1,17 @@
 class_name SpellData
 extends Resource
-## Base for gauntlet spells. A cast runs windup -> release -> recovery; at
-## release the subclass spawns its effect via release().
+## Base for spells. A cast runs windup -> release -> recovery; at release
+## the subclass spawns its effect via release(). Every fighter picks one
+## PRIMARY and one SIGNATURE spell, from any element.
 
 enum Element { NONE, FIRE, FROST }
+enum Slot { PRIMARY, SIGNATURE }
 
 @export var id := &""
 @export var display_name := ""
+@export_multiline var description := ""
 @export var element := Element.NONE
+@export var slot := Slot.PRIMARY
 ## Spent when the cast starts (primaries).
 @export var stamina_cost := 0.0
 ## Starts when the spell releases (signatures).

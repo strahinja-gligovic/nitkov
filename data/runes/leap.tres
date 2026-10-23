@@ -6,4 +6,5 @@
 script = ExtResource("1_leap")
 id = &"leap"
 display_name = "Leap"
+description = "A huge jump that keeps your momentum, then a slow fall. Gets you onto the ledge and over trouble."
 cooldown = 12.0

@@ -210,7 +210,7 @@ func _duel(me: Fighter, foe: Fighter, distance: float, toward: Vector3, cmd: Inp
 				_press |= InputCommand.LIGHT
 				_chain_left = int(rng.randf() < _aggression()) + int(rng.randf() < _aggression() * 0.7)
 			_next_attack = _time + lerpf(1.25, 0.45, _aggression()) + rng.randf() * 0.4
-		if me.gauntlet.signature is NovaSpell and s.signature_cd <= 0.0 and s.is_actionable() and rng.randf() < 0.02:
+		if me.signature is NovaSpell and s.signature_cd <= 0.0 and s.is_actionable() and rng.randf() < 0.02:
 			_press |= InputCommand.SIGNATURE
 		return _strafe_dir(toward) * 0.5 + toward * (0.3 if distance > MELEE_RANGE - 0.6 else -0.3)
 
@@ -325,16 +325,16 @@ func _continue_chain(me: Fighter) -> void:
 
 
 func _signature_fits(me: Fighter, distance: float) -> bool:
-	if me.gauntlet.signature is NovaSpell:
-		return distance < (me.gauntlet.signature as NovaSpell).radius - 1.0
+	if me.signature is NovaSpell:
+		return distance < (me.signature as NovaSpell).radius - 1.0
 	return distance > 5.0 and distance < 14.0
 
 
 ## Aim point with a little lead on a moving target, plus skill-scaled error.
 func _lead(me: Fighter, foe: Fighter, error: float) -> Vector3:
 	var speed := 40.0
-	if me.gauntlet.primary is ProjectileSpell:
-		speed = (me.gauntlet.primary as ProjectileSpell).speed
+	if me.primary is ProjectileSpell:
+		speed = (me.primary as ProjectileSpell).speed
 	var flight := me.cast_origin().distance_to(foe.chest_position()) / speed
 	var point := foe.chest_position() + Vector3(foe.velocity.x, 0.0, foe.velocity.z) * flight * lerpf(0.3, 1.0, difficulty)
 	var wobble := Vector2(rng.randf_range(-1, 1), rng.randf_range(-1, 1)).limit_length(1.0) * error

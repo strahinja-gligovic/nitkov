@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="NovaSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/nova_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"frost_nova"
+display_name = "Frost Nova"
+description = "A frost blast around you: 10 damage, 3 Chill and a 40% slow for 2s. Your best answer to someone in your face."
+element = 2
+slot = 1
+cooldown = 15.0
+windup = 0.3
+recovery = 0.4
+animation = &"Spellcast_Raise"
+release_time = 0.84
+radius = 5.0
+damage = 10.0
+chill_stacks = 3
+slow_amount = 0.4
+slow_duration = 2.0

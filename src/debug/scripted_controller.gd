@@ -8,7 +8,7 @@ extends RefCounted
 ##   press: button bits pressed on the step's first tick (also held while it lasts)
 ##   turn: camera yaw speed in rad/s, pitch: camera pitch speed in rad/s
 ##   track: true steers the crosshair onto the nearest enemy, like a player aiming
-##   swap: true quick-swaps the gauntlet on the step's first tick (debug key T)
+##   swap: true quick-swaps the primary spell on the step's first tick (debug key T)
 
 var steps: Array = []
 var camera_rig: CameraRig
@@ -44,7 +44,7 @@ func get_command(fighter: Fighter) -> InputCommand:
 			_fired[i] = true
 			cmd.pressed |= int(step.get("press", 0))
 			if step.get("swap", false):
-				fighter.cycle_gauntlet()
+				fighter.cycle_primary()
 	if camera_rig:
 		camera_rig.rotate_view(turn * dt, pitch * dt)
 		if track:

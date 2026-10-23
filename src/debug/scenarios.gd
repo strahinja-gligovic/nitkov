@@ -56,8 +56,8 @@ static func get_timeline(scenario: String) -> Array:
 				{"at": 2.0, "press": G},
 			]
 		"shatter":
-			# start with Frost (--player_gauntlet=frost): chill with Shard Volley,
-			# quick-swap to Fire, Firebolt -> Shatter. Then Nova from up close.
+			# start with Shard Volley (--player_primary=shard_volley): chill,
+			# quick-swap to Firebolt -> Shatter. Then Nova (--player_signature=frost_nova).
 			return [
 				{"at": 0.0, "for": 30.0, "track": true},
 				{"at": 0.3, "press": P},

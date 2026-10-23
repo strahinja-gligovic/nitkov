@@ -1,10 +1,11 @@
 class_name RuneData
 extends Resource
 ## A mobility rune: one movement ability on its own cooldown, independent of
-## the gauntlet. Subclasses implement activate().
+## your spells. Subclasses implement activate().
 
 @export var id := &""
 @export var display_name := ""
+@export_multiline var description := ""
 @export var cooldown := 10.0
 ## Whether it can be used while airborne.
 @export var air_use := false

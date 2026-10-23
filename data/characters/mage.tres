@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://src/combat/character_data.gd" id="1_character"]
+[ext_resource type="PackedScene" path="res://assets/kaykit/characters/Mage.glb" id="2_scene"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"mage"
+display_name = "Mage"
+blurb = "Traded the staff for a sword. Kept the hat."
+scene = ExtResource("2_scene")
+remove_nodes = PackedStringArray("Spellbook", "Spellbook_open", "1H_Wand", "2H_Staff")
+sword_node = ""

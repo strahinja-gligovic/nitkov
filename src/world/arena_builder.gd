@@ -69,7 +69,7 @@ func _ready() -> void:
 		_add_block(root, block[0], block[1], _materials[block[2]], rot, solid)
 	for spot in TORCHES:
 		_add_torch(root, spot)
-	_add_lighting(root)
+	add_sky_and_sun(root)
 
 
 func spawn_transform(team: int) -> Transform3D:
@@ -142,7 +142,9 @@ func _add_torch(root: Node3D, at: Vector3) -> void:
 	torch.add_child(light)
 
 
-func _add_lighting(root: Node3D) -> void:
+## The dusk sky, warm sun and stylized grading the arena uses (the start
+## menu showcase reuses it).
+static func add_sky_and_sun(root: Node3D) -> void:
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation_degrees = Vector3(-48.0, 38.0, 0.0)

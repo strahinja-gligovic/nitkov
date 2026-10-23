@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ProjectileSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/projectile_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"firebolt"
+display_name = "Firebolt"
+description = "A fast bolt of fire: 12 damage, and the splash sets everyone near the impact Burning (3 per second for 3s)."
+element = 1
+slot = 0
+stamina_cost = 15.0
+windup = 0.14
+recovery = 0.26
+animation = &"Spellcast_Shoot"
+release_time = 0.28
+damage = 12.0
+speed = 38.0
+radius = 0.28
+max_range = 60.0
+splash_radius = 1.5
+splash_damage = 4.0
+applies_burn = true

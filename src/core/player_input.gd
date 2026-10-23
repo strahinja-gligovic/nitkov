@@ -45,9 +45,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"release_mouse"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
-	if event.is_action_pressed(&"swap_gauntlet") and fighter:
+	if event.is_action_pressed(&"swap_primary") and fighter:
 		# debug shortcut that edits the loadout directly; online it would be a request to the server
-		fighter.cycle_gauntlet()
+		fighter.cycle_primary()
 		return
 	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
