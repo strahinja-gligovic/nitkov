@@ -38,6 +38,13 @@ func set_loadout(gauntlet_id: StringName) -> void:
 	loadout_changed.emit()
 
 
+## Debug quick-swap (T / D-pad right): the next gauntlet in GameData order.
+## Lets one player test Frost -> Fire Shatter alone.
+func cycle_gauntlet() -> void:
+	var ids: Array = GameData.gauntlets.keys()
+	set_loadout(ids[(ids.find(gauntlet.id) + 1) % ids.size()])
+
+
 ## Publishes a resolved hit and remembers who dealt damage (for burn kill credit).
 static func report_hit(attacker: Fighter, target: Fighter, result: HitResult, at: Vector3) -> void:
 	if result.outcome == HitResult.Outcome.IGNORED:

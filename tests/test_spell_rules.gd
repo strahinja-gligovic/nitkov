@@ -88,6 +88,83 @@ func test_reapplying_burn_refreshes_instead_of_stacking() -> void:
 	assert_eq(defender.burn_time, tuning.burn_duration)
 
 
+func _frost_hit(stacks := 1) -> SpellHit:
+	var hit := SpellHit.new()
+	hit.element = SpellData.Element.FROST
+	hit.damage = 5.0
+	hit.chill_stacks = stacks
+	hit.source = &"shard_volley"
+	return hit
+
+
+func test_chill_stacks_cap_and_refresh() -> void:
+	CombatRules.resolve_spell(defender, _frost_hit(), true, tuning)
+	assert_eq(defender.chill_stacks, 1)
+	assert_eq(defender.chill_time, tuning.chill_duration)
+	for i in 5:
+		CombatRules.resolve_spell(defender, _frost_hit(), true, tuning)
+	assert_eq(defender.chill_stacks, tuning.chill_max_stacks)
+	assert_almost_eq(CombatRules.move_speed_mult(defender, tuning), 1.0 - tuning.chill_slow, 0.001, "slowed at max stacks")
+
+
+func test_chill_expires() -> void:
+	CombatRules.resolve_spell(defender, _frost_hit(2), true, tuning)
+	CombatRules.tick_statuses(defender, tuning.chill_duration + 0.01, tuning)
+	assert_eq(defender.chill_stacks, 0)
+
+
+func test_fire_on_a_chilled_target_shatters() -> void:
+	CombatRules.resolve_spell(defender, _frost_hit(1), true, tuning)
+	var hp_before := defender.hp
+	var result := CombatRules.resolve_spell(defender, _fire_hit(12.0, false), true, tuning)
+	assert_eq(result.reaction, &"shatter")
+	assert_almost_eq(result.damage, 12.0 + tuning.shatter_damage, 0.001)
+	assert_almost_eq(defender.hp, hp_before - 12.0 - tuning.shatter_damage, 0.001)
+	assert_eq(defender.chill_stacks, 0, "Shatter consumes the Chill")
+	assert_eq(defender.action, FighterState.Action.STAGGER)
+	assert_eq(defender.stagger_kind, &"shatter")
+	assert_eq(defender.action_duration, tuning.shatter_stagger)
+
+
+func test_fire_on_an_unchilled_target_does_not_shatter() -> void:
+	var result := CombatRules.resolve_spell(defender, _fire_hit(), true, tuning)
+	assert_eq(result.reaction, &"")
+
+
+func test_blocked_fire_does_not_shatter() -> void:
+	CombatRules.resolve_spell(defender, _frost_hit(2), true, tuning)
+	defender.blocking = true
+	var result := CombatRules.resolve_spell(defender, _fire_hit(), true, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.BLOCKED)
+	assert_eq(result.reaction, &"")
+	assert_eq(defender.chill_stacks, 2)
+
+
+func test_burn_ticks_do_not_shatter() -> void:
+	CombatRules.apply_burn(defender, tuning)
+	CombatRules.resolve_spell(defender, _frost_hit(2), true, tuning)
+	CombatRules.tick_statuses(defender, 1.0, tuning)
+	assert_eq(defender.chill_stacks, 2)
+	assert_ne(defender.action, FighterState.Action.STAGGER)
+
+
+func test_non_reacting_fire_does_not_shatter() -> void:
+	CombatRules.resolve_spell(defender, _frost_hit(1), true, tuning)
+	var hit := _fire_hit()
+	hit.triggers_reactions = false
+	assert_eq(CombatRules.resolve_spell(defender, hit, true, tuning).reaction, &"")
+
+
+func test_nova_style_slow() -> void:
+	var hit := _frost_hit(3)
+	hit.slow_amount = 0.4
+	hit.slow_duration = 2.0
+	CombatRules.resolve_spell(defender, hit, true, tuning)
+	assert_almost_eq(CombatRules.move_speed_mult(defender, tuning), 0.6, 0.001, "the stronger nova slow wins over max Chill")
+	CombatRules.tick_statuses(defender, 2.01, tuning)
+	assert_almost_eq(CombatRules.move_speed_mult(defender, tuning), 1.0 - tuning.chill_slow, 0.001)
+
+
 func test_slows_take_the_strongest_not_the_sum() -> void:
 	defender.slow_amount = 0.4
 	defender.slow_time = 1.0

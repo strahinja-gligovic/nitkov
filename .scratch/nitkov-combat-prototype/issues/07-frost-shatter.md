@@ -1,6 +1,6 @@
 # 07 — Frost kit, Chill and Shatter
 
-Status: ready-for-agent
+Status: done
 Blocked by: 06
 
 ## What

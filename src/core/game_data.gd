@@ -4,7 +4,7 @@ extends Node
 
 const TUNING_PATH := "res://data/combat_tuning.tres"
 const WEAPON_PATHS: Array[String] = ["res://data/weapons/longsword.tres"]
-const GAUNTLET_PATHS: Array[String] = ["res://data/gauntlets/fire.tres"]
+const GAUNTLET_PATHS: Array[String] = ["res://data/gauntlets/fire.tres", "res://data/gauntlets/frost.tres"]
 
 var tuning: CombatTuning
 ## id -> WeaponData

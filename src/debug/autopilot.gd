@@ -7,6 +7,7 @@ extends Node
 ##   --drive=walk      replace the player's input with a Scenarios timeline
 ##   --player_at=0,6   move the player to this x,z first (open ground)
 ##   --bot_at=2.2      place the bot this far in front of the player
+##   --player_gauntlet=frost / --bot_gauntlet=fire   starting gauntlets
 ##   --spectate        view the duel from the side instead of over the shoulder
 ##   --log             print every resolved hit
 ## Example: godot --path . --fixed-fps 60 -- --drive=walk --shots=1.5 --quit=2

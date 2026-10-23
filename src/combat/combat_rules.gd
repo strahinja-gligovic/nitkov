@@ -97,12 +97,27 @@ static func resolve_spell(defender: FighterState, hit: SpellHit, from_front: boo
 
 	result.outcome = HitResult.Outcome.HIT
 	result.damage = hit.damage
+	if hit.element == SpellData.Element.FIRE and hit.triggers_reactions and defender.chill_stacks > 0:
+		# Shatter: fire meeting frost bursts the Chill for big damage and a stagger
+		result.reaction = &"shatter"
+		result.damage += tuning.shatter_damage
+		defender.chill_stacks = 0
+		defender.chill_time = 0.0
+		defender.apply_stagger(tuning.shatter_stagger, &"shatter")
+	if hit.chill_stacks > 0:
+		add_chill(defender, hit.chill_stacks, tuning)
 	if hit.applies_burn:
 		apply_burn(defender, tuning)
 	if hit.slow_duration > 0.0:
 		apply_slow(defender, hit.slow_amount, hit.slow_duration)
 	result.killed = defender.take_damage(result.damage)
 	return result
+
+
+## Chill stacks up to the cap; every new stack refreshes the timer.
+static func add_chill(state: FighterState, stacks: int, tuning: CombatTuning) -> void:
+	state.chill_stacks = mini(state.chill_stacks + stacks, tuning.chill_max_stacks)
+	state.chill_time = tuning.chill_duration
 
 
 ## Burn refreshes rather than stacks.

@@ -42,6 +42,7 @@ func _on_hit_resolved(attacker: Node, defender: Node, result: HitResult, at: Vec
 		color = Color(0.85, 0.55, 1.0)
 		size = 2.2
 		trauma = 0.6
+		Vfx.shards(self, at, SpellData.element_color(SpellData.Element.FROST), 12, 2.2)
 	Vfx.impact(self, at, color, size)
 	if camera_rig and (attacker == focus or defender == focus):
 		camera_rig.add_trauma(trauma)
