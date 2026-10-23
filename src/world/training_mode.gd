@@ -1,13 +1,14 @@
 class_name TrainingMode
 extends Node
-## Runs the training arena: spawns the player (and later the bot), owns the
-## camera, and respawns the dead.
+## Runs the training arena: spawns the player and the bot, owns the camera,
+## and respawns the dead.
 
 const FIGHTER_SCENE := preload("res://src/combat/fighter.tscn")
 
 @export var arena: ArenaBuilder
 
 var player: Fighter
+var bot: Fighter
 var camera_rig: CameraRig
 var player_input: PlayerInput
 
@@ -23,8 +24,9 @@ func _ready() -> void:
 	player_input.camera_rig = camera_rig
 	add_child(player_input)
 
-	player = _spawn_fighter(0, "You")
+	player = _spawn_fighter(0, "You", &"knight")
 	player.controller = player_input
+	bot = _spawn_fighter(1, "Bot", &"barbarian")
 	camera_rig.follow(player)
 
 	var pilot := Autopilot.from_args()
@@ -32,12 +34,19 @@ func _ready() -> void:
 		add_child(pilot)
 		if pilot.args.has("drive"):
 			player.controller = ScriptedController.new(Scenarios.get_timeline(pilot.args["drive"]), camera_rig)
+		if pilot.args.has("bot_at"):
+			# put the bot this many metres in front of the player, facing them
+			var distance := String(pilot.args["bot_at"]).to_float()
+			bot.global_position = player.global_position + player.forward() * distance
+			bot.state.facing_yaw = wrapf(player.state.facing_yaw + PI, -PI, PI)
+			bot.rotation.y = bot.state.facing_yaw
 
 
-func _spawn_fighter(team: int, label: String) -> Fighter:
+func _spawn_fighter(team: int, label: String, skin: StringName) -> Fighter:
 	var fighter: Fighter = FIGHTER_SCENE.instantiate()
 	fighter.team = team
 	fighter.display_name = label
+	fighter.skin = skin
 	fighter.name = label.replace(" ", "")
 	fighter.transform = arena.spawn_transform(team)
 	add_child(fighter)

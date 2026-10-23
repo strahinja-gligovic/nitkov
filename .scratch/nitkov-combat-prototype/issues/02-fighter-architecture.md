@@ -1,6 +1,6 @@
 # 02 — Command/tick architecture and fighter
 
-Status: ready-for-agent
+Status: done
 Blocked by: 01
 
 ## What

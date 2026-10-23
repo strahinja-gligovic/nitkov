@@ -1,0 +1,98 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://src/combat/weapon_data.gd" id="1_weapon"]
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="2_attack"]
+
+[sub_resource type="Resource" id="Resource_light1"]
+script = ExtResource("2_attack")
+id = &"light_1"
+damage = 8.0
+stamina_cost = 12.0
+windup = 0.15
+active = 0.08
+recovery = 0.3
+chain_after = 0.17
+dodge_cancel_after = 0.1
+reach = 2.3
+arc = 110.0
+lunge_speed = 2.5
+flinch = 0.25
+hitstop = 0.06
+knockback = 2.0
+block_stamina_cost = 10.0
+parry_stagger = 1.0
+animation = &"1H_Melee_Attack_Slice_Diagonal"
+strike_time = 0.38
+
+[sub_resource type="Resource" id="Resource_light2"]
+script = ExtResource("2_attack")
+id = &"light_2"
+damage = 8.0
+stamina_cost = 12.0
+windup = 0.15
+active = 0.08
+recovery = 0.3
+chain_after = 0.17
+dodge_cancel_after = 0.1
+reach = 2.3
+arc = 120.0
+lunge_speed = 2.5
+flinch = 0.25
+hitstop = 0.06
+knockback = 2.0
+block_stamina_cost = 10.0
+parry_stagger = 1.0
+animation = &"1H_Melee_Attack_Slice_Horizontal"
+strike_time = 0.4
+
+[sub_resource type="Resource" id="Resource_light3"]
+script = ExtResource("2_attack")
+id = &"light_3"
+damage = 10.0
+stamina_cost = 12.0
+windup = 0.2
+active = 0.1
+recovery = 0.4
+chain_after = 0.25
+dodge_cancel_after = 0.15
+reach = 2.4
+arc = 90.0
+lunge_speed = 3.0
+flinch = 0.3
+hitstop = 0.08
+knockback = 3.0
+block_stamina_cost = 12.0
+parry_stagger = 1.0
+animation = &"1H_Melee_Attack_Chop"
+strike_time = 0.6
+
+[sub_resource type="Resource" id="Resource_heavy"]
+script = ExtResource("2_attack")
+id = &"heavy"
+damage = 22.0
+stamina_cost = 25.0
+windup = 0.7
+active = 0.12
+recovery = 0.5
+chain_after = 0.3
+dodge_cancel_after = 0.25
+reach = 2.6
+arc = 100.0
+lunge_speed = 3.5
+windup_turn_rate = 240.0
+flinch = 0.4
+hitstop = 0.11
+knockback = 4.5
+block_stamina_cost = 25.0
+parry_stagger = 1.5
+hyperarmor = true
+breaks_block = true
+animation = &"2H_Melee_Attack_Chop"
+strike_time = 0.75
+
+[resource]
+script = ExtResource("1_weapon")
+id = &"longsword"
+display_name = "Longsword"
+light_chain = Array[ExtResource("2_attack")]([SubResource("Resource_light1"), SubResource("Resource_light2"), SubResource("Resource_light3")])
+heavy = SubResource("Resource_heavy")
