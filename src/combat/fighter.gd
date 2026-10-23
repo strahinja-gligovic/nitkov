@@ -18,6 +18,9 @@ var controller: Object
 var tuning: CombatTuning
 var weapon: WeaponData
 
+## Enemy the current swing is homing on (recomputed every tick of the wind-up).
+var _magnet: Fighter
+
 
 func _ready() -> void:
 	add_to_group(&"fighters")
@@ -29,7 +32,12 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var cmd: InputCommand = controller.get_command(self) if controller else InputCommand.new()
+	var cmd: InputCommand
+	if controller:
+		cmd = controller.get_command(self)
+	else:
+		cmd = InputCommand.new()  # an uncontrolled fighter stands still, facing where it faces
+		cmd.aim_yaw = state.facing_yaw
 	simulate(cmd, delta)
 
 
@@ -71,8 +79,10 @@ func enemies() -> Array[Fighter]:
 
 # --- action state machine -------------------------------------------------
 
-func _advance_action(_cmd: InputCommand, delta: float) -> void:
+func _advance_action(cmd: InputCommand, delta: float) -> void:
 	match state.action:
+		FighterState.Action.ATTACK:
+			_advance_attack(cmd, delta)
 		FighterState.Action.FLINCH, FighterState.Action.STAGGER:
 			state.action_time += delta
 			if state.action_time >= state.action_duration:
@@ -82,8 +92,132 @@ func _advance_action(_cmd: InputCommand, delta: float) -> void:
 
 
 ## Starts a new action from IDLE, highest priority first.
-func _act(_cmd: InputCommand) -> void:
-	pass
+func _act(cmd: InputCommand) -> void:
+	if state.on_floor and _try_attack(cmd):
+		return
+
+
+# --- melee ------------------------------------------------------------------
+
+func _try_attack(cmd: InputCommand) -> bool:
+	if not state.can_spend():
+		return false
+	if state.consume_buffered(InputCommand.HEAVY):
+		_start_attack(weapon.heavy, -1, cmd)
+		return true
+	if state.consume_buffered(InputCommand.LIGHT):
+		var chaining := state.action == FighterState.Action.ATTACK or state.since_attack <= tuning.combo_reset
+		var index := (state.combo_index + 1) % weapon.light_chain.size() if chaining else 0
+		_start_attack(weapon.light_chain[index], index, cmd)
+		return true
+	return false
+
+
+func _start_attack(attack: AttackData, combo_index: int, cmd: InputCommand) -> void:
+	state.start_action(FighterState.Action.ATTACK)
+	state.attack = attack
+	state.combo_index = combo_index
+	state.spend_stamina(attack.stamina_cost, tuning)
+	_magnet = _find_magnet_target(cmd.aim_yaw)
+
+
+func _advance_attack(cmd: InputCommand, delta: float) -> void:
+	var attack := state.attack
+	var before := state.action_time
+	state.action_time += delta
+	var now := state.action_time
+	if now < attack.windup:
+		_magnet = _find_magnet_target(cmd.aim_yaw)
+	# sweep on every tick that overlaps the active window
+	if now >= attack.windup and before < attack.windup + attack.active:
+		_sweep(attack)
+		if state.action != FighterState.Action.ATTACK:
+			return  # parried mid-swing
+	var into_recovery := now - attack.windup - attack.active
+	if into_recovery >= attack.chain_after and _try_attack(cmd):
+		return
+	if now >= attack.duration():
+		state.end_action()
+
+
+## The enemy nearest the aim direction, within the magnet cone and range.
+func _find_magnet_target(aim_yaw: float) -> Fighter:
+	var aim := CombatRules.yaw_to_dir(aim_yaw)
+	var best: Fighter = null
+	var best_score := INF
+	for other in enemies():
+		var to := other.global_position - global_position
+		to.y = 0.0
+		var distance := to.length()
+		if distance < 0.01 or distance > tuning.magnet_range:
+			continue
+		var angle := aim.angle_to(to)
+		if angle > deg_to_rad(tuning.magnet_angle):
+			continue
+		var score := distance + angle * 3.0
+		if score < best_score:
+			best = other
+			best_score = score
+	return best
+
+
+func _sweep(attack: AttackData) -> void:
+	for target in enemies():
+		var id := target.get_instance_id()
+		if state.swing_hits.has(id) or not _in_swing(target, attack):
+			continue
+		state.swing_hits.append(id)
+		var from_front := CombatRules.is_in_front(target.state.facing_yaw, target.global_position,
+				global_position, tuning.block_arc)
+		var result := CombatRules.resolve_melee(state, target.state, attack, from_front, tuning)
+		_apply_melee_impact(target, attack, result)
+		if state.action != FighterState.Action.ATTACK:
+			return
+
+
+func _in_swing(target: Fighter, attack: AttackData) -> bool:
+	var to := target.global_position - global_position
+	if absf(to.y) > 1.6:
+		return false
+	to.y = 0.0
+	var distance := to.length()
+	if distance > attack.reach + RADIUS:
+		return false
+	if distance > RADIUS and forward().angle_to(to) > deg_to_rad(attack.arc * 0.5):
+		return false
+	var query := PhysicsRayQueryParameters3D.create(chest_position(), target.chest_position(), 1)
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## Knockback and hit-stop live in the simulation (they change positions and
+## timing); everything cosmetic listens to CombatEvents.
+func _apply_melee_impact(target: Fighter, attack: AttackData, result: HitResult) -> void:
+	var push := target.global_position - global_position
+	push.y = 0.0
+	push = push.normalized() if push.length() > 0.01 else forward()
+	match result.outcome:
+		HitResult.Outcome.HIT:
+			target.state.knockback = push * attack.knockback
+			_freeze(target, attack.hitstop)
+		HitResult.Outcome.BLOCKED:
+			target.state.knockback = push * attack.knockback * 0.5
+			_freeze(target, attack.hitstop * 0.7)
+		HitResult.Outcome.GUARD_BREAK:
+			target.state.knockback = push * attack.knockback * 1.2
+			_freeze(target, attack.hitstop * 1.2)
+		HitResult.Outcome.PARRIED:
+			state.knockback = -push * 2.5
+			_freeze(target, 0.12)
+	if result.outcome != HitResult.Outcome.IGNORED:
+		var contact := target.chest_position() - push * 0.35
+		CombatEvents.hit_resolved.emit(self, target, result, contact)
+	if result.killed:
+		CombatEvents.fighter_died.emit(target, self)
+
+
+func _freeze(target: Fighter, seconds: float) -> void:
+	state.hitstop = maxf(state.hitstop, seconds)
+	target.state.hitstop = maxf(target.state.hitstop, seconds)
 
 
 # --- facing and movement ----------------------------------------------------
@@ -92,6 +226,12 @@ func _update_facing(cmd: InputCommand, delta: float) -> void:
 	match state.action:
 		FighterState.Action.IDLE:
 			_turn_toward(cmd.aim_yaw, tuning.turn_rate, delta)
+		FighterState.Action.ATTACK:
+			if state.action_time < state.attack.windup:
+				var yaw := cmd.aim_yaw
+				if _magnet:
+					yaw = CombatRules.dir_to_yaw(_magnet.global_position - global_position)
+				_turn_toward(yaw, state.attack.windup_turn_rate, delta)
 
 
 func _turn_toward(yaw: float, rate_deg: float, delta: float) -> void:
@@ -107,9 +247,11 @@ func _move(cmd: InputCommand, delta: float) -> void:
 	match state.action:
 		FighterState.Action.IDLE:
 			target = _locomotion_velocity(cmd, delta)
-		FighterState.Action.FLINCH, FighterState.Action.STAGGER, FighterState.Action.DEAD:
-			target = state.knockback
-			state.knockback = state.knockback.move_toward(Vector3.ZERO, 12.0 * delta)
+		FighterState.Action.ATTACK:
+			target = _lunge_velocity()
+			accel = 80.0
+	target += state.knockback
+	state.knockback = state.knockback.move_toward(Vector3.ZERO, 14.0 * delta)
 	var planar := Vector3(velocity.x, 0.0, velocity.z).move_toward(target, accel * delta)
 	velocity.x = planar.x
 	velocity.z = planar.z
@@ -129,3 +271,20 @@ func _locomotion_velocity(cmd: InputCommand, delta: float) -> Vector3:
 	if state.blocking:
 		speed *= tuning.block_move_mult
 	return wish * speed
+
+
+## Swings carry you forward through wind-up and active frames, homing on the
+## magnet target and stopping short of it. Recovery is committed: no movement.
+func _lunge_velocity() -> Vector3:
+	var attack := state.attack
+	if state.action_time >= attack.windup + attack.active:
+		return Vector3.ZERO
+	var speed := attack.lunge_speed
+	if _magnet:
+		var gap := (_magnet.global_position - global_position) * Vector3(1, 0, 1)
+		var distance := gap.length()
+		if distance <= tuning.magnet_stop_distance:
+			speed = 0.0
+		elif distance > attack.reach:
+			speed *= 1.5
+	return forward() * speed

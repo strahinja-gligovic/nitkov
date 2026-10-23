@@ -1,6 +1,6 @@
 # 03 — Melee: light chain and heavy
 
-Status: ready-for-agent
+Status: done
 Blocked by: 02
 
 ## What

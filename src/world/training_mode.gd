@@ -29,6 +29,12 @@ func _ready() -> void:
 	bot = _spawn_fighter(1, "Bot", &"barbarian")
 	camera_rig.follow(player)
 
+	var feedback := CombatFeedback.new()
+	feedback.name = "CombatFeedback"
+	feedback.camera_rig = camera_rig
+	feedback.focus = player
+	add_child(feedback)
+
 	var pilot := Autopilot.from_args()
 	if pilot:
 		add_child(pilot)
@@ -40,6 +46,8 @@ func _ready() -> void:
 			bot.global_position = player.global_position + player.forward() * distance
 			bot.state.facing_yaw = wrapf(player.state.facing_yaw + PI, -PI, PI)
 			bot.rotation.y = bot.state.facing_yaw
+		if pilot.args.has("spectate"):
+			pilot.spectate(player, bot)
 
 
 func _spawn_fighter(team: int, label: String, skin: StringName) -> Fighter:

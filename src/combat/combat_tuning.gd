@@ -50,7 +50,7 @@ extends Resource
 @export var magnet_angle := 30.0
 @export var magnet_range := 4.5
 ## The lunge stops this far from a magnet target.
-@export var magnet_stop_distance := 1.3
+@export var magnet_stop_distance := 1.6
 @export var knockback_speed := 3.0
 ## Seconds a button press is remembered while you can't act yet.
 @export var input_buffer := 0.18

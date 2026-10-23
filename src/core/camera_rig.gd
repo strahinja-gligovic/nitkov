@@ -4,10 +4,11 @@ extends Node3D
 ## spring arm so walls never swallow the view, and trauma-based shake.
 ## Presentation only: the simulation sees it solely through InputCommands.
 
-@export var pivot_height := 1.55
-## Right-shoulder offset of the spring arm's origin.
-@export var shoulder := Vector3(1.1, 0.3, 0.0)
-@export var distance := 3.6
+@export var pivot_height := 1.8
+## Right-shoulder offset of the spring arm's origin. Generous, so an enemy
+## in sword range isn't hidden behind your own character.
+@export var shoulder := Vector3(1.25, 0.35, 0.0)
+@export var distance := 4.0
 @export var follow_sharpness := 20.0
 @export var min_pitch := -60.0
 @export var max_pitch := 55.0
@@ -17,7 +18,7 @@ extends Node3D
 
 var target: Node3D
 var yaw := 0.0
-var pitch := deg_to_rad(-6.0)
+var pitch := deg_to_rad(-12.0)
 ## 0..1; shake strength is trauma squared, so small hits stay subtle.
 var trauma := 0.0
 var camera: Camera3D
