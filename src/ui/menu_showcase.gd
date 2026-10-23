@@ -1,15 +1,27 @@
 class_name MenuShowcase
 extends SubViewportContainer
 ## The start menu's living backdrop: your fighter and the opponent on two
-## small stages under the arena's dusk sky. They're real Fighters on the same
-## team (so nothing gets hurt), which means picking a spell makes your
-## character actually cast it.
+## small stages under the arena's dusk sky, framed into the gap between the
+## menu's panels. They're real Fighters on the same team (so nothing gets
+## hurt), which means picking a spell makes your character actually cast it:
+## the cast animation, the charge in the gauntlet, the release, the flight
+## and the impact all play exactly as in a fight.
+##
+## The display fighters are the menu's own puppets, not a match: the showcase
+## refills their stamina and cooldowns before each preview and pops them back
+## onto their stages when they wander off.
 
 const FIGHTER_SCENE := preload("res://src/combat/fighter.tscn")
-const PLAYER_HOME := Vector3(-1.05, 0.0, 0.7)
-const OPPONENT_HOME := Vector3(1.45, 0.0, -0.7)
-const CAMERA_HOME := Vector3(0.05, 1.65, 6.2)
-const LOOK_AT := Vector3(-0.2, 1.0, 0.0)
+const PLAYER_HOME := Vector3(-0.95, 0.0, 0.55)
+const OPPONENT_HOME := Vector3(1.3, 0.0, -0.7)
+## The camera sits left of the stages so they land in the gap between the
+## loadout panels (right of the screen's centre).
+const CAMERA_HOME := Vector3(-1.08, 1.72, 6.7)
+const LOOK_AT := Vector3(-1.08, 1.0, 0.0)
+## Where each fighter sends its spells: back into the scene past the other
+## one, so the whole flight stays in view.
+const PLAYER_LANE := Vector3(0.42, 0.0, -1.0)
+const OPPONENT_LANE := Vector3(-0.5, 0.0, -1.0)
 
 var player: Fighter
 var opponent: Fighter
@@ -28,6 +40,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_viewport = SubViewport.new()
 	_viewport.own_world_3d = true
+	_viewport.audio_listener_enable_3d = true
 	_viewport.msaa_3d = Viewport.MSAA_2X
 	add_child(_viewport)
 	_world = Node3D.new()
@@ -50,19 +63,49 @@ func show_loadout(for_player: bool, loadout: Loadout) -> void:
 
 
 ## Make a display fighter perform: InputCommand.PRIMARY, SIGNATURE, RUNE, LIGHT...
+## Spells are aimed so their whole effect plays out in front of the camera.
 func perform(for_player: bool, button: int) -> void:
 	var actor := _player_actor if for_player else _opponent_actor
 	var me := player if for_player else opponent
-	var other := opponent if for_player else player
-	var across := (other.global_position - me.global_position).normalized()
-	var aim := other.chest_position() + across * 8.0  # fly past the other one
-	if button == InputCommand.SIGNATURE:
-		aim = other.global_position + across * 2.5  # walls rise behind the other one
-	actor.press(button, aim)
+	var lane := (PLAYER_LANE if for_player else OPPONENT_LANE).normalized()
+	_refill(me)
+	var spell: SpellData = null
+	if button == InputCommand.PRIMARY:
+		spell = me.primary
+	elif button == InputCommand.SIGNATURE:
+		spell = me.signature
+	actor.press(button, _aim_for(me, spell, lane))
+
+
+## Where to aim each kind of spell, given the fighter's lane.
+static func _aim_for(me: Fighter, spell: SpellData, lane: Vector3) -> Vector3:
+	var home := me.global_position
+	if spell is FlameWallSpell:
+		return home + lane * 5.5  # the wall rises across the lane, behind the other stage
+	if spell is LightningStrikeSpell:
+		return home + lane * 4.5
+	if spell is NovaSpell:
+		return me.chest_position() + lane * 4.0
+	if spell is ProjectileSpell and (spell as ProjectileSpell).burst_radius > 0.0:
+		return home + lane * 9.0  # into the floor out there, where it bursts in view
+	if spell is ProjectileSpell:
+		return me.cast_origin() + lane * 30.0  # level flight down the lane
+	return me.chest_position() + lane * 10.0
+
+
+## The display fighters are the menu's puppets: refill them so every pick can
+## be previewed straight away, whatever was cast a moment ago.
+static func _refill(fighter: Fighter) -> void:
+	var s := fighter.state
+	s.signature_cd = 0.0
+	s.rune_cd = 0.0
+	s.stamina = s.max_stamina
+	s.exhausted = 0.0
+	s.regen_delay = 0.0
 
 
 func _physics_process(_delta: float) -> void:
-	# Blink and leaps wander off the stage; once idle again, pop back home.
+	# Blink, leaps and wind bursts carry them off the stage; once idle again, pop back home.
 	for pair in [[player, PLAYER_HOME], [opponent, OPPONENT_HOME]]:
 		var fighter: Fighter = pair[0]
 		var home: Vector3 = pair[1]
@@ -77,7 +120,7 @@ func _physics_process(_delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	_camera.position = CAMERA_HOME + Vector3(sin(_time * 0.21) * 0.45, sin(_time * 0.13) * 0.08, 0.0)
+	_camera.position = CAMERA_HOME + Vector3(sin(_time * 0.21) * 0.35, sin(_time * 0.13) * 0.08, 0.0)
 	_camera.look_at(LOOK_AT)
 
 
@@ -113,8 +156,9 @@ func _build_stage() -> void:
 	_world.add_child(floor_body)
 	for stage in [[PLAYER_HOME, Color(0.1, 0.75, 0.72)], [OPPONENT_HOME, Color(1.0, 0.45, 0.15)]]:
 		_add_pedestal(stage[0], stage[1])
-	for i in 7:
-		var angle := -2.4 + i * 0.8
+	# a ring of glowing crystals in the distance, leaving the sky behind the stages clear
+	for i in 6:
+		var angle: float = [-2.4, -1.6, -0.95, 0.95, 1.6, 2.4][i]
 		var crystal := MeshInstance3D.new()
 		var prism := BoxMesh.new()
 		prism.size = Vector3(0.7, 2.2 + (i % 3) * 0.8, 0.7)

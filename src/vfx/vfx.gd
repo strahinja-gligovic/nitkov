@@ -7,6 +7,14 @@ const IMPACT := preload("res://src/vfx/impact_star.gdshader")
 const SLASH := preload("res://src/vfx/slash_arc.gdshader")
 
 static var _slash_meshes := {}
+static var _quad: QuadMesh
+
+## Shapes of the comic accents (see impact_star.gdshader).
+enum Accent { STAR, FLAME, GLINT, SPARK, SWIRL }
+## How bright the element accents are: under the bloom threshold's blow-out
+## (the classic star burns at 2.5), so at range each still reads in its own
+## element color instead of a white sparkle.
+const ACCENT_ENERGY := 1.35
 
 
 ## A sweeping slash crescent in the swing plane, synced to a strike.
@@ -63,14 +71,42 @@ static func _slash_mesh(from_deg: float, to_deg: float, radius: float) -> ArrayM
 
 ## A comic impact star that pops and fades at `at`.
 static func impact(parent: Node, at: Vector3, color: Color, size := 1.0, duration := 0.22, points := 8.0) -> void:
+	_accent_quad(parent, at, color, size, duration, points, Accent.STAR)
+
+
+## A small element-shaped comic accent where a spell struck someone. It sits
+## with the element's own impact instead of repeating it: a flame burst that
+## breaks apart (fire), a crystal glint (frost), a strobing jagged spark
+## (lightning), a gust swirl (wind); anything else gets the classic star.
+static func accent(parent: Node, at: Vector3, element: int, size := 0.6, duration := 0.2) -> void:
+	var color := SpellData.element_color(element as SpellData.Element)
+	match element:
+		SpellData.Element.FIRE:
+			_accent_quad(parent, at, color, size, duration, 7.0, Accent.FLAME, ACCENT_ENERGY)
+		SpellData.Element.FROST:
+			_accent_quad(parent, at, color, size, duration * 0.8, 4.0, Accent.GLINT, ACCENT_ENERGY)
+		SpellData.Element.LIGHTNING:
+			_accent_quad(parent, at, color, size, duration, 6.0, Accent.SPARK, ACCENT_ENERGY)
+		SpellData.Element.WIND:
+			_accent_quad(parent, at, color, size, duration * 1.2, 3.0, Accent.SWIRL, ACCENT_ENERGY)
+		_:
+			_accent_quad(parent, at, color, size, duration, 8.0, Accent.STAR)
+
+
+static func _accent_quad(parent: Node, at: Vector3, color: Color, size: float, duration: float, points: float,
+		shape: Accent, energy := 2.5) -> void:
 	var material := ShaderMaterial.new()
 	material.shader = IMPACT
 	material.set_shader_parameter(&"color", color)
 	material.set_shader_parameter(&"points", points)
 	material.set_shader_parameter(&"spin", randf() * TAU)
-	var quad := QuadMesh.new()
+	material.set_shader_parameter(&"shape", shape)
+	material.set_shader_parameter(&"energy", energy)
+	material.set_shader_parameter(&"seed", randf() * 100.0)
+	if _quad == null:
+		_quad = QuadMesh.new()
 	var star := MeshInstance3D.new()
-	star.mesh = quad
+	star.mesh = _quad
 	star.material_override = material
 	star.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	star.scale = Vector3.ONE * size

@@ -39,16 +39,34 @@ MELEE_MOVES = {
 }
 
 CAST_MOVES = {
-    # a left jab throws the bolt; on the move only the left arm and spine take it
+    # Firebolt: a left jab punches the bolt out (on the move only the left arm and spine take it)
     "cast_bolt": dict(clip="ual1/Punch_Jab", keys=[0.0, 0.133, 0.133, 0.2, 0.333, 0.867], strike=0.04, hold=0.0,
                       settle_fraction=0.3, left_arm_only=True, blend_in=0.05),
-    # an overhand throw from the gauntlet hand slams the wall down ahead
+    # Ice Spike: a dart thrown from beside the head, the arm whipping through and down across the body
+    "cast_dart": dict(clip="m2m_addon/Throw Object", mirror=True, keys=[0.40, 0.5, 0.517, 0.73, 0.80, 0.917],
+                      strike=0.065, hold=0.015, settle_fraction=0.35, left_arm_only=True, blend_in=0.06),
+    # Lightning Bolt: the hand drops to the hip, then the straight arm snaps up to point, and holds
+    "cast_point": dict(clip="ual1/Spell_Simple_Enter", chain_clip="ual1/Spell_Simple_Exit", chain_at=0.533,
+                       chain_from=0.0, chain_to=0.433, chain_blend=0.06, keys=[0.0, 0.05, 0.1, 0.4, 0.533, 0.9],
+                       strike=0.07, hold=0.0, settle_fraction=0.45, left_arm_only=True, blend_in=0.09),
+    # Wind Slash: dip and coil to the right, then rise into a backhand sweep that flings the crescent
+    "cast_sweep": dict(clip="ual2/Sword_Regular_A_Rec", mirror=True, keys=[0.0, 0.133, 0.2, 0.383, 0.483, 0.533],
+                       strike=0.06, hold=0.0, settle_fraction=0.35, blend_in=0.06, blend_out=0.2),
+    # Flame Wall: an overhand throw from the gauntlet hand slams the wall down ahead
     "cast_wall": dict(clip="ual2/OverhandThrow", mirror=True, keys=[0.0, 0.267, 0.267, 0.367, 0.45, 1.2], strike=0.09,
                       hold=0.0, settle_fraction=0.1, blend_in=0.08, blend_out=0.15),
-    # a two-fisted ground pound bursts frost around the caster
+    # Frost Nova: a two-fisted ground pound bursts frost around the caster
     "cast_nova": dict(clip="m2m_addon/Attack_Ground_Pound", keys=[0.0, 0.25, 0.3, 0.733, 0.783, 0.933], strike=0.1,
                       hold=0.0, settle_fraction=0.1, blend_in=0.06, blend_out=0.15),
+    # Lightning Strike: gather low, then the fist rises to the sky with a knee up (the bolt is called
+    # from the raised hand), and slams down at the ground ahead with a stomp
+    "cast_call": dict(clip="ual2/Sword_Heavy_Combo", mirror=True, keys=[2.05, 2.267, 2.283, 2.533, 2.667, 3.0],
+                      strike=0.3, hold=0.03, settle_fraction=0.35, blend_in=0.1, blend_out=0.25),
+    # Wind Spear: the arm winds far back while the sword arm aims, then hurls the spear; the back leg kicks up
+    "cast_javelin": dict(clip="m2m_addon/Throw Object", mirror=True, keys=[0.22, 0.483, 0.517, 0.70, 0.8, 1.0],
+                         strike=0.1, hold=0.08, settle_fraction=0.3, blend_in=0.1, blend_out=0.2),
 }
+
 
 AIR_MOVES = {
     "leap_start": dict(clip="ual2/NinjaJump_Start", keys=[0.033, 0.45], duration=0.59, blend_in=0.04),

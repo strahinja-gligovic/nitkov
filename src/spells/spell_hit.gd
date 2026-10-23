@@ -21,6 +21,8 @@ var stagger_kind := &""
 ## Shove: a horizontal velocity added to the target, and an upward pop (m/s).
 var push := Vector3.ZERO
 var launch := 0.0
+## Seconds the target freezes when this lands (hit-stop).
+var hitstop := 0.0
 ## Repeating area damage (e.g. Flame Wall ticks) gets quieter feedback.
 var periodic := false
 var source := &""

@@ -4,13 +4,25 @@ extends CanvasLayer
 ## status chips, ability slots with cooldowns, crosshair and hit-markers, the
 ## enemy's bar over their head, the respawn overlay and kill banners. Reads
 ## simulation state only.
+##
+## The ability slots show each spell's own icon (UiIcons). A cooling slot is
+## veiled by a sweep that unwinds clockwise from 12 o'clock with a bright
+## hand on its edge and a countdown; when it comes back it flashes. A slot
+## lights up white while you cast its spell, and greys out when you can't.
 
 const INK := Color(0.06, 0.03, 0.09)
 const HEALTH := Color(0.95, 0.27, 0.32)
 const TRAIL := Color(1.0, 0.95, 0.85)
 const STAMINA := Color(1.0, 0.84, 0.3)
 const EXHAUSTED := Color(1.0, 0.3, 0.22)
-const SLOT := Color(0.15, 0.1, 0.2, 0.92)
+const SLOT := Color(0.13, 0.08, 0.18, 0.94)
+const VEIL := Color(0.03, 0.01, 0.06, 0.66)
+const SPELL_SLOT := 76.0
+const RUNE_SLOT := 62.0
+const SLOT_GAP := 30.0
+const SLOT_RADIUS := 8
+## Seconds a slot flashes when it's ready again.
+const READY_FLASH := 0.45
 
 var player: Fighter
 var bot: Fighter
@@ -20,6 +32,7 @@ var camera: Camera3D
 
 var _canvas: Control
 var _font: Font
+var _bold: Font
 var _hp_trail := 100.0
 var _bot_trail := 100.0
 var _hit_marker := 0.0
@@ -28,11 +41,22 @@ var _banner := ""
 var _banner_time := 0.0
 var _controls: Control
 var _time := 0.0
+## Per slot (primary, signature, rune): usable last frame, and the ready flash left.
+var _was_ready: Array[bool] = [true, true, true]
+var _ready_flash: Array[float] = [0.0, 0.0, 0.0]
+## "<text>@<width>" -> [lines, font size] for slot names that must fit their slot.
+var _name_fits := {}
+var _fill_box := StyleBoxFlat.new()
+var _frame_box := StyleBoxFlat.new()
 
 
 func _ready() -> void:
 	layer = 5
 	_font = ThemeDB.fallback_font
+	_bold = UiTheme.bold_font()
+	_fill_box.anti_aliasing = true
+	_frame_box.anti_aliasing = true
+	_frame_box.draw_center = false
 	_canvas = Control.new()
 	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -55,6 +79,12 @@ func _process(delta: float) -> void:
 	_banner_time = maxf(_banner_time - delta, 0.0)
 	_hp_trail = _chase(_hp_trail, player.state.hp, delta)
 	_bot_trail = _chase(_bot_trail, bot.state.hp, delta)
+	for i in 3:
+		var ready := _slot_ready(i)
+		if ready and not _was_ready[i]:
+			_ready_flash[i] = READY_FLASH
+		_was_ready[i] = ready
+		_ready_flash[i] = maxf(_ready_flash[i] - delta, 0.0)
 	_canvas.queue_redraw()
 
 
@@ -76,13 +106,39 @@ func _on_died(fighter: Node, _killer: Node) -> void:
 	_banner_time = 1.8
 
 
+# --- slot state -------------------------------------------------------------------
+
+## Seconds of cooldown left on slot `i` (0 primary, 1 signature, 2 rune).
+func _slot_remaining(i: int) -> float:
+	match i:
+		1:
+			return player.state.signature_cd
+		2:
+			return player.state.rune_cd
+	return 0.0
+
+
+## Whether pressing slot `i` would work right now (cooldown aside, for the primary).
+func _slot_usable(i: int) -> bool:
+	var s := player.state
+	if s.is_dead():
+		return false
+	if i == 0:
+		return s.can_spend()
+	return s.exhausted <= 0.0
+
+
+func _slot_ready(i: int) -> bool:
+	return _slot_usable(i) and _slot_remaining(i) <= 0.0
+
+
 # --- drawing ----------------------------------------------------------------------
 
 func _draw_hud() -> void:
 	var size := _canvas.size
 	_draw_crosshair(size * 0.5)
 	_draw_player_panel(Vector2(36, size.y - 118))
-	_draw_slots(Vector2(size.x * 0.5, size.y - 64))
+	_draw_slots(Vector2(size.x * 0.5, size.y - 46))
 	_draw_enemy_bar()
 	_draw_overlays(size)
 	_text(Vector2(size.x - 24, 32), "H controls · Tab loadout · F1-F4 debug", 15, Color(1, 1, 1, 0.65), HORIZONTAL_ALIGNMENT_RIGHT)
@@ -104,7 +160,7 @@ func _draw_crosshair(center: Vector2) -> void:
 func _draw_player_panel(at: Vector2) -> void:
 	var s := player.state
 	_bar(Rect2(at, Vector2(380, 28)), s.hp / s.max_hp, _hp_trail / s.max_hp, HEALTH)
-	_text(at + Vector2(12, 21), "%d / %d" % [ceili(s.hp), roundi(s.max_hp)], 18, Color.WHITE)
+	_text(at + Vector2(12, 21), "%d / %d" % [ceili(s.hp), roundi(s.max_hp)], 18, Color.WHITE, HORIZONTAL_ALIGNMENT_LEFT, true, _bold)
 	var stamina_color := STAMINA
 	if s.exhausted > 0.0:
 		stamina_color = EXHAUSTED.lerp(Color.WHITE, 0.35 * (0.5 + 0.5 * sin(_time * 18.0)))
@@ -120,6 +176,8 @@ func _draw_player_panel(at: Vector2) -> void:
 		chips.append(["CHILL x%d" % s.chill_stacks, SpellData.element_color(SpellData.Element.FROST)])
 	if CombatRules.move_speed_mult(s, player.tuning) < 1.0:
 		chips.append(["SLOWED", Color(0.6, 0.75, 1.0)])
+	if s.action == FighterState.Action.STAGGER and s.stagger_kind == &"shock":
+		chips.append(["SHOCKED", SpellData.element_color(SpellData.Element.LIGHTNING)])
 	if s.heal_time > 0.0:
 		chips.append(["HEALING", HealthOrb.COLOR])
 	var x := at.x
@@ -127,61 +185,143 @@ func _draw_player_panel(at: Vector2) -> void:
 		x += _chip(Vector2(x, at.y + 62), chip[0], chip[1]) + 8.0
 
 
-func _draw_slots(center: Vector2) -> void:
+## Primary, signature and rune slots side by side, bottoms aligned on `base`.
+func _draw_slots(base: Vector2) -> void:
 	var s := player.state
 	var pad := player_input != null and player_input.using_gamepad
-	var slots := [
-		[player.primary.display_name, "LT" if pad else "E", 0.0, 0.0, "%d" % roundi(player.primary.stamina_cost), s.can_spend()],
-		[player.signature.display_name, "Y" if pad else "Q", s.signature_cd, player.signature.cooldown, "", true],
-		[player.rune.display_name, "B" if pad else "R", s.rune_cd, player.rune.cooldown, "", s.exhausted <= 0.0],
-	]
-	var elements := [player.primary.element, player.signature.element]
-	var width := 76.0
-	var gap := 14.0
-	var left := center.x - (width * 3 + gap * 2) * 0.5
-	for i in slots.size():
-		var slot: Array = slots[i]
-		var rect := Rect2(Vector2(left + i * (width + gap), center.y - width * 0.5 - 6), Vector2(width, width))
-		_canvas.draw_rect(rect.grow(3), INK)
-		_canvas.draw_rect(rect, SLOT)
-		var icon_color: Color = SpellData.element_color(elements[i]) if i < 2 else Color(0.82, 0.68, 1.0)
-		if not slot[5]:
-			icon_color = icon_color.darkened(0.6)
-		_draw_icon(rect.get_center(), i, icon_color, elements[i] if i < 2 else SpellData.Element.NONE)
-		var remaining: float = slot[2]
-		if remaining > 0.0:
-			_pie(rect.get_center(), width * 0.5, remaining / maxf(slot[3], 0.01), Color(0, 0, 0, 0.62))
-			_text(rect.get_center() + Vector2(0, 8), "%.0f" % ceilf(remaining), 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
-		if slot[4] != "":
-			_text(rect.position + Vector2(width - 6, 18), slot[4], 14, STAMINA, HORIZONTAL_ALIGNMENT_RIGHT)
-		_key_hint(Vector2(rect.get_center().x, rect.end.y + 4), slot[1])
-		_text(Vector2(rect.get_center().x, rect.position.y - 8), slot[0], 14, Color(1, 1, 1, 0.85), HORIZONTAL_ALIGNMENT_CENTER)
+	var widths := [SPELL_SLOT, SPELL_SLOT, RUNE_SLOT]
+	var left := base.x - (SPELL_SLOT * 2.0 + RUNE_SLOT + SLOT_GAP * 2.0) * 0.5
+	var casting: SpellData = s.spell if s.action == FighterState.Action.CAST and not s.spell_released else null
+	for i in 3:
+		var side: float = widths[i]
+		var rect := Rect2(Vector2(left, base.y - side), Vector2(side, side))
+		left += side + SLOT_GAP
+		match i:
+			0:
+				var cost := player.primary.stamina_cost
+				_draw_slot(i, rect, player.primary.id, player.primary.display_name, "LT" if pad else "E",
+						0.0, 0.0, casting == player.primary, "%d" % roundi(cost) if cost > 0.0 else "", s.stamina < cost)
+			1:
+				_draw_slot(i, rect, player.signature.id, player.signature.display_name, "Y" if pad else "Q",
+						s.signature_cd, player.signature.cooldown, casting == player.signature)
+			2:
+				_draw_slot(i, rect, player.rune.id, player.rune.display_name, "B" if pad else "R",
+						s.rune_cd, player.rune.cooldown, false)
 
 
-func _draw_icon(c: Vector2, slot: int, color: Color, element: SpellData.Element) -> void:
-	if slot == 2:
-		if player.rune is LeapRune:
-			for k in 2:
-				var y := c.y + 8.0 - k * 14.0
-				_canvas.draw_polyline([Vector2(c.x - 14, y + 8), Vector2(c.x, y - 6), Vector2(c.x + 14, y + 8)], color, 5.0)
-		else:
-			for k in 2:
-				var x := c.x - 8.0 + k * 14.0
-				_canvas.draw_polyline([Vector2(x - 8, c.y - 14), Vector2(x + 6, c.y), Vector2(x - 8, c.y + 14)], color, 5.0)
-		return
-	if element == SpellData.Element.FROST:
-		for k in 3:
-			var dir := Vector2.from_angle(k * PI / 3.0) * (20.0 if slot == 0 else 24.0)
-			_canvas.draw_line(c - dir, c + dir, color, 4.0)
-		if slot == 1:
-			_canvas.draw_arc(c, 26.0, 0, TAU, 32, color, 3.0)
-	else:
-		var flame := PackedVector2Array([c + Vector2(0, -24), c + Vector2(14, 6), c + Vector2(8, 18),
-				c + Vector2(-8, 18), c + Vector2(-14, 6)])
-		_canvas.draw_colored_polygon(flame, color)
-		_canvas.draw_circle(c + Vector2(0, 8), 7.0, Color(1, 0.95, 0.7))
-		if slot == 1:
-			_canvas.draw_line(c + Vector2(-26, 24), c + Vector2(26, 24), color, 5.0)
+func _draw_slot(i: int, rect: Rect2, id: StringName, title: String, key: String, remaining: float, total: float,
+		casting: bool, cost := "", cost_short := false) -> void:
+	var accent := UiIcons.accent_of(id)
+	var usable := _slot_usable(i)
+	var ready := usable and remaining <= 0.0
+	var flash := _ready_flash[i] / READY_FLASH
+	var center := rect.get_center()
+	_round_rect(rect.grow(3.0), INK, SLOT_RADIUS + 3)
+	_round_rect(rect, SLOT.lerp(accent.darkened(0.72), 0.3) if ready else SLOT, SLOT_RADIUS)
+	if ready:
+		_canvas.draw_circle(center, rect.size.x * 0.38, Color(accent, 0.13), true, -1.0, true)
+	# a cooling slot is darkened by its veil alone, so the swept part shows the icon lit
+	var dim := 0.0 if usable else 0.8
+	var zoom := 1.0 + 0.14 * flash * flash + (0.06 if casting else 0.0)
+	UiIcons.draw(_canvas, id, center, rect.size.x - 12.0, dim, zoom)
+	if remaining > 0.0 and total > 0.0:
+		_sweep(rect, clampf(remaining / total, 0.0, 1.0), accent)
+	var frame := accent if ready else accent.darkened(0.55)
+	if casting:
+		frame = Color.WHITE
+	_round_frame(rect, frame, 3, SLOT_RADIUS)
+	if remaining > 0.0:
+		var count := "%.1f" % remaining if remaining < 1.0 else "%d" % ceili(remaining)
+		_text(center + Vector2(0, 10), count, 28 if rect.size.x > 70.0 else 24, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER, true, _bold)
+	if flash > 0.0:
+		_round_rect(rect, Color(1, 1, 1, 0.6 * flash * flash), SLOT_RADIUS)
+		_round_frame(rect.grow(3.0 + 12.0 * (1.0 - flash)), Color(accent.lightened(0.5), flash), 3, SLOT_RADIUS + 4)
+	if cost != "":
+		_cost_badge(Vector2(rect.end.x - 2.0, rect.position.y + 2.0), cost, cost_short or not usable)
+	_key_hint(Vector2(center.x, rect.end.y + 7.0), key)
+	_slot_name(title, center.x, rect.position.y - 14.0, rect.size.x + SLOT_GAP - 8.0, ready)
+
+
+## The cooldown sweep: a dark veil over the part of the slot still cooling,
+## unwinding clockwise from 12 o'clock, with a bright hand on its edge.
+func _sweep(rect: Rect2, left: float, accent: Color) -> void:
+	var center := rect.get_center()
+	var start := -PI * 0.5 + TAU * (1.0 - left)
+	var half := rect.size * 0.5
+	var veil := PackedVector2Array([center, center + _to_edge(half, start)])
+	# the square's corners clockwise from top-right, then back to 12 o'clock
+	for corner in [atan2(-half.y, half.x), atan2(half.y, half.x), atan2(half.y, -half.x), atan2(-half.y, -half.x) + TAU]:
+		if corner > start:
+			veil.append(center + _to_edge(half, corner))
+	veil.append(center + Vector2(0.0, -half.y))
+	for piece: PackedVector2Array in Geometry2D.intersect_polygons(veil, _rounded(rect, SLOT_RADIUS)):
+		_canvas.draw_colored_polygon(piece, VEIL)
+	var tip := center + _to_edge(half, start)
+	_canvas.draw_line(center, tip, INK, 5.0, true)
+	_canvas.draw_line(center, tip, accent.lightened(0.6), 2.5, true)
+
+
+## From a rect's centre to its edge along `angle`.
+static func _to_edge(half: Vector2, angle: float) -> Vector2:
+	var dir := Vector2.from_angle(angle)
+	var reach := INF
+	if absf(dir.x) > 0.0001:
+		reach = half.x / absf(dir.x)
+	if absf(dir.y) > 0.0001:
+		reach = minf(reach, half.y / absf(dir.y))
+	return dir * reach
+
+
+## A rounded rect as a polygon (to clip the cooldown veil to the slot's shape).
+static func _rounded(rect: Rect2, radius: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var corners := [rect.position + Vector2(rect.size.x - radius, radius), rect.end - Vector2(radius, radius),
+			rect.position + Vector2(radius, rect.size.y - radius), rect.position + Vector2(radius, radius)]
+	for k in 4:
+		for step in 4:
+			out.append(corners[k] + Vector2.from_angle(-PI * 0.5 + PI * 0.5 * k + PI / 6.0 * step) * radius)
+	return out
+
+
+## The stamina a primary costs, as a sticker on the slot's corner (red when
+## casting it now would overdraw you).
+func _cost_badge(corner: Vector2, text: String, short: bool) -> void:
+	var width := maxf(_bold.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 12.0, 26.0)
+	var rect := Rect2(corner - Vector2(width * 0.75, 10.0), Vector2(width, 20.0))
+	_round_rect(rect.grow(2.0), INK, 8)
+	_round_rect(rect, EXHAUSTED if short else STAMINA, 6)
+	_text(rect.get_center() + Vector2(0, 5), text, 14, INK, HORIZONTAL_ALIGNMENT_CENTER, false, _bold)
+
+
+## A slot's name above it, shrunk (then split onto two lines) to fit its width.
+func _slot_name(text: String, x: float, bottom: float, width: float, ready: bool) -> void:
+	var key := "%s@%d" % [text, roundi(width)]
+	if not _name_fits.has(key):
+		_name_fits[key] = _fit_name(text, width)
+	var fit: Array = _name_fits[key]
+	var lines: PackedStringArray = fit[0]
+	var size: int = fit[1]
+	var color := Color(1, 1, 1, 0.92) if ready else Color(0.8, 0.76, 0.84, 0.85)
+	for k in lines.size():
+		_text(Vector2(x, bottom - (lines.size() - 1 - k) * (size + 2)), lines[k], size, color, HORIZONTAL_ALIGNMENT_CENTER)
+
+
+func _fit_name(text: String, width: float) -> Array:
+	for size in [15, 14, 13]:
+		if _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x <= width:
+			return [PackedStringArray([text]), size]
+	var words := text.split(" ")
+	if words.size() < 2:
+		return [PackedStringArray([text]), 13]
+	# break at the space that leaves the two lines most even
+	var best := 1
+	var best_gap := INF
+	for cut in range(1, words.size()):
+		var gap := absf(" ".join(words.slice(0, cut)).length() - " ".join(words.slice(cut)).length())
+		if gap < best_gap:
+			best_gap = gap
+			best = cut
+	return [PackedStringArray([" ".join(words.slice(0, best)), " ".join(words.slice(best))]), 14]
 
 
 func _draw_enemy_bar() -> void:
@@ -198,25 +338,41 @@ func _draw_enemy_bar() -> void:
 	if bot_brain and bot.controller == bot_brain:
 		label += " · %s" % BotBrain.MODE_NAMES[bot_brain.mode]
 	_text(point + Vector2(0, -8), label, 15, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
-	var pips := ""
-	if bot.state.burn_time > 0.0:
-		pips += "BURN  "
-	if bot.state.chill_stacks > 0:
-		pips += "CHILL x%d" % bot.state.chill_stacks
-	if pips != "":
-		_text(point + Vector2(0, -28), pips.strip_edges(), 13, Color(0.75, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
+	var pips: Array = []
+	var s := bot.state
+	if s.burn_time > 0.0:
+		pips.append(["BURN", SpellData.element_color(SpellData.Element.FIRE)])
+	if s.chill_stacks > 0:
+		pips.append(["CHILL x%d" % s.chill_stacks, SpellData.element_color(SpellData.Element.FROST)])
+	if s.action == FighterState.Action.STAGGER and s.stagger_kind == &"shock":
+		pips.append(["SHOCKED", SpellData.element_color(SpellData.Element.LIGHTNING)])
+	if pips.is_empty():
+		return
+	var widths: Array[float] = []
+	var total := -6.0
+	for pip: Array in pips:
+		widths.append(_font.get_string_size(pip[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 12.0)
+		total += widths[-1] + 6.0
+	var x := point.x - total * 0.5
+	for k in pips.size():
+		var pip: Array = pips[k]
+		var chip := Rect2(Vector2(x, point.y - 46), Vector2(widths[k], 17))
+		_round_rect(chip.grow(2.0), INK, 5)
+		_round_rect(chip, (pip[1] as Color).darkened(0.55), 4)
+		_text(Vector2(chip.get_center().x, chip.end.y - 4), pip[0], 12, (pip[1] as Color).lightened(0.35), HORIZONTAL_ALIGNMENT_CENTER, false)
+		x += widths[k] + 6.0
 
 
 func _draw_overlays(size: Vector2) -> void:
 	if player.state.is_dead():
 		_canvas.draw_rect(Rect2(Vector2.ZERO, size), Color(0.08, 0.02, 0.06, 0.45))
 		var left := maxf(player.tuning.respawn_time - player.state.dead_time, 0.0)
-		_text(size * 0.5 + Vector2(0, -20), "DOWN!", 64, EXHAUSTED, HORIZONTAL_ALIGNMENT_CENTER)
+		_text(size * 0.5 + Vector2(0, -20), "DOWN!", 64, EXHAUSTED, HORIZONTAL_ALIGNMENT_CENTER, true, _bold)
 		_text(size * 0.5 + Vector2(0, 30), "back in %.1f" % left, 26, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
 	if _banner_time > 0.0:
 		var pop := 1.0 + 0.25 * maxf(_banner_time - 1.6, 0.0) / 0.2
 		var color := Color(1.0, 0.85, 0.3, minf(_banner_time / 0.4, 1.0))
-		_text(Vector2(size.x * 0.5, 150), _banner, int(52 * pop), color, HORIZONTAL_ALIGNMENT_CENTER)
+		_text(Vector2(size.x * 0.5, 150), _banner, int(52 * pop), color, HORIZONTAL_ALIGNMENT_CENTER, true, _bold)
 
 
 # --- primitives -------------------------------------------------------------------
@@ -241,32 +397,35 @@ func _chip(at: Vector2, label: String, color: Color) -> float:
 
 
 func _key_hint(top_center: Vector2, key: String) -> void:
-	var width := maxf(_font.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 12.0, 24.0)
+	var width := maxf(_bold.get_string_size(key, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 12.0, 24.0)
 	var rect := Rect2(top_center - Vector2(width * 0.5, 0), Vector2(width, 20))
-	_canvas.draw_rect(rect, Color(1, 1, 1, 0.9))
-	_text(rect.get_center() + Vector2(0, 5), key, 14, INK, HORIZONTAL_ALIGNMENT_CENTER, false)
+	_round_rect(rect.grow(2.0), INK, 6)
+	_round_rect(rect, Color(1, 1, 1, 0.92), 4)
+	_text(rect.get_center() + Vector2(0, 5), key, 14, INK, HORIZONTAL_ALIGNMENT_CENTER, false, _bold)
 
 
-## A pie slice from 12 o'clock covering `fraction` of the circle (cooldowns).
-func _pie(center: Vector2, radius: float, fraction: float, color: Color) -> void:
-	var points := PackedVector2Array([center])
-	var steps := 32
-	for i in steps + 1:
-		var angle := -PI * 0.5 + TAU * fraction * float(i) / steps
-		points.append(center + Vector2.from_angle(angle) * radius)
-	if points.size() >= 3:
-		_canvas.draw_colored_polygon(points, color)
+func _round_rect(rect: Rect2, color: Color, radius: int) -> void:
+	_fill_box.bg_color = color
+	_fill_box.set_corner_radius_all(radius)
+	_canvas.draw_style_box(_fill_box, rect)
 
 
-func _text(at: Vector2, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_LEFT, outline := true) -> void:
-	var width := -1.0
+func _round_frame(rect: Rect2, color: Color, width: int, radius: int) -> void:
+	_frame_box.border_color = color
+	_frame_box.set_border_width_all(width)
+	_frame_box.set_corner_radius_all(radius)
+	_canvas.draw_style_box(_frame_box, rect)
+
+
+func _text(at: Vector2, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_LEFT, outline := true, font: Font = null) -> void:
+	var face := font if font else _font
 	var origin := at
 	if align != HORIZONTAL_ALIGNMENT_LEFT:
-		width = _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		var width := face.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 		origin.x -= width * (0.5 if align == HORIZONTAL_ALIGNMENT_CENTER else 1.0)
 	if outline:
-		_canvas.draw_string_outline(_font, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, maxi(size / 5, 3), INK)
-	_canvas.draw_string(_font, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+		_canvas.draw_string_outline(face, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, maxi(size / 5, 3), INK)
+	_canvas.draw_string(face, origin, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 
 func _build_controls_panel() -> Control:

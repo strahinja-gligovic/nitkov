@@ -15,6 +15,8 @@ extends SpellData
 @export var max_range := 60.0
 
 @export_group("Impact")
+## Seconds the target freezes on a direct hit (hit-stop).
+@export var hitstop := 0.0
 @export var splash_radius := 0.0
 @export var splash_damage := 0.0
 @export var applies_burn := false
@@ -33,6 +35,8 @@ extends SpellData
 ## Shove at the centre (m/s); half that at the edge.
 @export var burst_push := 0.0
 @export var burst_launch := 0.0
+## Seconds enemies caught in the burst freeze (hit-stop).
+@export var burst_hitstop := 0.0
 ## The caster and allies get shoved too (no damage): blast yourself away.
 @export var burst_moves_allies := true
 ## Enemy projectiles inside the burst are blown away from it.
@@ -43,6 +47,14 @@ func release(caster: Fighter, target: Vector3) -> void:
 	var origin := caster.cast_origin()
 	var aim := target - origin
 	aim = aim.normalized() if aim.length() > 0.5 else caster.forward()
+	# Pressed against a wall or pillar, the hand is inside it: the spell
+	# strikes that surface instead of starting out on its far side.
+	var body := Vector3(caster.global_position.x, origin.y, caster.global_position.z)
+	var blocked := caster.get_world_3d().direct_space_state.intersect_ray(
+			PhysicsRayQueryParameters3D.create(body, origin, 1))
+	if blocked:
+		origin = blocked.position + blocked.normal * 0.05
+		aim = -blocked.normal
 	for i in count:
 		var offset := (float(i) - (count - 1) * 0.5) * deg_to_rad(spread)
 		var projectile := Projectile.new()
@@ -62,4 +74,5 @@ func make_hit(direct: bool, travel: Vector3) -> SpellHit:
 		var flat := Vector3(travel.x, 0.0, travel.z)
 		hit.push = flat.normalized() * push if flat.length() > 0.001 else Vector3.ZERO
 		hit.launch = launch
+		hit.hitstop = hitstop
 	return hit

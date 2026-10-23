@@ -19,20 +19,21 @@ const ORB_SPOTS: Array[Vector3] = [Vector3(17.5, 3.0, -3.0), Vector3(-17.0, 0.0,
 # [centre, size, material, rotation in degrees (optional)]
 const BLOCKS := [
 	[Vector3(0, -0.5, 0), Vector3(46, 1, 46), &"floor"],
-	[Vector3(0, 3, -22.5), Vector3(46, 6, 1), &"wall"],
-	[Vector3(0, 3, 22.5), Vector3(46, 6, 1), &"wall"],
-	[Vector3(-22.5, 3, 0), Vector3(1, 6, 44), &"wall"],
-	[Vector3(22.5, 3, 0), Vector3(1, 6, 44), &"wall"],
+	# 9 m tall: a Leap from the ledge peaks near 6.8 m
+	[Vector3(0, 4.5, -22.5), Vector3(46, 9, 1), &"wall"],
+	[Vector3(0, 4.5, 22.5), Vector3(46, 9, 1), &"wall"],
+	[Vector3(-22.5, 4.5, 0), Vector3(1, 9, 44), &"wall"],
+	[Vector3(22.5, 4.5, 0), Vector3(1, 9, 44), &"wall"],
 	# cover pillars
 	[Vector3(-7, 2.5, -6), Vector3(1.6, 5, 1.6), &"pillar"],
 	[Vector3(7, 2.5, 6), Vector3(1.6, 5, 1.6), &"pillar"],
 	[Vector3(-7, 2.5, 6), Vector3(1.6, 5, 1.6), &"pillar"],
 	[Vector3(6, 2.5, -7), Vector3(1.6, 5, 1.6), &"pillar"],
-	# waist-high walls: block bolts, not blades
-	[Vector3(0, 0.6, 12), Vector3(6, 1.2, 0.8), &"low_wall"],
-	[Vector3(0, 0.6, -12), Vector3(6, 1.2, 0.8), &"low_wall"],
-	[Vector3(-14, 0.6, -7), Vector3(0.8, 1.2, 5), &"low_wall"],
-	[Vector3(-14, 0.6, 7), Vector3(0.8, 1.2, 5), &"low_wall"],
+	# chest-high walls: they stop bolts (cast from 1.3 m) but you can swing over them
+	[Vector3(0, 0.75, 12), Vector3(6, 1.5, 0.8), &"low_wall"],
+	[Vector3(0, 0.75, -12), Vector3(6, 1.5, 0.8), &"low_wall"],
+	[Vector3(-14, 0.75, -7), Vector3(0.8, 1.5, 5), &"low_wall"],
+	[Vector3(-14, 0.75, 7), Vector3(0.8, 1.5, 5), &"low_wall"],
 	# the ledge (top at y = 3) and its ramp, rising north along the east wall
 	[Vector3(17.5, 1.5, -1), Vector3(9, 3, 12), &"ledge"],
 	[Vector3(19.5, 1.266, 8.912), Vector3(4, 0.5, 8.544), &"ramp", Vector3(20.556, 0, 0)],

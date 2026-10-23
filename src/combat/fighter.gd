@@ -391,6 +391,8 @@ func _apply_melee_impact(target: Fighter, attack: AttackData, result: HitResult)
 		HitResult.Outcome.PARRIED:
 			state.knockback = -push * 2.5
 			_freeze(target, 0.12)
+	target.state.shoved = false  # a blade's knockback replaces any shove
+	state.shoved = false
 	report_hit(self, target, result, target.chest_position() - push * 0.35)
 
 
@@ -434,13 +436,16 @@ func _move(cmd: InputCommand, delta: float) -> void:
 		FighterState.Action.DASH:
 			target = state.dash_dir * _dash_speed()
 			accel = 1000.0
-	if state.leaping and state.action in [FighterState.Action.IDLE, FighterState.Action.CAST]:
+	# (not while shoved: the leap keeps your momentum, and the shove would ride on top of it every tick)
+	if state.leaping and state.action in [FighterState.Action.IDLE, FighterState.Action.CAST] and state.knockback == Vector3.ZERO:
 		target = _air_velocity(cmd)
 		accel = tuning.air_accel
 	target += state.knockback
-	if state.knockback.length() > 3.0:
+	if state.shoved and state.knockback.length() > 3.0:
 		accel = maxf(accel, 200.0)  # a real shove moves you now, not after a run-up
 	state.knockback = state.knockback.move_toward(Vector3.ZERO, 14.0 * delta)
+	if state.knockback == Vector3.ZERO:
+		state.shoved = false
 	if state.launch > 0.0:
 		velocity.y = maxf(velocity.y, state.launch)
 		state.launch = 0.0

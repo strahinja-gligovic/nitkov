@@ -34,9 +34,12 @@ func contains(point: Vector3, margin := 0.0) -> bool:
 	return not _struck and _inside(point, margin)
 
 
+## Inside the circle, standing on the ground it marks (or up to 3 m above it,
+## mid-jump): someone on the floor beside a ledge isn't under a strike that
+## lands on top of it. The slack below allows for the ramp's slope.
 func _inside(point: Vector3, margin: float) -> bool:
 	var offset := point - _centre
-	return Vector2(offset.x, offset.z).length() <= spell.radius + margin and absf(offset.y) < 3.0
+	return Vector2(offset.x, offset.z).length() <= spell.radius + margin and offset.y > -1.2 and offset.y < 3.0
 
 
 ## The short way out for someone standing at `point`.
@@ -58,6 +61,8 @@ func _strike() -> void:
 	_struck = true
 	if is_instance_valid(_warning):
 		_warning.queue_free()
+	if not is_instance_valid(caster):
+		caster = null  # they left the match: it still strikes, uncredited
 	for node in get_tree().get_nodes_in_group(&"fighters"):
 		var fighter := node as Fighter
 		if fighter.team == team or fighter.state.is_dead() or not _inside(fighter.global_position, Fighter.RADIUS):
@@ -70,6 +75,7 @@ func _strike() -> void:
 		hit.stagger = spell.stagger
 		hit.stagger_kind = &"shock"
 		hit.launch = spell.launch
+		hit.hitstop = spell.hitstop
 		var result := CombatRules.resolve_spell(fighter.state, hit, false, _tuning)
 		Fighter.report_hit(caster, fighter, result, fighter.chest_position())
 	CombatEvents.spell_impact.emit(caster, spell, _centre)

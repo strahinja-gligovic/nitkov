@@ -1,153 +1,276 @@
 class_name LightningFx
 extends RefCounted
-## How Lightning looks: the Lightning Bolt, Lightning Strike's warning mark
-## and its bolt from the sky, and lightning's charge-up, release flash and
-## impacts. Cosmetic only (see SpellFx).
+## How Lightning looks (see SpellFx): jagged, violent electricity, with
+## white-hot cores, branching arcs that re-randomize every couple of frames,
+## strobing flashes and scorch. The pieces live next to this file:
+##   LightningArc, LightningCrackle   jagged camera-facing ribbons
+##   LightningFlare                   electric flashes
+##   LightningSparks                  spark streaks that bounce
+##   LightningPuffs, LightningDebris  dust, smoke and thrown chunks
+##   LightningScorch                  burns with glowing Lichtenberg cracks
+##   LightningBoltLook                the Lightning Bolt in flight
+##   LightningChargeFx                the charge in the casting hand
+##   LightningWarningFx, LightningCloud   the strike's telegraph
+##   LightningStrikeFx                the bolt from the sky
+##   LightningShockFx                 arcs over a stunned body
+## Cosmetic only: nothing here reads or writes gameplay state.
 
 const COLOR := Color(1.0, 0.9, 0.3)
 const WHITE := Color(1.0, 0.98, 0.85)
+## A deeper, hotter yellow for sparks and rims.
+const HOT := Color(1.0, 0.76, 0.2)
+
+## Release flashes drawn this tick ([physics frame, position]), so a bolt
+## fired on the same tick can start its channel at the hand.
+static var _releases: Array = []
+## Where the last projectile ended ({frame, at, fizzled}), for its look's
+## finish() a moment later in the same tick.
+static var _impact := {}
 
 
-## The Lightning Bolt's body: a white-hot streak (-Z is the direction of
-## flight).
+## The Lightning Bolt's body (-Z is the direction of flight).
 static func bolt(spell: ProjectileSpell) -> Node3D:
-	var root := ElementFxKit.orb(COLOR, spell.radius)
-	var streak := MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = spell.radius * 0.5
-	capsule.height = 2.0
-	streak.mesh = capsule
-	streak.rotation.x = PI * 0.5
-	streak.position.z = 1.0  # trailing behind
-	streak.material_override = ToonMaterials.make_vfx(WHITE, 4.0)
-	streak.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(streak)
-	return root
+	return LightningBoltLook.make(spell)
 
 
-static func impact(world: Node, at: Vector3, _normal: Vector3, struck: bool, fizzled: bool, _spell: ProjectileSpell) -> void:
-	ElementFxKit.flash(world, at, WHITE, 0.5 if fizzled else (1.2 if struck else 0.9), 0.14)
+static func impact(world: Node, at: Vector3, normal: Vector3, struck: bool, fizzled: bool, spell: ProjectileSpell) -> void:
+	_impact = {"frame": Engine.get_physics_frames(), "at": at, "fizzled": fizzled}
+	var n := normal.normalized() if normal.length() > 0.01 else Vector3.UP
 	if fizzled:
+		_fizzle(world, at)
 		return
-	for i in 3:
-		var direction := Vector3(randf_range(-1.0, 1.0), randf_range(-0.3, 1.0), randf_range(-1.0, 1.0)).normalized()
-		_arc(world, at, at + direction * randf_range(0.6, 1.1), 0.03, 0.12)
+	LightningFlare.spawn(world, at + n * 0.1, 1.8 if struck else 1.4, 0.07)
+	light_flash(world, at + n * 0.5, 5.0, 4.5, 0.14)
+	var sparks := LightningSparks.spawn(world, HOT, floor_below(world, at))
+	if struck:
+		var reach := Fighter.RADIUS + (spell.radius if spell else 0.2)
+		_body_burst(world, at, n, reach)
+		sparks.emit(at, 18, n, 1.3, Vector2(3.0, 7.5), Vector2(0.3, 0.65))
+	else:
+		_surface_burst(world, at, n)
+		sparks.emit(at + n * 0.05, 26, n, 1.25, Vector2(3.0, 9.0), Vector2(0.35, 0.8))
+		LightningScorch.spawn(world, at, n, 1.4, 2.8, 1.0, 4.0)
+		_smoke(world, at + n * 0.12)
 
 
+## Where a projectile ended, for its look (see LightningBoltLook.finish).
+## Empty unless it ended this very tick.
+static func claim_impact() -> Dictionary:
+	if _impact.is_empty() or _impact["frame"] != Engine.get_physics_frames():
+		return {}
+	var found := _impact
+	_impact = {}
+	return found
+
+
+## The casting hand of a bolt that appeared at `head` on physics frame
+## `frame`, if its release flash was drawn then; otherwise `head`.
+static func claim_release(head: Vector3, frame: int) -> Vector3:
+	var best := -1
+	var best_distance := 2.5
+	for i in _releases.size():
+		var entry: Array = _releases[i]
+		var distance := head.distance_to(entry[1])
+		if entry[0] == frame and distance < best_distance:
+			best = i
+			best_distance = distance
+	if best < 0:
+		return head
+	var at: Vector3 = _releases[best][1]
+	_releases.remove_at(best)
+	return at
+
+
+## Lightning gathering in the hand for the wind-up (see LightningChargeFx).
 static func charge(hand: Node3D, seconds: float, signature: bool) -> void:
-	ElementFxKit.hand_glow(hand, COLOR, seconds, 0.2 if signature else 0.12)
+	if is_instance_valid(hand):
+		LightningChargeFx.attach(hand, seconds, signature)
+	# draw a scorch texture now rather than on the frame the bolt lands
+	LightningScorch.prepare()
 
 
 static func release(world: Node, at: Vector3, direction: Vector3, signature: bool) -> void:
-	ElementFxKit.flash(world, at, WHITE, 0.8 if signature else 0.45, 0.1)
+	var frame := Engine.get_physics_frames()
+	_releases = _releases.filter(func(entry: Array) -> bool: return entry[0] == frame)
+	_releases.append([frame, at])
+	var forward := direction.normalized() if direction.length() > 0.01 else Vector3.FORWARD
+	LightningFlare.spawn(world, at, 1.15 if signature else 0.75, 0.05)
+	light_flash(world, at, 4.0, 3.5, 0.08)
+	var sparks := LightningSparks.spawn(world, HOT, floor_below(world, at))
 	if signature:
-		_arc(world, at, at + Vector3.UP * 6.0, 0.06, 0.15)
-	else:
-		_arc(world, at, at + direction * 1.2, 0.04, 0.08)
-
-
-## The mark where a Lightning Strike will land, under `parent` (the strike,
-## at ground level): a ring at the edge and a disc that fills in until the
-## bolt lands, `delay` seconds from now. The strike frees it when it lands.
-static func strike_warning(parent: Node3D, radius: float, delay: float) -> Node3D:
-	var root := Node3D.new()
-	parent.add_child(root)
-	var edge := MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.inner_radius = 0.92
-	torus.outer_radius = 1.0
-	torus.rings = 48
-	edge.mesh = torus
-	edge.scale = Vector3(radius, 0.4, radius)
-	edge.position.y = 0.06
-	edge.material_override = ToonMaterials.make_vfx(COLOR, 2.5)
-	edge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(edge)
-	var fill := MeshInstance3D.new()
-	var disc := CylinderMesh.new()
-	disc.top_radius = 1.0
-	disc.bottom_radius = 1.0
-	disc.height = 0.02
-	fill.mesh = disc
-	fill.position.y = 0.05
-	var fill_material := ToonMaterials.make_vfx(COLOR, 1.5)
-	fill_material.albedo_color.a = 0.35
-	fill.material_override = fill_material
-	fill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	fill.scale = Vector3(0.05, 1.0, 0.05)
-	root.add_child(fill)
-	var tween := fill.create_tween()
-	tween.tween_property(fill, ^"scale", Vector3(radius, 1.0, radius), maxf(delay, 0.05)) \
-			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	return root
-
-
-## The bolt landing at `at` (on the ground): a jagged bolt from the sky, a
-## blinding flash and a shock ring as wide as the strike.
-static func strike(world: Node, at: Vector3, radius: float) -> void:
-	var sky := at + Vector3(randf_range(-1.5, 1.5), 22.0, randf_range(-1.5, 1.5))
-	_arc(world, sky, at, 0.22, 0.25, WHITE)
-	_arc(world, sky, at, 0.1, 0.35, COLOR)
-	ElementFxKit.flash(world, at + Vector3.UP * 0.5, WHITE, radius * 1.2, 0.25)
-	Vfx.ring(world, at, COLOR, radius, 0.35)
-	for i in 5:
-		var angle := TAU * i / 5.0 + randf() * 0.5
-		var out := Vector3(cos(angle), 0.0, sin(angle)) * radius * randf_range(0.7, 1.0)
-		_arc(world, at + Vector3.UP * 0.2, at + out + Vector3.UP * 0.1, 0.05, 0.2, COLOR)
-
-
-## Arcs crackling over a stunned fighter for `seconds` (Lightning Strike's
-## stun). `body` is the fighter's visual pivot (origin at the feet); the
-## effect rides on it and frees itself.
-static func shock(body: Node3D, seconds: float) -> void:
-	if not is_instance_valid(body) or seconds <= 0.0:
+		sparks.emit(at, 24, Vector3.UP, 0.9, Vector2(3.0, 8.0), Vector2(0.25, 0.55), 0.04)
+		_sky_bolt(world, at, forward)
 		return
-	var holder := Node3D.new()
-	body.add_child(holder)
-	var tween := holder.create_tween().set_loops(maxi(1, int(seconds / 0.12)))
-	tween.tween_callback(func() -> void:
-		var low := holder.global_position + Vector3(randf_range(-0.3, 0.3), randf_range(0.3, 1.0), randf_range(-0.3, 0.3))
-		var high := holder.global_position + Vector3(randf_range(-0.4, 0.4), randf_range(1.0, 1.8), randf_range(-0.4, 0.4))
-		_arc(holder, low, high, 0.025, 0.1))
-	tween.tween_interval(0.12)
-	holder.create_tween().tween_callback(holder.queue_free).set_delay(seconds)
+	sparks.emit(at, 12, forward, 0.65, Vector2(4.0, 9.0), Vector2(0.15, 0.35), 0.03)
+	var muzzle := LightningCrackle.spawn(world, func(arc: LightningArc, _t: float) -> void:
+		for i in 4:
+			var out := LightningArc.scatter(forward, 0.9)
+			arc.add(LightningArc.jagged(at, at + out * randf_range(0.35, 0.8), 3, 0.3), 0.016, 1.0, 0.85, 0.5)
+	, 0.1)
+	muzzle.hold = 0.4
 
 
-## A jagged line of light from `from` to `to` that fades over `duration`.
-static func _arc(world: Node, from: Vector3, to: Vector3, width: float, duration: float, color := WHITE) -> void:
-	var length := from.distance_to(to)
-	var points := _jagged(from, to, maxi(3, int(length / 0.5)), length * 0.06)
-	var root := Node3D.new()
-	world.add_child(root)
-	var material := ToonMaterials.make_vfx(color, 5.0)
-	for i in points.size() - 1:
-		var a := points[i]
-		var b := points[i + 1]
-		var segment := MeshInstance3D.new()
-		var box := BoxMesh.new()
-		box.size = Vector3(width, width, a.distance_to(b) + width)
-		segment.mesh = box
-		segment.material_override = material
-		segment.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		root.add_child(segment)
-		segment.global_position = (a + b) * 0.5
-		var along := (b - a).normalized()
-		segment.look_at(b, Vector3.UP if absf(along.y) < 0.99 else Vector3.RIGHT)
-	var tween := root.create_tween()
-	tween.tween_property(material, ^"albedo_color:a", 0.0, duration)
-	tween.tween_callback(root.queue_free)
+## Lightning Strike's telegraph under `parent` (the strike, at ground
+## level): see LightningWarningFx. The strike frees it when the bolt lands.
+static func strike_warning(parent: Node3D, radius: float, delay: float) -> Node3D:
+	return LightningWarningFx.build(parent, radius, delay)
 
 
-## Points from `from` to `to`, each inner one knocked sideways by up to
-## `jitter`.
-static func _jagged(from: Vector3, to: Vector3, segments: int, jitter: float) -> PackedVector3Array:
-	var points := PackedVector3Array([from])
-	var along := to - from
-	var side := along.cross(Vector3.UP)
-	side = side.normalized() if side.length() > 0.001 else Vector3.RIGHT
-	var other := along.cross(side).normalized()
-	for i in range(1, segments):
-		var t := float(i) / segments
-		points.append(from + along * t + side * randf_range(-jitter, jitter) + other * randf_range(-jitter, jitter))
-	points.append(to)
+## The bolt from the sky landing at `at` (ground centre): see
+## LightningStrikeFx. It takes over the warning's storm cloud and leader, so
+## the bolt comes down the path the leader was stepping along.
+static func strike(world: Node, at: Vector3, radius: float) -> void:
+	var cloud: LightningCloud = null
+	var leader := PackedVector3Array()
+	for node in world.get_tree().get_nodes_in_group(LightningWarningFx.GROUP):
+		var warning := node as LightningWarningFx
+		if warning == null:
+			continue
+		if Vector2(warning.global_position.x - at.x, warning.global_position.z - at.z).length() > 0.3:
+			continue
+		leader = warning.leader
+		if is_instance_valid(warning.cloud):
+			cloud = warning.cloud
+			cloud.reparent(world)
+			warning.cloud = null
+		warning.remove_from_group(LightningWarningFx.GROUP)
+		break
+	LightningStrikeFx.spawn(world, at, radius, cloud, leader)
+
+
+## Arcs crackling over a stunned fighter for `seconds` (see LightningShockFx).
+static func shock(body: Node3D, seconds: float) -> void:
+	if is_instance_valid(body) and seconds > 0.0:
+		LightningShockFx.attach(body, seconds)
+
+
+# --- shared pieces ------------------------------------------------------------
+
+## An OmniLight with no shadows.
+static func lamp(color: Color, energy: float, reach: float) -> OmniLight3D:
+	var light := OmniLight3D.new()
+	light.light_color = color
+	light.light_energy = energy
+	light.omni_range = reach
+	light.shadow_enabled = false
+	return light
+
+
+## A light that blinks on at `at` and dies out over `duration`.
+static func light_flash(world: Node, at: Vector3, energy: float, reach: float, duration: float, color := COLOR) -> void:
+	var light := lamp(color, energy, reach)
+	world.add_child(light)
+	light.global_position = at
+	var tween := light.create_tween()
+	tween.tween_property(light, ^"light_energy", 0.0, duration).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.tween_callback(light.queue_free)
+
+
+## The height of the ground under `at` (where sparks bounce), or a guess
+## `drop` metres below it when there's nothing there to find.
+static func floor_below(world: Node, at: Vector3, drop := 1.3) -> float:
+	var node := world as Node3D
+	if node == null or not node.is_inside_tree():
+		return at.y - drop
+	var query := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.1, at + Vector3.DOWN * 8.0, 1)
+	var hit := node.get_world_3d().direct_space_state.intersect_ray(query)
+	return (hit["position"] as Vector3).y if hit else at.y - drop
+
+
+## Arcs raking out along a wall or the floor from `at`, re-randomized every
+## couple of frames, with their forks.
+static func _surface_burst(world: Node, at: Vector3, n: Vector3) -> void:
+	var base := at + n * 0.03
+	var arms: Array[Vector3] = []
+	for i in 6:
+		arms.append(LightningArc.along_surface(n))
+	var crackle := LightningCrackle.spawn(world, func(arc: LightningArc, t: float) -> void:
+		for dir in arms:
+			var reach := randf_range(0.55, 1.35) * (1.0 - 0.35 * t)
+			var path := LightningArc.jagged(base, base + dir * reach, 4, 0.2, n)
+			arc.add(path, 0.024, 1.0, 0.85, 0.55)
+			if randf() < 0.6:
+				arc.add(LightningArc.fork(path, reach * 0.55, 0.9, 3, 0.25, n), 0.014, 0.8, 0.9, 0.6)
+	, 0.34)
+	crackle.hold = 0.3
+	crackle.flicker = 0.45
+
+
+## A bolt that struck a fighter: arcs wrap round the body behind the hit and
+## spit back out toward the shooter. `reach` is how far the hit point is
+## from the body's axis.
+static func _body_burst(world: Node, at: Vector3, n: Vector3, reach: float) -> void:
+	var front := Vector3(n.x, 0.0, n.z)
+	front = front.normalized() if front.length() > 0.01 else Vector3.FORWARD
+	var axis := at - front * reach
+	var crackle := LightningCrackle.spawn(world, func(arc: LightningArc, _t: float) -> void:
+		for i in 3:
+			var turn := randf_range(1.2, 2.6) * (1.0 if i % 2 == 0 else -1.0)
+			arc.add(_wrap(axis, front, turn, 0.34, randf_range(-0.6, 0.45)), 0.018, 1.0, 0.7, 0.5)
+		for i in 3:
+			var out := LightningArc.scatter(n, 1.1)
+			var from := axis + front * 0.3
+			arc.add(LightningArc.jagged(from, from + out * randf_range(0.45, 1.0), 3, 0.28), 0.02, 1.0, 0.9, 0.5)
+	, 0.3)
+	crackle.flicker = 0.45
+
+
+## A path that runs round a vertical axis: from `front` (a flat direction)
+## through `turn` radians at `radius`, rising `rise` metres on the way.
+static func _wrap(axis: Vector3, front: Vector3, turn: float, radius: float, rise: float) -> PackedVector3Array:
+	var points := PackedVector3Array()
+	var steps := 8
+	for k in steps + 1:
+		var t := float(k) / steps
+		var out := front.rotated(Vector3.UP, turn * t) * (radius + randf_range(-0.03, 0.07))
+		points.append(axis + out + Vector3.UP * (rise * t + randf_range(-0.06, 0.06)))
 	return points
+
+
+## Out of range: the bolt sputters out in a few weak crackles, no flash.
+static func _fizzle(world: Node, at: Vector3) -> void:
+	var crackle := LightningCrackle.spawn(world, func(arc: LightningArc, t: float) -> void:
+		for i in 3:
+			var out := LightningArc.scatter(Vector3.UP, PI)
+			arc.add(LightningArc.jagged(at, at + out * randf_range(0.15, 0.45) * (1.0 - t * 0.5), 3, 0.3), 0.012, 0.7, 0.8, 0.5)
+	, 0.18)
+	crackle.peak = 0.7
+	LightningFlare.spawn(world, at, 0.5, 0.06, COLOR, 0.5)
+	var sparks := LightningSparks.spawn(world, HOT, floor_below(world, at))
+	sparks.emit(at, 6, Vector3.DOWN, PI, Vector2(0.8, 2.5), Vector2(0.2, 0.4), 0.025)
+
+
+## A thin curl of dark smoke off a fresh scorch.
+static func _smoke(world: Node, at: Vector3) -> void:
+	var smoke := LightningPuffs.spawn(world, &"smoke")
+	smoke.rise = 1.8
+	smoke.drag = 1.5
+	smoke.fade_from = 0.0
+	for i in 3:
+		var drift := Vector3(randf_range(-0.3, 0.3), randf_range(0.4, 0.9), randf_range(-0.3, 0.3))
+		smoke.emit(at + drift * 0.25, drift, randf_range(0.22, 0.36), randf_range(0.45, 0.7))
+
+
+## Lightning Strike's release: a bolt leaping from the raised hand up into
+## the sky (leaning a little toward where the caster faces).
+static func _sky_bolt(world: Node, at: Vector3, forward: Vector3) -> void:
+	var top := at + (Vector3.UP + forward * 0.22).normalized() * 30.0
+	var path := LightningArc.jagged(at, top, 6, 0.06)
+	var crackle := LightningCrackle.spawn(world, func(arc: LightningArc, _t: float) -> void:
+		var live := PackedVector3Array()
+		for point in path:
+			live.append(point + Vector3(randf_range(-0.05, 0.05), 0.0, randf_range(-0.05, 0.05)))
+		arc.add(live, 0.07, 1.0, 0.5, 0.2)
+		for i in 3:
+			arc.add(LightningArc.fork(live, randf_range(1.0, 3.0), 0.7, 3, 0.2, Vector3.ZERO, Vector2(0.15, 0.7)),
+					0.03, 0.85, 0.85, 0.5)
+	, 0.24, COLOR, true)
+	crackle.envelope = func(age: float) -> float:
+		if age < 0.05:
+			return 1.0
+		if age < 0.08:
+			return 0.08
+		if age < 0.14:
+			return 0.95
+		return maxf(0.0, 1.0 - (age - 0.14) / 0.1)
+	crackle.flicker = 0.15

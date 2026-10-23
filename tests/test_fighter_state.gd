@@ -17,6 +17,17 @@ func test_reset_fills_health_and_stamina() -> void:
 	assert_eq(state.action, FighterState.Action.IDLE)
 
 
+func test_reset_drops_any_shove_or_pop_still_pending() -> void:
+	state.knockback = Vector3(9.0, 0.0, -3.0)
+	state.launch = 5.0
+	state.apply_stagger(1.0, &"shock")
+	state.reset(tuning)
+	assert_eq(state.knockback, Vector3.ZERO)
+	assert_eq(state.launch, 0.0, "a respawn doesn't pop you up")
+	assert_eq(state.action, FighterState.Action.IDLE)
+	assert_eq(state.stagger_kind, &"")
+
+
 func test_stamina_floors_at_zero_and_any_stamina_allows_actions() -> void:
 	state.stamina = 5.0
 	assert_true(state.can_spend())

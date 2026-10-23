@@ -14,6 +14,11 @@ extends RefCounted
 ##                beats.
 ##   upper body   the guard, guard impacts and parries over the legs; casts
 ##                on the move take the left arm only, so the sword arm runs.
+##                A cast on a layer keeps its own clip's chest (LayerAim), so
+##                it aims the same over a run, a crouch or a leap.
+## Lightning's stun twitches (stagger_shock, with ShockJitter shaking the
+## body on top); a fighter shoved off the ground
+## by a wind burst is shown blown away.
 ## Presentation-only moves (parry deflect, block impact, combo recoveries,
 ## landings, the respawn entrance, the kill taunt) run on their own clock
 ## via play_overlay().
@@ -28,15 +33,29 @@ const MAX_LEG_YAW := deg_to_rad(75.0)
 const CAST_ON_THE_MOVE_SPEED := 1.0
 ## A stagger at least this long uses the long stagger move.
 const LONG_STAGGER := 1.3
+## Off the ground and shoved at least this fast (a wind burst): blown away.
+const BLOWN_SPEED := 4.0
 
 var tree: AnimationTree
 var moves: MoveSet
 ## Turns the legs toward the travel direction (set up by FighterVisual).
 var stride: StrideTwistModifier
+## Debug: move id -> the move shown in its place (AnimGallery compares
+## candidates this way). Empty in play.
+var stand_ins := {}
 
+var _player: AnimationPlayer
 var _full: SlotPair
 var _upper: SlotPair
 var _left: SlotPair
+## Holds a layered cast's chest where its clip has it (see LayerAim).
+var _aim: LayerAim
+var _aim_fade := 0.0
+var _aim_pair: SlotPair
+## clip name -> rotation tracks of the bones LayerAim follows (-1 = none)
+var _aim_tracks := {}
+## Shakes the body while a lightning stun lasts (see ShockJitter).
+var _shock: ShockJitter
 var _speeds := PackedFloat32Array()
 var _moving := 0.0
 var _backward := false
@@ -112,6 +131,17 @@ func build(model: Node3D, player: AnimationPlayer, upper_filter: Array[NodePath]
 	tree.active = true
 	for pair: SlotPair in [_full, _upper, _left]:
 		pair.tree = tree
+	_player = player
+	# added before FighterVisual's procedural layers, so it runs first and
+	# they lean, twist and look on top of the steadied chest
+	var skeleton := model.get_node_or_null(NodePath(AnimLibrary.SKELETON_PATH)) as Skeleton3D
+	if skeleton and skeleton.find_bone(String(LayerAim.CHAIN[LayerAim.CHAIN.size() - 1])) >= 0:
+		_aim = LayerAim.new()
+		_aim.name = "CastAim"
+		skeleton.add_child(_aim)
+		_shock = ShockJitter.new()
+		_shock.name = "ShockJitter"
+		skeleton.add_child(_shock)
 
 
 ## The library name of a move's clip: spliced chains and mirrored copies
@@ -151,6 +181,8 @@ func update(fighter: Fighter, delta: float) -> void:
 	var left_only := not upper.is_empty() and (upper[0] as AnimMove).left_arm_only
 	_show(_upper, [] if left_only else upper, dt)
 	_show(_left, upper if left_only else [], dt)
+	_update_aim(s, upper, left_only, dt)
+	_update_shock(s, delta)
 	_update_locomotion(fighter, dt)
 	tree.set(&"parameters/full/blend_amount", _full.weight)
 	tree.set(&"parameters/upper/blend_amount", _upper.weight)
@@ -210,6 +242,13 @@ func _full_body(fighter: Fighter) -> Array:
 				_death_serial = s.action_serial
 				_death = _pick_death(fighter)
 			return [_death, _keyed_time(_death, s.action_time, _death.length()), s.action_serial]
+	if not s.on_floor and not s.leaping and s.knockback.length() > BLOWN_SPEED and moves.has_move(&"blown"):
+		# flung backward or aside: legs swept up; flung forward (a burst behind you): a tuck
+		if s.knockback.normalized().dot(fighter.forward()) > 0.5:
+			var tuck := _move(&"leap_air")
+			return [tuck, _loop_time(tuck, _air_time), "blown_forward"]
+		var blown := _move(&"blown")
+		return [blown, _keyed_time(blown, _air_time, blown.length()), "blown"]
 	if s.leaping or (not s.on_floor and fighter.velocity.y < -3.0):
 		var start := _move(&"leap_start")
 		if s.leaping and _air_time < start.length() and fighter.velocity.y > 0.0:
@@ -237,6 +276,56 @@ func _upper_body(fighter: Fighter) -> Array:
 		var guard := _move(&"block")
 		return [guard, _enter_then_loop(guard, _block_time), "guard"]
 	return []
+
+
+## A cast showing as a layer keeps its clip's chest (LayerAim). The hold lets
+## go over a blend-out once the cast is over, even if the layer moves on to
+## the guard.
+func _update_aim(s: FighterState, layer_pose: Array, left_only: bool, dt: float) -> void:
+	if _aim == null:
+		return
+	var casting := s.action == FighterState.Action.CAST and not layer_pose.is_empty()
+	if casting:
+		_aim_pair = _left if left_only else _upper
+		_aim.locals = _clip_chest(layer_pose[0], layer_pose[1])
+		_aim_fade = 1.0
+	else:
+		_aim_fade = move_toward(_aim_fade, 0.0, dt / 0.15)
+	_aim.weight = _aim_fade * (_aim_pair.weight if _aim_pair else 0.0)
+
+
+## A lightning stun shakes hard at first and dies down; it keeps shaking
+## through hit-stop (real time, not the frozen clip clock).
+func _update_shock(s: FighterState, delta: float) -> void:
+	if _shock == null:
+		return
+	if s.action == FighterState.Action.STAGGER and s.stagger_kind == &"shock":
+		var t := clampf(s.action_time / maxf(s.action_duration, 0.01), 0.0, 1.0)
+		var tail := clampf((s.action_duration - s.action_time) / 0.12, 0.0, 1.0)
+		_shock.weight = lerpf(1.0, 0.45, t) * tail
+	else:
+		_shock.weight = move_toward(_shock.weight, 0.0, delta / 0.08)
+
+
+## Local rotations of LayerAim's bones in `move`'s clip at `time`.
+func _clip_chest(move: AnimMove, time: float) -> Array[Quaternion]:
+	var clip_id := clip_name(move)
+	var clip := _player.get_animation(clip_id) if _player.has_animation(clip_id) else null
+	if not _aim_tracks.has(clip_id):
+		var found := PackedInt32Array()
+		for bone_name in LayerAim.CHAIN:
+			var path := NodePath("%s:%s" % [AnimLibrary.SKELETON_PATH, bone_name])
+			found.append(clip.find_track(path, Animation.TYPE_ROTATION_3D) if clip else -1)
+		_aim_tracks[clip_id] = found
+	var tracks: PackedInt32Array = _aim_tracks[clip_id]
+	var skeleton := _aim.get_skeleton()
+	var out: Array[Quaternion] = []
+	for i in LayerAim.CHAIN.size():
+		if tracks[i] >= 0:
+			out.append(clip.rotation_track_interpolate(tracks[i], time))
+		else:
+			out.append(skeleton.get_bone_rest(skeleton.find_bone(LayerAim.CHAIN[i])).basis.get_rotation_quaternion())
+	return out
 
 
 func _update_locomotion(fighter: Fighter, dt: float) -> void:
@@ -324,6 +413,9 @@ func _stagger_move(s: FighterState) -> StringName:
 			return &"guard_break"
 		&"shatter":
 			return &"knockdown"
+		&"shock":
+			if moves.has_move(&"stagger_shock"):
+				return &"stagger_shock"
 	return &"stagger_long" if s.action_duration >= LONG_STAGGER and moves.has_move(&"stagger_long") else &"stagger"
 
 
@@ -339,7 +431,7 @@ func _pick_death(fighter: Fighter) -> AnimMove:
 
 ## A move by id; a missing one falls back to idle so a gap shows as a pose, not a crash.
 func _move(id: StringName) -> AnimMove:
-	var move := moves.get_move(id)
+	var move := moves.get_move(stand_ins.get(id, id))
 	return move if move != null else moves.get_move(&"idle")
 
 
@@ -431,3 +523,139 @@ class SlotPair:
 	func hide(dt: float) -> void:
 		_key = ""
 		weight = move_toward(weight, 0.0, dt / maxf(_blend_out, 0.12))
+
+
+## Turns the spine of a cast playing as a layer (left arm, or the upper body
+## on the move or in the air) so the chest faces where it faces in the cast's
+## own clip, relative to the character, whatever the legs below are doing.
+## The layer copies the clip's spine rotations, but they hang off another
+## pelvis: a run leans forward and twists, the sword idle crouches, so a jab
+## that is level in its clip would punch the floor on the run. Half the turn
+## goes to spine_01 and half to spine_02, so the waist doesn't kink.
+class LayerAim extends SkeletonModifier3D:
+	const CHAIN: Array[StringName] = [&"pelvis", &"spine_01", &"spine_02"]
+
+	## Local rotations of CHAIN in the cast's clip, this frame.
+	var locals: Array[Quaternion] = []
+	## 0..1: how far the chest turns to the clip's.
+	var weight := 0.0
+
+	var _bones := PackedInt32Array()
+
+	func _process_modification_with_delta(_delta: float) -> void:
+		if weight <= 0.001 or locals.size() != CHAIN.size():
+			return
+		var skeleton := get_skeleton()
+		if skeleton == null:
+			return
+		if _bones.is_empty():
+			for bone_name in CHAIN:
+				_bones.append(skeleton.find_bone(bone_name))
+		if -1 in _bones:
+			return
+		var above := skeleton.get_bone_parent(_bones[0])
+		var base := _global_rotation(skeleton, above) if above >= 0 else Quaternion.IDENTITY
+		var target := base * locals[0] * locals[1] * locals[2]
+		var pelvis_now := _global_rotation(skeleton, _bones[0])
+		var lower_now := _global_rotation(skeleton, _bones[1])
+		var chest_now := _global_rotation(skeleton, _bones[2])
+		var turn := chest_now.slerp(target, weight) * chest_now.inverse()
+		var lower := Quaternion.IDENTITY.slerp(turn, 0.5) * lower_now
+		skeleton.set_bone_pose_rotation(_bones[1], (pelvis_now.inverse() * lower).normalized())
+		skeleton.set_bone_pose_rotation(_bones[2], (lower.inverse() * turn * chest_now).normalized())
+
+	static func _global_rotation(skeleton: Skeleton3D, bone: int) -> Quaternion:
+		return skeleton.get_bone_global_pose(bone).basis.orthonormalized().get_rotation_quaternion()
+
+
+## Electrocution on top of the stagger_shock clip. The clip gives the braced
+## legs and the flung-up arms; this locks them into a rigid star (arms pulled
+## out wide, elbows and wrists clenched, back arched, head thrown back) and
+## makes the body chatter: every couple of frames each bone flips to the other
+## side of its own jolt axis, with no easing, so it strobes like the arcs.
+## Presentation only. Turns are in skeleton space (about the character's right,
+## up and forward), so they read the same whatever the bones' local axes are.
+class ShockJitter extends SkeletonModifier3D:
+	## bone -> chatter amplitude in degrees
+	const JOLTS := {
+		&"pelvis": 3.0, &"spine_01": 4.0, &"spine_02": 5.0, &"spine_03": 6.0, &"neck_01": 8.0, &"Head": 12.0,
+		&"clavicle_l": 6.0, &"clavicle_r": 6.0, &"upperarm_l": 10.0, &"upperarm_r": 10.0,
+		&"lowerarm_l": 16.0, &"lowerarm_r": 16.0, &"hand_l": 24.0, &"hand_r": 24.0,
+		&"thigh_l": 3.0, &"thigh_r": 3.0, &"calf_l": 4.0, &"calf_r": 4.0,
+	}
+	## bone -> the held rigid pose: [degrees about right (+ arches back),
+	## degrees about forward (+ tips toward the character's right)]
+	const RIGID := {
+		&"spine_02": [8.0, 0.0], &"spine_03": [10.0, 0.0], &"Head": [22.0, 0.0],
+		&"upperarm_l": [0.0, -50.0], &"upperarm_r": [0.0, 50.0],
+		&"lowerarm_l": [0.0, 45.0], &"lowerarm_r": [0.0, -45.0],
+		&"hand_l": [-30.0, 0.0], &"hand_r": [-30.0, 0.0],
+	}
+	## the chatter flips about this often (seconds)
+	const JOLT_EVERY := 0.04
+
+	## 0..1: how hard it shakes (the director fades it in and out).
+	var weight := 0.0
+
+	var _bones := PackedInt32Array()
+	var _amps := PackedFloat32Array()
+	var _rigid: Array[Vector2] = []
+	var _axes: Array[Vector3] = []
+	var _sizes := PackedFloat32Array()
+	var _side := 1.0
+	var _clock := 0.0
+	var _right := Vector3.RIGHT
+	var _forward := Vector3.BACK
+
+	func _process_modification_with_delta(delta: float) -> void:
+		var skeleton := get_skeleton()
+		if skeleton == null or weight <= 0.001:
+			return
+		if _bones.is_empty():
+			_find_bones(skeleton)
+		_clock -= delta
+		if _clock <= 0.0:
+			_clock = JOLT_EVERY * randf_range(0.6, 1.4)
+			_side = -_side
+			for i in _bones.size():
+				if randf() < 0.3:  # now and then the current kicks another way
+					_axes[i] = Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized()
+				_sizes[i] = randf_range(0.4, 1.0)
+		var set_in := minf(weight * 2.5, 1.0)
+		for i in _bones.size():
+			var turn := Quaternion(_axes[i], deg_to_rad(_amps[i]) * _sizes[i] * _side * weight)
+			var rigid := _rigid[i] * set_in
+			if rigid != Vector2.ZERO:
+				turn = Quaternion(_forward, deg_to_rad(rigid.y)) * Quaternion(_right, deg_to_rad(rigid.x)) * turn
+			_turn(skeleton, _bones[i], turn)
+
+	func _find_bones(skeleton: Skeleton3D) -> void:
+		# parents before children, so each turn carries down the chain
+		for bone_name: StringName in JOLTS:
+			var bone := skeleton.find_bone(bone_name)
+			if bone >= 0:
+				_bones.append(bone)
+				_amps.append(JOLTS[bone_name])
+				var held: Array = RIGID.get(bone_name, [0.0, 0.0])
+				_rigid.append(Vector2(held[0], held[1]))
+				_axes.append(Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)).normalized())
+				_sizes.append(0.0)
+		var left := skeleton.find_bone(&"upperarm_l")
+		var right := skeleton.find_bone(&"upperarm_r")
+		var pelvis := skeleton.find_bone(&"pelvis")
+		var head := skeleton.find_bone(&"Head")
+		if left >= 0 and right >= 0 and pelvis >= 0 and head >= 0:
+			var across := skeleton.get_bone_global_rest(right).origin - skeleton.get_bone_global_rest(left).origin
+			var up := skeleton.get_bone_global_rest(head).origin - skeleton.get_bone_global_rest(pelvis).origin
+			if across.length() > 0.01 and up.length() > 0.01:
+				_right = across.normalized()
+				_forward = up.normalized().cross(_right).normalized()
+
+	## Turns `bone` by `turn` given in skeleton space.
+	static func _turn(skeleton: Skeleton3D, bone: int, turn: Quaternion) -> void:
+		var parent := skeleton.get_bone_parent(bone)
+		var above := Quaternion.IDENTITY
+		if parent >= 0:
+			above = skeleton.get_bone_global_pose(parent).basis.orthonormalized().get_rotation_quaternion()
+		var local := skeleton.get_bone_pose_rotation(bone)
+		skeleton.set_bone_pose_rotation(bone, (above.inverse() * turn * above * local).normalized())

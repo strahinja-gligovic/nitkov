@@ -4,6 +4,9 @@ extends Node
 ## camera and menus, and respawns the dead.
 
 const FIGHTER_SCENE := preload("res://src/combat/fighter.tscn")
+## Anyone below this has fallen out of the arena and is put back at their spawn.
+const KILL_PLANE := -10.0
+
 
 @export var arena: ArenaBuilder
 
@@ -45,6 +48,9 @@ func _ready() -> void:
 	feedback.camera_rig = camera_rig
 	feedback.focus = player
 	add_child(feedback)
+	var combat_sfx := CombatSfx.new()
+	combat_sfx.name = "CombatSfx"
+	add_child(combat_sfx)
 
 	menu = LoadoutMenu.new()
 	menu.name = "LoadoutMenu"
@@ -98,6 +104,8 @@ func _physics_process(_delta: float) -> void:
 	for fighter in [player, bot]:
 		if fighter.state.is_dead() and fighter.state.dead_time >= fighter.tuning.respawn_time:
 			fighter.respawn(arena.spawn_transform(fighter.team))
+		elif fighter.global_position.y < KILL_PLANE:
+			fighter.respawn(arena.spawn_transform(fighter.team))  # fell out of the arena
 
 
 func _on_respawned(fighter: Node) -> void:
@@ -172,7 +180,9 @@ func _apply_autopilot() -> void:
 	if args.has("autotest"):
 		# bot vs bot: the player's fighter gets a duelist brain too
 		var skill := String(args.get("player_skill", "0.5")).to_float()
-		player.controller = BotBrain.new(BotBrain.Mode.DUELIST, skill, 3)
+		var seed_arg := String(args.get("seed", "0")).to_int()
+		player.controller = BotBrain.new(BotBrain.Mode.DUELIST, skill, 3 + seed_arg * 101)
+		bot_brain.rng.seed = 7 + seed_arg * 131
 		player.apply_loadout(Loadout.make(player.character.id, &"firebolt", &"flame_wall", &"leap"))
 		bot.apply_loadout(Loadout.make(bot.character.id, &"ice_spike", &"frost_nova", &"blink"))
 		camera_rig.auto_yaw = true

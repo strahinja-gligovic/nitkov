@@ -67,6 +67,9 @@ extends Resource
 @export var chill_slow := 0.3
 @export var shatter_damage := 25.0
 @export var shatter_stagger := 1.2
+## After a spell flinches you, more spell flinches can't for this long
+## (one bolt interrupts; a stream of them doesn't lock you down).
+@export var spell_flinch_immunity := 0.6
 
 @export_group("Healing & respawn")
 @export var orb_heal_fraction := 0.5

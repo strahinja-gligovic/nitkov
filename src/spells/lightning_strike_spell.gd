@@ -13,6 +13,8 @@ extends SpellData
 ## Stun on everyone it hits.
 @export var stagger := 1.0
 @export var launch := 2.5
+## Seconds everyone it hits freezes as it lands (hit-stop).
+@export var hitstop := 0.12
 ## How far from the caster the mark can be placed.
 @export var max_range := 18.0
 @export var min_range := 3.0
@@ -24,7 +26,8 @@ func release(caster: Fighter, target: Vector3) -> void:
 	var direction := flat.normalized() if flat.length() > 0.1 else caster.forward()
 	var centre := caster.global_position + direction * clampf(flat.length(), min_range, max_range)
 	# settle onto whatever ground is there (the arena floor or the ledge)
-	var down := PhysicsRayQueryParameters3D.create(centre + Vector3.UP * 4.0, centre + Vector3.DOWN * 10.0, 1)
+	# from high above everything, so a pillar or ledge under the mark is struck on top whatever height you cast from
+	var down := PhysicsRayQueryParameters3D.create(centre + Vector3.UP * 20.0, centre + Vector3.DOWN * 10.0, 1)
 	var ground := caster.get_world_3d().direct_space_state.intersect_ray(down)
 	if ground:
 		centre.y = ground.position.y

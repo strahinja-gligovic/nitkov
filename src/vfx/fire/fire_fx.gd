@@ -1,32 +1,44 @@
 class_name FireFx
 extends RefCounted
 ## How Fire looks: the Firebolt, the Flame Wall, and fire's charge-up,
-## release flash and impacts. Cosmetic only (see SpellFx).
+## release flash and impacts. Fire is heat and chaos: roiling toon-banded
+## flames (white core, yellow, orange, red, an ink rim), embers, sparks and
+## dark-edged smoke. Cosmetic only (see SpellFx); every effect frees itself.
+## The pieces live next to this file: FireKit (shared shaders, materials and
+## particle recipes), FireBoltLook, FireCharge, FireMuzzle, FireExplosion,
+## FireScorch, FireMotes and FlameWallLook.
 
 const COLOR := Color(1.0, 0.45, 0.12)
 const HOT := Color(1.0, 0.85, 0.4)
 
 
-## The Firebolt's body; -Z is the direction of flight.
+## The Firebolt's body; -Z is the direction of flight. It implements
+## finish(), so its trail and embers die out after the impact.
 static func firebolt(spell: ProjectileSpell) -> Node3D:
-	return ElementFxKit.orb(COLOR, spell.radius)
+	return FireBoltLook.create(spell.radius)
 
 
-static func impact(world: Node, at: Vector3, _normal: Vector3, struck: bool, fizzled: bool, spell: ProjectileSpell) -> void:
+## Where a Firebolt ended: an explosion the size of its splash (on the body
+## for a fighter hit, scorching a wall or the floor), or at the end of its
+## range a sputter of smoke.
+static func impact(world: Node, at: Vector3, normal: Vector3, struck: bool, fizzled: bool, spell: ProjectileSpell) -> void:
 	if fizzled:
-		ElementFxKit.flash(world, at, COLOR, 0.6, 0.15)
+		FireExplosion.fizzle(world, at, -normal)
 		return
-	ElementFxKit.flash(world, at, HOT, 1.4 if struck else 1.1, 0.22)
-	if spell.splash_radius > 0.0:
-		Vfx.dome(world, at, COLOR, spell.splash_radius, 0.3)
+	var splash := spell.splash_radius if spell.splash_radius > 0.0 else 1.0
+	FireExplosion.burst(world, at, normal, splash, struck)
 
 
+## Fire gathering in the fist over the wind-up (bigger for the signature).
 static func charge(hand: Node3D, seconds: float, signature: bool) -> void:
-	ElementFxKit.hand_glow(hand, COLOR, seconds, 0.2 if signature else 0.13)
+	if not is_instance_valid(hand) or not hand.is_inside_tree():
+		return
+	FireCharge.start(hand, seconds, signature)
 
 
-static func release(world: Node, at: Vector3, _direction: Vector3, signature: bool) -> void:
-	ElementFxKit.flash(world, at, HOT, 0.8 if signature else 0.5, 0.12)
+## The burst of flame as the spell leaves the fist.
+static func release(world: Node, at: Vector3, direction: Vector3, signature: bool) -> void:
+	FireMuzzle.fire(world, at, direction, signature)
 
 
 ## The Flame Wall's fire, added as a child of the wall (local X along the

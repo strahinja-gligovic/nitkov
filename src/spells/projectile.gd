@@ -38,6 +38,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not is_instance_valid(caster):
+		caster = null  # they left the match: the spell still lands, uncredited
 	var from := global_position
 	var to := from + velocity * delta
 	var step := from.distance_to(to)
@@ -54,7 +56,7 @@ func _physics_process(delta: float) -> void:
 			continue
 		var t := CombatRules.segment_hits_capsule(from, to, fighter.global_position + Vector3.UP * 0.35,
 				fighter.global_position + Vector3.UP * 1.45, Fighter.RADIUS + spell.radius)
-		if t >= 0.0 and t < hit_t:
+		if t >= 0.0 and t < hit_t and _reaches(from.lerp(to, t), fighter):
 			hit_t = t
 			victim = fighter
 			normal = -velocity.normalized()
@@ -68,8 +70,12 @@ func _physics_process(delta: float) -> void:
 		_impact(global_position, -velocity.normalized(), null, true)
 
 
-## Blown off course (a wind burst): same speed, new heading.
-func deflect(direction: Vector3) -> void:
+## Blown off course by another side's wind burst: same speed, new heading,
+## and it's theirs now, so it can't come back at them or their team.
+func deflect(direction: Vector3, by: Projectile) -> void:
+	caster = by.caster
+	team = by.team
+	_origin = global_position  # its flight starts over from here (see _reaches)
 	var flat := Vector3(direction.x, 0.0, direction.z)
 	if flat.length() < 0.01:
 		return
@@ -89,11 +95,13 @@ func _impact(at: Vector3, normal: Vector3, victim: Fighter, spent := false) -> v
 			if fighter.chest_position().distance_to(at) <= spell.splash_radius + Fighter.RADIUS:
 				_apply(fighter, spell.make_hit(false, travel), at, fighter.chest_position())
 	if spell.burst_radius > 0.0:
-		WindBurst.blast(caster, spell, at, victim)
+		WindBurst.blast(self, at, normal, victim)
 	var fizzled := spent and spell.burst_radius <= 0.0
 	if not fizzled:
 		CombatEvents.spell_impact.emit(caster, spell, at)
 	SpellFx.impact(spell, get_parent(), at, normal, victim != null, fizzled)
+	if is_instance_valid(_visual):
+		_visual.global_transform = Transform3D(global_basis, at)  # its head reaches the impact
 	SpellFx.release_look(_visual, get_parent())
 	queue_free()
 
@@ -107,6 +115,22 @@ func _apply(target: Fighter, hit: SpellHit, source: Vector3, contact: Vector3) -
 func _process(_delta: float) -> void:
 	if is_instance_valid(_visual) and _visual.get_parent() == self:
 		_visual.global_transform = Transform3D(global_basis, _smoother.position())
+
+
+## A wide projectile (a wind crescent) can't clip someone round a corner:
+## the edge of it that would touch them must have flown a clear path.
+func _reaches(contact: Vector3, fighter: Fighter) -> bool:
+	if spell.radius < 0.5:
+		return true
+	var space := get_world_3d().direct_space_state
+	var chest := fighter.chest_position()
+	if not space.intersect_ray(PhysicsRayQueryParameters3D.create(contact, chest, 1)).is_empty():
+		return false
+	var travel := velocity.normalized()
+	var side := chest - contact
+	side -= travel * side.dot(travel)
+	side = side.limit_length(spell.radius)
+	return space.intersect_ray(PhysicsRayQueryParameters3D.create(_origin + side, contact + side, 1)).is_empty()
 
 
 func _face_travel() -> void:

@@ -191,17 +191,20 @@ func test_blink_teleports_forward_and_stops_at_walls() -> void:
 	assert_gt(fighter.state.invulnerable, 0.0)
 
 
+## These two also walk for the tick, so they run in a physics frame: outside
+## one, move_and_slide() steps by the frame time, which varies run to run.
 func test_blink_in_open_ground_covers_its_distance() -> void:
 	fighter.rune = GameData.runes[&"blink"]
-	_tick(_move_cmd(Vector2(0, -1), InputCommand.RUNE))
+	await _tick_physics(_move_cmd(Vector2(0, -1), InputCommand.RUNE))
 	assert_almost_eq(fighter.global_position.z, -(GameData.runes[&"blink"] as BlinkRune).distance, 0.1)
 
 
 func test_exhausted_fighters_cannot_use_runes() -> void:
 	fighter.rune = GameData.runes[&"blink"]
 	fighter.state.exhausted = 1.0
-	_tick(_move_cmd(Vector2(1, 0), InputCommand.RUNE))
-	assert_almost_eq(fighter.global_position.x, 0.0, 0.01)
+	await _tick_physics(_move_cmd(Vector2(1, 0), InputCommand.RUNE))
+	assert_almost_eq(fighter.global_position.x, 0.0, 0.05, "one tick of walking, no blink")
+	assert_eq(fighter.state.rune_cd, 0.0, "the rune wasn't spent")
 
 
 func test_presses_during_a_flinch_are_buffered() -> void:
@@ -210,3 +213,69 @@ func test_presses_during_a_flinch_are_buffered() -> void:
 	assert_eq(fighter.state.action, FighterState.Action.FLINCH)
 	_tick(_cmd(), 6)
 	assert_eq(fighter.state.action, FighterState.Action.ATTACK, "the buffered light fires when the flinch ends")
+
+
+# --- shoves and pops (Wind, Lightning Strike) -----------------------------------
+
+func test_a_pop_lifts_the_fighter_off_the_floor_and_it_lands_again() -> void:
+	fighter.state.launch = 5.0
+	await _tick_physics(_cmd())
+	assert_eq(fighter.state.launch, 0.0, "the pop is spent in one tick")
+	assert_almost_eq(fighter.velocity.y, 5.0 - fighter.tuning.gravity * DT, 0.01, "rising at the pop's speed")
+	assert_false(fighter.state.on_floor)
+	assert_false(fighter.is_on_floor(), "off the floor")
+	var peak := fighter.global_position.y
+	for i in 120:
+		await _tick_physics(_cmd())
+		peak = maxf(peak, fighter.global_position.y)
+		if fighter.is_on_floor():
+			break
+	var expected := 5.0 * 5.0 / (2.0 * fighter.tuning.gravity)
+	assert_between(peak, expected * 0.75, expected * 1.05, "peak %.2f m" % peak)
+	assert_true(fighter.is_on_floor(), "and lands again")
+	assert_almost_eq(fighter.global_position.y, 0.0, 0.05)
+
+
+func test_a_pop_never_slows_a_faster_rise() -> void:
+	fighter.velocity.y = 8.0
+	fighter.state.launch = 3.0
+	_tick(_cmd())
+	assert_almost_eq(fighter.velocity.y, 8.0 - fighter.tuning.gravity * DT, 0.01)
+
+
+func test_no_guard_while_popped_up() -> void:
+	var guard := _cmd(InputCommand.BLOCK)
+	await _tick_physics(guard)
+	assert_true(fighter.state.blocking)
+	fighter.state.launch = 5.0
+	await _tick_physics(guard, 2)
+	assert_false(fighter.state.blocking, "no guard in the air")
+	for i in 60:
+		await _tick_physics(guard)
+		if fighter.state.blocking:
+			break
+	assert_true(fighter.state.blocking, "back on guard once it lands")
+
+
+func test_a_real_shove_moves_you_at_once() -> void:
+	CombatRules.apply_push(fighter.state, Vector3(8.0, 0.0, 0.0), 0.0)
+	_tick(_cmd())
+	assert_gt(fighter.velocity.x, 3.0, "moving at a run within one tick")
+	_tick(_cmd(), 2)
+	assert_between(fighter.velocity.x, fighter.state.knockback.x, 8.0, "at the full shove by the third")
+
+
+func test_a_gentle_nudge_eases_in() -> void:
+	fighter.state.knockback = Vector3(2.5, 0.0, 0.0)
+	_tick(_cmd())
+	assert_lt(fighter.velocity.x, 1.0, "small nudges ramp up at the normal ground acceleration")
+
+
+func test_a_full_burst_shove_carries_you_metres() -> void:
+	var start := fighter.global_position
+	CombatRules.apply_push(fighter.state, Vector3(0.0, 0.0, -12.0), 0.0)
+	await _tick_physics(_cmd(), 90)
+	var travelled := start.distance_to(fighter.global_position)
+	assert_between(travelled, 3.0, 7.0, "blown %.1f m" % travelled)
+	assert_eq(fighter.state.knockback, Vector3.ZERO, "and the shove dies out")
+	assert_almost_eq(fighter.velocity.length(), 0.0, 0.05, "coming to a stop")
