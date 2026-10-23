@@ -2,7 +2,8 @@ class_name Projectile
 extends Node3D
 ## A spell projectile. It moves in the physics tick and sweeps its path every
 ## tick: walls stop it (raycast), and fighters are hit with an analytic
-## segment-vs-capsule test, so fast bolts never tunnel through anyone.
+## segment-vs-capsule test, so fast bolts never tunnel through anyone. Its
+## look comes from SpellFx and is drawn between ticks (TickSmoother).
 
 var caster: Fighter
 var spell: ProjectileSpell
@@ -12,7 +13,6 @@ var velocity := Vector3.ZERO
 var _origin := Vector3.ZERO
 var _travelled := 0.0
 var _tuning: CombatTuning
-## The look, drawn between physics ticks (see TickSmoother).
 var _visual: Node3D
 var _smoother: TickSmoother
 
@@ -29,7 +29,10 @@ func setup(from: Fighter, data: ProjectileSpell, origin: Vector3, initial_veloci
 func _ready() -> void:
 	add_to_group(&"projectiles")
 	global_position = _origin
-	_build_visual()
+	_face_travel()
+	_visual = SpellFx.projectile(spell)
+	_visual.top_level = true
+	add_child(_visual)
 	_smoother = TickSmoother.new(self)
 	_process(0.0)
 
@@ -40,9 +43,11 @@ func _physics_process(delta: float) -> void:
 	var step := from.distance_to(to)
 	var hit_t := INF
 	var victim: Fighter = null
+	var normal := -velocity.normalized()
 	var wall := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(from, to, 1))
 	if wall:
 		hit_t = from.distance_to(wall.position) / maxf(step, 0.0001)
+		normal = wall.normal
 	for node in get_tree().get_nodes_in_group(&"fighters"):
 		var fighter := node as Fighter
 		if fighter.team == team or fighter.state.is_dead():
@@ -52,31 +57,44 @@ func _physics_process(delta: float) -> void:
 		if t >= 0.0 and t < hit_t:
 			hit_t = t
 			victim = fighter
+			normal = -velocity.normalized()
 	if hit_t <= 1.0:
-		_impact(from.lerp(to, hit_t), victim)
+		_impact(from.lerp(to, hit_t), normal, victim)
 		return
 	global_position = to
 	_smoother.tick()
 	_travelled += step
 	if _travelled >= spell.max_range:
-		Vfx.impact(get_parent(), global_position, SpellData.element_color(spell.element), 0.5, 0.15)
-		queue_free()
+		_impact(global_position, -velocity.normalized(), null, true)
 
 
-func _impact(at: Vector3, victim: Fighter) -> void:
+## Blown off course (a wind burst): same speed, new heading.
+func deflect(direction: Vector3) -> void:
+	var flat := Vector3(direction.x, 0.0, direction.z)
+	if flat.length() < 0.01:
+		return
+	velocity = flat.normalized() * velocity.length()
+	_face_travel()
+
+
+func _impact(at: Vector3, normal: Vector3, victim: Fighter, spent := false) -> void:
 	var travel := velocity.normalized()
 	if victim:
-		_apply(victim, spell.make_hit(true), victim.global_position - travel, at)
-	if spell.splash_radius > 0.0:
+		_apply(victim, spell.make_hit(true, travel), victim.global_position - travel, at)
+	if spell.splash_radius > 0.0 and not spent:
 		for node in get_tree().get_nodes_in_group(&"fighters"):
 			var fighter := node as Fighter
 			if fighter == victim or fighter.team == team or fighter.state.is_dead():
 				continue
 			if fighter.chest_position().distance_to(at) <= spell.splash_radius + Fighter.RADIUS:
-				_apply(fighter, spell.make_hit(false), at, fighter.chest_position())
-	Vfx.impact(get_parent(), at, SpellData.element_color(spell.element), 1.1 + spell.splash_radius * 0.4, 0.25, 6.0)
-	if spell.splash_radius > 0.0:
-		Vfx.ring(get_parent(), at - Vector3.UP * 0.6, SpellData.element_color(spell.element), spell.splash_radius, 0.3)
+				_apply(fighter, spell.make_hit(false, travel), at, fighter.chest_position())
+	if spell.burst_radius > 0.0:
+		WindBurst.blast(caster, spell, at, victim)
+	var fizzled := spent and spell.burst_radius <= 0.0
+	if not fizzled:
+		CombatEvents.spell_impact.emit(caster, spell, at)
+	SpellFx.impact(spell, get_parent(), at, normal, victim != null, fizzled)
+	SpellFx.release_look(_visual, get_parent())
 	queue_free()
 
 
@@ -87,48 +105,10 @@ func _apply(target: Fighter, hit: SpellHit, source: Vector3, contact: Vector3) -
 
 
 func _process(_delta: float) -> void:
-	_visual.global_transform = Transform3D(global_basis, _smoother.position())
+	if is_instance_valid(_visual) and _visual.get_parent() == self:
+		_visual.global_transform = Transform3D(global_basis, _smoother.position())
 
 
-func _build_visual() -> void:
-	var color := SpellData.element_color(spell.element)
-	_visual = Node3D.new()
-	_visual.top_level = true
-	add_child(_visual)
-	var body := MeshInstance3D.new()
-	if spell.element == SpellData.Element.FROST:
-		var shard := CylinderMesh.new()
-		shard.top_radius = 0.0
-		shard.bottom_radius = spell.radius * 0.6
-		shard.height = 0.9
-		shard.radial_segments = 5
-		shard.rings = 1
-		body.mesh = shard
-		body.rotation_degrees = Vector3(-90.0, 0.0, 0.0)  # point the tip along -Z (travel)
-		body.material_override = ToonMaterials.make(color.lightened(0.4), {&"glow_color": color, &"glow_energy": 1.5})
-	else:
-		var core := SphereMesh.new()
-		core.radius = spell.radius
-		core.height = spell.radius * 2.0
-		body.mesh = core
-		body.material_override = ToonMaterials.make_vfx(color.lightened(0.35), 4.0, false)
-		var halo := MeshInstance3D.new()
-		var halo_mesh := SphereMesh.new()
-		halo_mesh.radius = spell.radius * 1.8
-		halo_mesh.height = spell.radius * 3.6
-		halo.mesh = halo_mesh
-		halo.scale = Vector3(1.0, 1.0, 2.2)  # stretched into a comet tail
-		halo.position = Vector3(0.0, 0.0, spell.radius * 1.5)
-		var halo_material := ToonMaterials.make_vfx(color, 2.0)
-		halo_material.albedo_color.a = 0.45
-		halo.material_override = halo_material
-		_visual.add_child(halo)
-	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_visual.add_child(body)
-	var light := OmniLight3D.new()
-	light.light_color = color
-	light.light_energy = 1.6
-	light.omni_range = 4.0
-	_visual.add_child(light)
+func _face_travel() -> void:
 	if velocity.length() > 0.01:
 		look_at(global_position + velocity, Vector3.UP if absf(velocity.normalized().y) < 0.99 else Vector3.RIGHT)

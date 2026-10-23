@@ -27,3 +27,4 @@ func release(caster: Fighter, target: Vector3) -> void:
 	var wall := FlameWall.new()
 	wall.setup(caster, self, centre, direction)
 	caster.get_parent().add_child(wall)
+	CombatEvents.spell_impact.emit(caster, self, centre)

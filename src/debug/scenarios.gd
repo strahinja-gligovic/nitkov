@@ -72,18 +72,30 @@ static func get_timeline(scenario: String) -> Array:
 				{"at": 1.0, "press": P},
 				{"at": 2.0, "press": G},
 			]
-		"shatter":
-			# start with Shard Volley (--player_primary=shard_volley): chill,
-			# quick-swap to Firebolt -> Shatter. Then Nova (--player_signature=frost_nova).
+		"spells":
+			# any loadout (--player_primary / --player_signature): three
+			# primaries, the signature, one more primary
 			return [
 				{"at": 0.0, "for": 30.0, "track": true},
 				{"at": 0.3, "press": P},
-				{"at": 0.8, "swap": true},
+				{"at": 1.1, "press": P},
+				{"at": 1.9, "press": P},
+				{"at": 2.7, "press": G},
+				{"at": 4.6, "press": P},
+			]
+		"shatter":
+			# Ice Spike: chill, quick-swap to Firebolt -> Shatter. Then Nova
+			# (--player_signature=frost_nova) and Firebolt again.
+			return [
+				{"at": 0.0, "for": 30.0, "track": true},
+				{"at": 0.0, "swap": &"ice_spike"},
+				{"at": 0.3, "press": P},
+				{"at": 0.8, "swap": &"firebolt"},
 				{"at": 1.0, "press": P},
-				{"at": 2.6, "swap": true},
+				{"at": 2.6, "swap": &"ice_spike"},
 				{"at": 2.7, "for": 1.2, "move": Vector2(0, 1)},
 				{"at": 3.9, "press": G},
-				{"at": 4.6, "swap": true},
+				{"at": 4.6, "swap": &"firebolt"},
 				{"at": 4.7, "press": P},
 			]
 		"leap":

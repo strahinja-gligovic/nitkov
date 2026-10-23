@@ -43,6 +43,8 @@ var invulnerable := 0.0
 ## While > 0 the fighter is frozen mid-swing by a melee impact.
 var hitstop := 0.0
 var knockback := Vector3.ZERO
+## Upward velocity to give the body on the next movement tick (a shove's pop).
+var launch := 0.0
 
 var facing_yaw := 0.0
 var on_floor := true
@@ -84,6 +86,7 @@ func reset(tuning: CombatTuning) -> void:
 	invulnerable = 0.0
 	hitstop = 0.0
 	knockback = Vector3.ZERO
+	launch = 0.0
 	leaping = false
 	buffer.clear()
 	clear_statuses()

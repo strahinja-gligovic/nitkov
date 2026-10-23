@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ProjectileSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/projectile_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"wind_spear"
+display_name = "Wind Spear"
+description = "Hurls a spear of storm wind that bursts where it lands: 14 damage to whoever it pierces, and the burst blows everyone within 4 m away and off their feet (8 damage to enemies). Burst it at your feet to fling yourself clear. It also knocks enemy spells off course."
+element = 4
+slot = 1
+cooldown = 14.0
+windup = 0.45
+recovery = 0.4
+animation = &"cast_wall"
+damage = 14.0
+speed = 34.0
+radius = 0.35
+max_range = 40.0
+burst_radius = 4.0
+burst_damage = 8.0
+burst_push = 12.0
+burst_launch = 5.0

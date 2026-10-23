@@ -13,8 +13,9 @@ extends Node3D
 ##             (LeanModifier), a head look-at, breathing, and a spring-driven
 ##             bend away from each blow (HitReactModifier);
 ##   effects   blade trail and slash arc on swings, the heavy's ready flash,
-##             afterimages on dashes and blinks, the gauntlet's glow, status
-##             tints and hit flashes.
+##             afterimages on dashes and blinks, the gauntlet's glow and
+##             each spell's charge-up and release (SpellFx), status tints,
+##             shock arcs and hit flashes.
 
 const TRAIL_STEEL := [Color(0.92, 0.97, 1.0), Color(0.45, 0.68, 1.0)]
 const TRAIL_HEAVY := [Color(1.0, 0.9, 0.62), Color(1.0, 0.42, 0.1)]
@@ -55,6 +56,8 @@ var _ready_shown := false
 var _ready_glow := 0.0
 var _ghost_timer := 0.0
 var _dash_serial := -1
+var _cast_serial := -1
+var _shock_serial := -1
 var _was_leaping := false
 var _taunt_until := -1.0
 var _flash := 0.0
@@ -95,6 +98,7 @@ func _ready() -> void:
 	CombatEvents.fighter_respawned.connect(_on_respawned)
 	CombatEvents.landed.connect(_on_landed)
 	CombatEvents.fighter_died.connect(_on_died)
+	CombatEvents.spell_cast.connect(_on_spell_cast)
 	_place(0.0)
 
 
@@ -193,6 +197,7 @@ func _process(delta: float) -> void:
 	_update_taunt(s)
 	_update_gauntlet(s)
 	_update_status_tint(s)
+	_update_shock(s)
 	_update_flash(s, delta)
 	_update_tells(s)
 
@@ -476,10 +481,14 @@ func _build_gauntlet() -> void:
 	_gauntlet_core.add_child(_gauntlet_light)
 
 
-## The orb swells while a spell winds up and flares while guarding.
+## The orb swells while a spell winds up (with the element's own charge-up
+## in the hand) and flares while guarding.
 func _update_gauntlet(s: FighterState) -> void:
 	if _gauntlet_core == null or not is_instance_valid(_gauntlet_core):
 		return
+	if s.action == FighterState.Action.CAST and s.action_serial != _cast_serial:
+		_cast_serial = s.action_serial
+		SpellFx.charge(s.spell, _gauntlet_core, s.spell.windup)
 	var boost := 1.0
 	if s.action == FighterState.Action.CAST and not s.spell_released:
 		boost = 1.0 + 2.5 * clampf(s.action_time / maxf(s.spell.windup, 0.01), 0.0, 1.0)
@@ -487,6 +496,13 @@ func _update_gauntlet(s: FighterState) -> void:
 		boost = 1.7
 	_gauntlet_core.scale = Vector3.ONE * (1.0 + 0.3 * (boost - 1.0))
 	_gauntlet_light.light_energy = 0.7 * boost
+
+
+## The spell leaving the gauntlet.
+func _on_spell_cast(who: Node, spell: Resource) -> void:
+	if who != fighter or _gauntlet_core == null or not is_instance_valid(_gauntlet_core):
+		return
+	SpellFx.release(spell as SpellData, fighter.get_parent(), _gauntlet_core.global_position, fighter.forward())
 
 
 # --- tints, flashes and tells -----------------------------------------------------
@@ -504,6 +520,14 @@ func _update_status_tint(s: FighterState) -> void:
 	for material in materials:
 		material.set_shader_parameter(&"glow_color", color)
 		material.set_shader_parameter(&"glow_energy", energy)
+
+
+## A lightning stun crackles over the body while it lasts.
+func _update_shock(s: FighterState) -> void:
+	if s.action != FighterState.Action.STAGGER or s.stagger_kind != &"shock" or s.action_serial == _shock_serial:
+		return
+	_shock_serial = s.action_serial
+	SpellFx.shock(_pivot, s.action_duration - s.action_time)
 
 
 func _update_flash(s: FighterState, delta: float) -> void:

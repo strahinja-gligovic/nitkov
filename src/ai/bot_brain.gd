@@ -327,6 +327,9 @@ func _continue_chain(me: Fighter) -> void:
 func _signature_fits(me: Fighter, distance: float) -> bool:
 	if me.signature is NovaSpell:
 		return distance < (me.signature as NovaSpell).radius - 1.0
+	if me.signature is LightningStrikeSpell:
+		var strike := me.signature as LightningStrikeSpell
+		return distance > strike.min_range + 1.0 and distance < strike.max_range - 2.0
 	return distance > 5.0 and distance < 14.0
 
 
@@ -361,12 +364,14 @@ func _unstick(me: Fighter, move: Vector3, dt: float) -> Vector3:
 	return move
 
 
-## Steps out of enemy ground fire the short way.
+## Steps out of enemy ground fire or a marked strike circle the short way.
+## A zone is anything in the "zones" group with a team, contains() and
+## exit_direction() (FlameWall, LightningStrike).
 func _escape_zones(me: Fighter) -> Vector3:
 	for node in me.get_tree().get_nodes_in_group(&"zones"):
-		var wall := node as FlameWall
-		if wall.team != me.team and wall.contains(me.global_position, Fighter.RADIUS + 0.5):
-			return wall.exit_direction(me.global_position)
+		var zone = node
+		if zone.team != me.team and zone.contains(me.global_position, Fighter.RADIUS + 0.5):
+			return zone.exit_direction(me.global_position)
 	return Vector3.ZERO
 
 

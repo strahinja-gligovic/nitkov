@@ -31,7 +31,7 @@ Milestone 1 is **single-player combat feel only**: one player against a dummy or
 | Controls help | H | |
 
 ### Loadout
-Everyone is a hybrid: one melee weapon (milestone 1: **longsword**), one elemental gauntlet (**Fire** or **Frost**), and one mobility rune (**Leap** or **Blink**).
+Everyone is a hybrid: one melee weapon (milestone 1: **longsword**), one elemental gauntlet, and one mobility rune (**Leap** or **Blink**). The gauntlet holds a primary and a signature from any of the four elements (**Fire**, **Frost**, **Lightning**, **Wind**; ticket 15), mixed and matched.
 
 ### Stamina (one shared pool)
 - 100 max. Regenerates 35/s after a 0.6s delay since the last spend, at half speed while blocking. Sprinting drains 10/s.
@@ -50,12 +50,12 @@ Everyone is a hybrid: one melee weapon (milestone 1: **longsword**), one element
 - If a blocked hit costs more stamina than you have, the guard breaks: stagger for 0.8s, plus exhausted.
 - A blocked heavy always breaks the guard: 0.8s stagger and 50% of the heavy's damage (default, tunable).
 - **Parry**: block pressed within 150ms before a melee hit lands, from the front. The attacker is staggered for 1.0s after a light or 1.5s after a heavy, and the defender takes nothing. A new parry window can open only 0.6s after the previous press; holding block still blocks.
-- Fire on the ground (Flame Wall) and burn damage over time can't be blocked.
+- Fire on the ground (Flame Wall), burn damage over time and the Lightning Strike (it comes from above) can't be blocked.
 
 ### Stagger (flinch rules, no poise bar)
 - Light hits flinch for 0.25s and heavy hits for 0.4s. A flinch interrupts lights, casts and dashes, but not heavies.
 - Parry, guard break and Shatter cause a long stagger.
-- Spells don't flinch (default). Attacker and victim freeze briefly on melee contact (hit-stop).
+- Spells don't flinch, except Lightning: the Lightning Bolt flinches (not through hyperarmor) and the Lightning Strike stuns ("shock" stagger). Attacker and victim freeze briefly on melee contact (hit-stop).
 
 ### Dash-step
 4m over 0.25s, 0.15s of invulnerability from the start, 20 stamina. It goes in the move direction, or backwards with no input. Ground only.
@@ -66,7 +66,9 @@ Each gauntlet has a **primary** (costs stamina) and a **signature** (15s cooldow
 | Gauntlet | Primary | Signature |
 |---|---|---|
 | Fire | **Firebolt**: projectile, 12 damage plus Burn (3/s for 3s); 1.5m splash dealing 4 damage plus Burn; 15 stamina | **Flame Wall**: 8m line of burning ground across the aim point, 4s, 8 damage per second to anyone standing in it |
-| Frost | **Shard Volley**: 3 shards in a tight spread, 5 damage and +1 Chill each; 15 stamina | **Frost Nova**: 5m blast around the caster, 10 damage, +3 Chill, 40% slow for 2s |
+| Frost | **Ice Spike** (was Shard Volley, ticket 15): one spike, 10 damage and +1 Chill; 15 stamina | **Frost Nova**: 5m blast around the caster, 10 damage, +3 Chill, 40% slow for 2s |
+| Lightning | **Lightning Bolt**: near-instant bolt (80 m/s), 9 damage and a 0.25s flinch; 15 stamina | **Lightning Strike**: marks a 2.5m circle at the aim point (3–18m); 0.9s later a bolt from the sky deals 24 damage, a 1s stun and a pop up. Unblockable |
+| Wind | **Wind Slash**: a wide crescent (1m hit radius, fades at 25m), 8 damage and a shove; 15 stamina | **Wind Spear**: 14 damage to whoever it hits; it bursts where it lands, blowing everyone within 4m away and off their feet (8 damage to enemies, caster and allies only pushed) and knocking enemy spells off course. 14s cooldown |
 
 - **Chill** stacks to 3 and expires 4s after the last stack. At 3 stacks you're slowed 30%. Slows don't add up; the strongest one wins.
 - **Shatter** (status-based combo, any source): a Fire hit on a Chilled target (Firebolt direct or splash, or a Flame Wall tick) deals 25 bonus damage and a 1.2s stagger, and consumes the Chill. Burn ticks don't trigger it.
@@ -110,4 +112,4 @@ These can be done on both keyboard/mouse and controller:
 - TTK in the combat log reads ~4–6s.
 
 ## Out of scope
-Networking, teams larger than 1v1, TDM scoring, more weapons or elements, Steam combos, gliding, audio, and final art.
+Networking, teams larger than 1v1, TDM scoring, more weapons, Lightning and Wind status combos, Steam combos, gliding, music, and final art.

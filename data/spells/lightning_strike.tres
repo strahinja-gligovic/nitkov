@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LightningStrikeSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/lightning_strike_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"lightning_strike"
+display_name = "Lightning Strike"
+description = "Marks the ground at your aim point, and 0.9s later lightning strikes it from the sky: 24 damage, a 1s stun and a jolt into the air. Guards can't stop it, so get out of the circle."
+element = 3
+slot = 1
+cooldown = 15.0
+windup = 0.4
+recovery = 0.35
+animation = &"cast_wall"
+radius = 2.5
+delay = 0.9
+damage = 24.0
+stagger = 1.0
+launch = 2.5
+max_range = 18.0
+min_range = 3.0

@@ -8,9 +8,10 @@ extends Node
 ##   --player_at=0,6   move the player to this x,z first (open ground)
 ##   --bot_at=2.2      place the bot this far in front of the player
 ##   --player_yaw=-90  starting facing in degrees (0 = north/-Z, -90 = east)
-##   --player_primary=shard_volley / --player_signature=frost_nova / --player_rune=blink
+##   --player_primary=ice_spike / --player_signature=frost_nova / --player_rune=blink
 ##   --player_character=mage  (and the same with bot_ for the bot)
 ##   --player_hp=40    start the player hurt
+##   --slowmo=0.25     run the game at this speed (shots and quit stay in game time)
 ##   --menu            open the loadout menu at start
 ##   --hitboxes / --combat_log / --tuning   start with that debug view open
 ##   --bot_mode=4 --bot_skill=0.7   bot behaviour (BotBrain.Mode) and difficulty

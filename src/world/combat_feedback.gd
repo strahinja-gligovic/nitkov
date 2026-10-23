@@ -61,7 +61,7 @@ func _on_hit_resolved(attacker: Node, defender: Node, result: HitResult, at: Vec
 		trauma = 0.6
 		kick = 1.0
 		punch = 5.0
-		Vfx.shards(self, at, SpellData.element_color(SpellData.Element.FROST), 12, 2.2)
+		SpellFx.shatter(self, at)
 	Vfx.impact(self, at, color, size)
 	if camera_rig == null or (attacker != focus and defender != focus):
 		return

@@ -3,8 +3,10 @@ extends Resource
 ## Base for spells. A cast runs windup -> release -> recovery; at release
 ## the subclass spawns its effect via release(). Every fighter picks one
 ## PRIMARY and one SIGNATURE spell, from any element.
+##   Fire burns over time, Frost chills and slows (Fire on a Chilled target
+##   Shatters), Lightning interrupts and stuns, Wind pushes.
 
-enum Element { NONE, FIRE, FROST }
+enum Element { NONE, FIRE, FROST, LIGHTNING, WIND }
 enum Slot { PRIMARY, SIGNATURE }
 
 @export var id := &""
@@ -37,4 +39,8 @@ static func element_color(element: Element) -> Color:
 			return Color(1.0, 0.45, 0.12)
 		Element.FROST:
 			return Color(0.35, 0.8, 1.0)
+		Element.LIGHTNING:
+			return Color(1.0, 0.9, 0.3)
+		Element.WIND:
+			return Color(0.5, 1.0, 0.72)
 	return Color(0.8, 0.8, 0.8)

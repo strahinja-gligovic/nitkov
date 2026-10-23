@@ -438,7 +438,13 @@ func _move(cmd: InputCommand, delta: float) -> void:
 		target = _air_velocity(cmd)
 		accel = tuning.air_accel
 	target += state.knockback
+	if state.knockback.length() > 3.0:
+		accel = maxf(accel, 200.0)  # a real shove moves you now, not after a run-up
 	state.knockback = state.knockback.move_toward(Vector3.ZERO, 14.0 * delta)
+	if state.launch > 0.0:
+		velocity.y = maxf(velocity.y, state.launch)
+		state.launch = 0.0
+		state.on_floor = false
 	var planar := Vector3(velocity.x, 0.0, velocity.z).move_toward(target, accel * delta)
 	velocity.x = planar.x
 	velocity.z = planar.z

@@ -4,19 +4,17 @@
 
 [resource]
 script = ExtResource("1_spell")
-id = &"shard_volley"
-display_name = "Shard Volley"
-description = "Three ice shards in a tight fan: 5 damage and +1 Chill each. Three Chill stacks slow the target."
+id = &"ice_spike"
+display_name = "Ice Spike"
+description = "One heavy spike of ice: 10 damage and +1 Chill. Three Chill stacks slow the target, and Fire on a Chilled target Shatters it."
 element = 2
 slot = 0
 stamina_cost = 15.0
-windup = 0.14
+windup = 0.15
 recovery = 0.26
 animation = &"cast_bolt"
-damage = 5.0
-speed = 46.0
-radius = 0.2
-count = 3
-spread = 4.0
+damage = 10.0
+speed = 50.0
+radius = 0.22
 max_range = 55.0
 chill_stacks = 1

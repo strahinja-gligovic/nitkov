@@ -93,7 +93,7 @@ func _frost_hit(stacks := 1) -> SpellHit:
 	hit.element = SpellData.Element.FROST
 	hit.damage = 5.0
 	hit.chill_stacks = stacks
-	hit.source = &"shard_volley"
+	hit.source = &"ice_spike"
 	return hit
 
 
