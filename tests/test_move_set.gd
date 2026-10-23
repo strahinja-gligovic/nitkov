@@ -51,6 +51,8 @@ func test_keys_ascend_and_clips_are_named_by_source() -> void:
 		var move: AnimMove = moves.moves[id]
 		assert_eq(String(move.clip).split("/").size(), 2, "%s: clip is <source>/<name>" % id)
 		assert_gt(move.keys.size(), 1, "%s has keys" % id)
+		if not move.sim_keys.is_empty():
+			continue  # timed moves may play out and back (a recoil returning to the guard)
 		for i in range(1, move.keys.size()):
 			assert_true(move.keys[i] >= move.keys[i - 1], "%s: keys ascend" % id)
 
@@ -102,7 +104,10 @@ func test_every_clip_exists_in_its_source() -> void:
 			assert_true(available.has(String(move.chain_clip)), "%s: clip %s exists" % [id, move.chain_clip])
 		if not available.has(String(move.clip)):
 			continue
-		var length: float = available[String(move.clip)]
+		var length: float = available[String(move.clip)] - move.clip_from
 		if move.has_chain():
 			length = move.chain_at - move.chain_blend + move.chain_to - move.chain_from
-		assert_true(move.keys[move.keys.size() - 1] <= length + 0.002, "%s: keys stay inside the clip" % id)
+		var latest := 0.0
+		for key in move.keys:
+			latest = maxf(latest, key)
+		assert_true(latest <= length + 0.002, "%s: keys stay inside the clip" % id)

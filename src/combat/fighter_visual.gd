@@ -5,10 +5,13 @@ extends Node3D
 ## on the body. Every frame it reads Fighter.state; it never writes it.
 ##
 ##   body      drawn between physics ticks (TickSmoother); turns through a
-##             spring instead of snapping, leans into acceleration, squashes
-##             on landings and hits, shakes through hit-stop (BodyDynamics);
-##   skeleton  the director's clips, then a head look-at, breathing, and a
-##             spring-driven bend away from each blow (HitReactModifier);
+##             spring instead of snapping, squashes and stretches on
+##             landings, take-offs, dashes and hits, shakes through hit-stop
+##             (BodyDynamics);
+##   skeleton  the director's clips, then legs turned toward the travel
+##             (StrideTwistModifier), a spine lean into acceleration
+##             (LeanModifier), a head look-at, breathing, and a spring-driven
+##             bend away from each blow (HitReactModifier);
 ##   effects   blade trail and slash arc on swings, the heavy's ready flash,
 ##             afterimages on dashes and blinks, the gauntlet's glow, status
 ##             tints and hit flashes.
@@ -22,6 +25,8 @@ const READY_FLASH_LEAD := 0.12
 const GHOST_INTERVAL := 0.04
 ## The slash arc's outer radius around the chest: about arm plus blade.
 const SLASH_RADIUS := 1.5
+## Seconds after a kill in which the taunt can still start.
+const TAUNT_WINDOW := 1.5
 
 var fighter: Fighter
 var rig: CharacterRig
@@ -51,6 +56,7 @@ var _ready_glow := 0.0
 var _ghost_timer := 0.0
 var _dash_serial := -1
 var _was_leaping := false
+var _taunt_until := -1.0
 var _flash := 0.0
 var _last_hp := -1.0
 var _time := 0.0
@@ -114,7 +120,8 @@ func _build_model() -> void:
 	sword_materials = rig.sword_materials
 	AnimLibrary.attach(rig.anim_player, rig.skeleton, GameData.moves)
 	director = AnimDirector.new()
-	director.build(rig.model, rig.anim_player, rig.upper_body_filter(), rig.left_arm_filter(), GameData.moves)
+	director.build(rig.model, rig.anim_player, rig.upper_body_filter(), rig.left_arm_filter(), rig.grip_filter(),
+			GameData.moves)
 	_build_modifiers()
 	director.stride = _stride
 	_trail.setup(rig.sword, rig.sword_hilt, rig.sword_tip)
@@ -183,6 +190,7 @@ func _process(delta: float) -> void:
 	rig.skeleton.advance(delta)
 	_update_swing_effects(s, delta)
 	_update_ghosts(s, delta)
+	_update_taunt(s)
 	_update_gauntlet(s)
 	_update_status_tint(s)
 	_update_flash(s, delta)
@@ -320,9 +328,20 @@ func _on_respawned(who: Node) -> void:
 	_place(0.0)
 
 
-## A little celebration when you take someone down (if you're free to).
+## A little celebration when you take someone down: once the killing blow
+## has played out, if you're standing free within a moment of it.
 func _on_died(_who: Node, killer: Node) -> void:
-	if killer == fighter and rig and fighter.state.action == FighterState.Action.IDLE and not fighter.state.blocking:
+	if killer == fighter:
+		_taunt_until = _time + TAUNT_WINDOW
+
+
+func _update_taunt(s: FighterState) -> void:
+	if _taunt_until < _time:
+		return
+	var free := s.action == FighterState.Action.IDLE and not s.blocking and s.on_floor \
+			and Vector2(fighter.velocity.x, fighter.velocity.z).length() < 1.0
+	if free:
+		_taunt_until = -1.0
 		director.play_overlay(&"taunt", AnimDirector.Layer.FULL)
 
 

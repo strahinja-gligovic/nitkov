@@ -18,8 +18,9 @@ ground_speed = 1
 [sub_resource type="Resource" id="Move_run"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Run_Female"
-keys = PackedFloat32Array(0.467, 0.833)
-ground_speed = 3.4
+clip_from = 0.042
+keys = PackedFloat32Array(0.425, 0.791)
+ground_speed = 3.47
 play_at = 2.75
 
 [sub_resource type="Resource" id="Move_jog"]
@@ -33,7 +34,7 @@ play_at = 5
 script = ExtResource("1_move")
 clip = &"ual1/Sprint"
 keys = PackedFloat32Array(0, 0.667)
-ground_speed = 9.1
+ground_speed = 9.3
 play_at = 7.5
 
 [sub_resource type="Resource" id="Move_light_1"]
@@ -115,28 +116,30 @@ blend_in = 0
 [sub_resource type="Resource" id="Move_cast_bolt"]
 script = ExtResource("1_move")
 clip = &"ual1/Punch_Jab"
-keys = PackedFloat32Array(0, 0.133, 0.15, 0.2, 0.333, 0.867)
+keys = PackedFloat32Array(0, 0.133, 0.133, 0.2, 0.333, 0.867)
 blend_in = 0.05
 left_arm_only = true
-strike = 0.035
-hold = 0.012
+strike = 0.04
+hold = 0
 settle_fraction = 0.3
 
 [sub_resource type="Resource" id="Move_cast_wall"]
 script = ExtResource("1_move")
 clip = &"ual2/OverhandThrow"
-keys = PackedFloat32Array(0, 0.267, 0.283, 0.367, 0.45, 1.2)
+keys = PackedFloat32Array(0, 0.267, 0.267, 0.367, 0.45, 1.2)
 mirror = true
 blend_in = 0.08
-strike = 0.08
-hold = 0.015
+blend_out = 0.15
+strike = 0.09
+hold = 0
 settle_fraction = 0.1
 
 [sub_resource type="Resource" id="Move_cast_nova"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Attack_Ground_Pound"
-keys = PackedFloat32Array(0, 0.25, 0.3, 0.733, 0.783, 1)
+keys = PackedFloat32Array(0, 0.25, 0.3, 0.733, 0.783, 0.933)
 blend_in = 0.06
+blend_out = 0.15
 strike = 0.1
 hold = 0
 settle_fraction = 0.1
@@ -156,25 +159,27 @@ chain_blend = 0.05
 [sub_resource type="Resource" id="Move_block_impact"]
 script = ExtResource("1_move")
 clip = &"ual2/Idle_Shield_Break"
-keys = PackedFloat32Array(0, 0.067, 0.067)
-sim_keys = PackedFloat32Array(0, 0.27, 1)
+keys = PackedFloat32Array(0, 0.05, 0)
+sim_keys = PackedFloat32Array(0, 0.2, 1)
 duration = 0.25
 blend_in = 0
 
 [sub_resource type="Resource" id="Move_parry"]
 script = ExtResource("1_move")
 clip = &"ual2/Sword_Block"
-keys = PackedFloat32Array(0.067, 0.1, 0.167, 0.333)
+keys = PackedFloat32Array(0.067, 0.1, 0.15, 0.333)
 sim_keys = PackedFloat32Array(0, 0.1111, 0.3333, 1)
 duration = 0.27
 blend_in = 0
+blend_out = 0.16
 
 [sub_resource type="Resource" id="Move_guard_break"]
 script = ExtResource("1_move")
 clip = &"ual2/Idle_Shield_Break"
-keys = PackedFloat32Array(0, 0.133, 0.233, 0.95, 1.067)
-sim_keys = PackedFloat32Array(0, 0.125, 0.3, 0.9, 1)
+keys = PackedFloat32Array(0, 0.133, 0.233, 0.55)
+sim_keys = PackedFloat32Array(0, 0.125, 0.3, 1)
 blend_in = 0.03
+blend_out = 0.2
 
 [sub_resource type="Resource" id="Move_flinch"]
 script = ExtResource("1_move")
@@ -182,6 +187,7 @@ clip = &"ual1/Hit_Chest"
 keys = PackedFloat32Array(0, 0.033, 0.3, 0.333)
 sim_keys = PackedFloat32Array(0, 0.12, 0.88, 1)
 blend_in = 0.02
+blend_out = 0.15
 
 [sub_resource type="Resource" id="Move_flinch_heavy"]
 script = ExtResource("1_move")
@@ -189,6 +195,7 @@ clip = &"ual2/Idle_Shield_Break"
 keys = PackedFloat32Array(0.067, 0.133, 0.233, 0.6)
 sim_keys = PackedFloat32Array(0, 0.15, 0.35, 1)
 blend_in = 0.02
+blend_out = 0.18
 
 [sub_resource type="Resource" id="Move_stagger"]
 script = ExtResource("1_move")
@@ -196,6 +203,7 @@ clip = &"m2m_addon/Death_A"
 keys = PackedFloat32Array(0.075, 0.3, 1.05)
 sim_keys = PackedFloat32Array(0, 0.2, 1)
 blend_in = 0.03
+blend_out = 0.18
 
 [sub_resource type="Resource" id="Move_stagger_long"]
 script = ExtResource("1_move")
@@ -203,17 +211,19 @@ clip = &"m2m_addon/Death_A"
 keys = PackedFloat32Array(0.075, 0.3, 0.6, 1.35)
 sim_keys = PackedFloat32Array(0, 0.1667, 0.4, 1)
 blend_in = 0.03
+blend_out = 0.18
 
 [sub_resource type="Resource" id="Move_knockdown"]
 script = ExtResource("1_move")
 clip = &"ual2/Hit_Knockback"
-keys = PackedFloat32Array(0, 0.067, 0.3, 0.637, 0.987, 1.637)
+keys = PackedFloat32Array(0, 0.067, 0.3, 0.475, 0.725, 1.125)
 blend_in = 0.02
+blend_out = 0.15
 chain_clip = &"ual2/LayToIdle"
-chain_at = 0.4
-chain_from = 0.083
+chain_at = 0.5
+chain_from = 0.625
 chain_to = 1.4
-chain_blend = 0.08
+chain_blend = 0.15
 
 [sub_resource type="Resource" id="Move_death"]
 script = ExtResource("1_move")
@@ -237,39 +247,46 @@ blend_in = 0.05
 [sub_resource type="Resource" id="Move_dash_f"]
 script = ExtResource("1_move")
 clip = &"ual2/Sword_Dash"
-keys = PackedFloat32Array(0.2, 0.233, 0.267, 0.367, 0.45)
-blend_in = 0.03
+keys = PackedFloat32Array(0.2, 0.217, 0.367, 0.4, 0.45)
+blend_in = 0.05
+blend_out = 0.15
 
 [sub_resource type="Resource" id="Move_dash_b"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Dodge_back"
 keys = PackedFloat32Array(0.05, 0.1, 0.217, 0.3, 0.45)
 blend_in = 0.03
+blend_out = 0.12
 
 [sub_resource type="Resource" id="Move_dash_l"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Dodge_left"
-keys = PackedFloat32Array(0.083, 0.133, 0.15, 0.267, 0.5)
-blend_in = 0.03
+keys = PackedFloat32Array(0.15, 0.267, 0.5)
+blend_in = 0.04
+blend_out = 0.14
 
 [sub_resource type="Resource" id="Move_dash_r"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Dodge_right"
-keys = PackedFloat32Array(0.083, 0.133, 0.15, 0.267, 0.5)
-blend_in = 0.03
+keys = PackedFloat32Array(0.15, 0.267, 0.5)
+blend_in = 0.04
+blend_out = 0.14
 
 [sub_resource type="Resource" id="Move_taunt"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Victory"
-keys = PackedFloat32Array(0, 0.4, 0.5, 0.767, 1.217, 1.667)
+keys = PackedFloat32Array(0, 0.4, 0.517, 0.767, 1.217, 1.667)
 duration = 1.667
+mirror = true
 blend_in = 0.15
+blend_out = 0.2
 
 [sub_resource type="Resource" id="Move_entrance"]
 script = ExtResource("1_move")
 clip = &"m2m_addon/Land_Three_Point"
-keys = PackedFloat32Array(0, 0.5, 0.7, 0.95, 1.817)
+keys = PackedFloat32Array(0, 0.467, 0.733, 0.95, 1.38, 1.817)
 duration = 1.817
+mirror = true
 blend_in = 0
 chain_clip = &"ual2/NinjaJump_Land"
 chain_at = 1
@@ -298,18 +315,19 @@ blend_in = 0.25
 
 [sub_resource type="Resource" id="Move_leap_land"]
 script = ExtResource("1_move")
-clip = &"ual2/NinjaJump_Land"
-keys = PackedFloat32Array(0.1, 0.183, 0.8)
-duration = 0.7
-blend_in = 0.03
+clip = &"ual1/Jump_Land"
+keys = PackedFloat32Array(0, 0.2, 0.8)
+duration = 0.8
+blend_in = 0.05
+blend_out = 0.15
 
 [sub_resource type="Resource" id="Move_blink"]
 script = ExtResource("1_move")
 clip = &"ual2/Shield_Dash"
-keys = PackedFloat32Array(0.2, 0.467, 0.8)
+keys = PackedFloat32Array(0.1, 0.467, 0.8)
 duration = 0.3
 blend_in = 0
-keep_while_moving = true
+blend_out = 0.15
 
 [resource]
 script = ExtResource("2_set")

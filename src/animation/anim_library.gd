@@ -83,31 +83,40 @@ static func _prepare(skeleton: Skeleton3D, moves: MoveSet) -> Dictionary:
 	var converted := {}  # "prefix/clip" -> Animation, converted for this skeleton
 	for id: StringName in moves.moves:
 		var move: AnimMove = moves.moves[id]
-		var clip := _converted(move.clip, skeleton, converted)
-		if clip == null:
-			push_warning("AnimLibrary: move %s wants missing clip %s" % [id, move.clip])
-			continue
-		if move.has_chain():
-			var second := _converted(move.chain_clip, skeleton, converted)
-			if second == null:
-				push_warning("AnimLibrary: move %s wants missing clip %s" % [id, move.chain_clip])
-				continue
-			clip = splice(clip, move.chain_at, second, move.chain_from, move.chain_to, move.chain_blend)
 		var prefix := StringName(String(move.clip).get_base_dir())
 		if not libraries.has(prefix):
 			libraries[prefix] = AnimationLibrary.new()
 		var library: AnimationLibrary = libraries[prefix]
 		var name := move.baked_name()
 		if not library.has_animation(name):
+			var clip := _part(move.clip, move.mirror, skeleton, converted)
+			if clip == null:
+				push_warning("AnimLibrary: move %s wants missing clip %s" % [id, move.clip])
+				continue
+			if move.clip_from > 0.0:
+				clip = trim_start(clip, move.clip_from)
+			if move.has_chain():
+				var second := _part(move.chain_clip, move.chain_mirror, skeleton, converted)
+				if second == null:
+					push_warning("AnimLibrary: move %s wants missing clip %s" % [id, move.chain_clip])
+					continue
+				clip = splice(clip, move.chain_at, second, move.chain_from, move.chain_to, move.chain_blend)
 			library.add_animation(name, clip)
-		clip = library.get_animation(name)
 		if move.ground_speed > 0.0 or id in LOOPING_MOVES:
-			clip.loop_mode = Animation.LOOP_LINEAR
-		if move.mirror and not library.has_animation(name + MIRROR_SUFFIX):
-			var mirrored := AnimMirror.mirror(clip, skeleton)
-			mirrored.loop_mode = clip.loop_mode
-			library.add_animation(name + MIRROR_SUFFIX, mirrored)
+			library.get_animation(name).loop_mode = Animation.LOOP_LINEAR
 	return libraries
+
+
+## A clip converted for `skeleton`, mirrored if asked; each kept once per prepare.
+static func _part(path: StringName, mirrored: bool, skeleton: Skeleton3D, cache: Dictionary) -> Animation:
+	var key := String(path) + (MIRROR_SUFFIX if mirrored else "")
+	if cache.has(key):
+		return cache[key]
+	var clip := _converted(path, skeleton, cache)
+	if clip != null and mirrored:
+		clip = AnimMirror.mirror(clip, skeleton)
+		cache[key] = clip
+	return clip
 
 
 ## A source clip ("prefix/name") converted for `skeleton`, once per prepare.
@@ -167,6 +176,36 @@ static func splice(first: Animation, first_until: float, second: Animation, seco
 				Animation.TYPE_SCALE_3D:
 					out.scale_track_insert_key(track, t, (from_first as Vector3).lerp(from_second, w))
 	return out
+
+
+## `clip` without its first `seconds`, every key moved earlier by as much.
+static func trim_start(clip: Animation, seconds: float) -> Animation:
+	var out := Animation.new()
+	out.length = maxf(clip.length - seconds, 0.001)
+	for track in clip.get_track_count():
+		var type := clip.track_get_type(track)
+		if type not in [Animation.TYPE_POSITION_3D, Animation.TYPE_ROTATION_3D, Animation.TYPE_SCALE_3D]:
+			continue
+		var copy := out.add_track(type)
+		out.track_set_path(copy, clip.track_get_path(track))
+		# the pose at the cut, then every later key
+		var first: Variant = _sample(clip, track, seconds, type)
+		_insert_key(out, copy, type, 0.0, first)
+		for key in clip.track_get_key_count(track):
+			var t := clip.track_get_key_time(track, key)
+			if t > seconds + 0.0001:
+				_insert_key(out, copy, type, t - seconds, clip.track_get_key_value(track, key))
+	return out
+
+
+static func _insert_key(clip: Animation, track: int, type: int, t: float, value: Variant) -> void:
+	match type:
+		Animation.TYPE_ROTATION_3D:
+			clip.rotation_track_insert_key(track, t, value)
+		Animation.TYPE_POSITION_3D:
+			clip.position_track_insert_key(track, t, value)
+		Animation.TYPE_SCALE_3D:
+			clip.scale_track_insert_key(track, t, value)
 
 
 static func _sample(clip: Animation, track: int, t: float, type: int) -> Variant:

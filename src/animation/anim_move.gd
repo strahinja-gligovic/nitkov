@@ -7,6 +7,9 @@ extends Resource
 
 ## Clip in the shared library, e.g. &"ual2/Sword_Regular_A".
 @export var clip := &""
+## Seconds cut from the clip's start (e.g. a pose an importer holds before
+## the first real key, which would stutter a loop). Keys count from the cut.
+@export var clip_from := 0.0
 ## Key poses in clip seconds, ascending. Swings and casts use six: start,
 ## antic (wind-up extreme), go (strike begins), contact (blade at the target
 ## or spell leaving the hand), settle (follow-through stops), end.
@@ -23,8 +26,12 @@ extends Resource
 @export var mirror := false
 ## Crossfade into this move, seconds.
 @export var blend_in := 0.08
-## Upper-body plays (casts on the move) only take the left arm and the
-## spine, so the sword arm keeps running.
+## Crossfade out of this move into whatever follows, seconds (moves that end
+## far from the guard need longer); 0 = use what follows' blend_in.
+@export var blend_out := 0.0
+## A cast that only ever takes the left arm and the spine, standing or on
+## the move (the sword arm keeps its pose, so its blade can't swing into
+## the head).
 @export var left_arm_only := false
 ## A full-body flourish normally gives way as soon as the fighter moves;
 ## this one plays out (e.g. the short blink arrival).
@@ -60,6 +67,8 @@ extends Resource
 ## The stretch of the second clip that follows.
 @export var chain_from := 0.0
 @export var chain_to := 0.0
+## Play the second clip mirrored (`mirror` applies to the first only).
+@export var chain_mirror := false
 ## Crossfade at the splice, seconds.
 @export var chain_blend := 0.08
 
@@ -81,11 +90,14 @@ func has_chain() -> bool:
 	return chain_clip != &""
 
 
-## The joined clip's name inside its library ("Hit_Knockback+LayToIdle").
+## The prepared clip's name inside its library: mirrored parts carry a
+## suffix and spliced chains join their parts ("Hit_Knockback+LayToIdle").
 func baked_name() -> String:
-	var own := String(clip).get_file()
+	var own := String(clip).get_file() + (AnimLibrary.MIRROR_SUFFIX if mirror else "")
+	if clip_from > 0.0:
+		own += "@%.3f" % clip_from
 	if has_chain():
-		own += "+" + String(chain_clip).get_file()
+		own += "+" + String(chain_clip).get_file() + (AnimLibrary.MIRROR_SUFFIX if chain_mirror else "")
 	return own
 
 

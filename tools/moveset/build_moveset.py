@@ -40,31 +40,34 @@ MELEE_MOVES = {
 
 CAST_MOVES = {
     # a left jab throws the bolt; on the move only the left arm and spine take it
-    "cast_bolt": dict(clip="ual1/Punch_Jab", keys=[0.0, 0.133, 0.15, 0.2, 0.333, 0.867], strike=0.035, hold=0.012,
+    "cast_bolt": dict(clip="ual1/Punch_Jab", keys=[0.0, 0.133, 0.133, 0.2, 0.333, 0.867], strike=0.04, hold=0.0,
                       settle_fraction=0.3, left_arm_only=True, blend_in=0.05),
     # an overhand throw from the gauntlet hand slams the wall down ahead
-    "cast_wall": dict(clip="ual2/OverhandThrow", mirror=True, keys=[0.0, 0.267, 0.283, 0.367, 0.45, 1.2], strike=0.08,
-                      hold=0.015, settle_fraction=0.1, blend_in=0.08),
+    "cast_wall": dict(clip="ual2/OverhandThrow", mirror=True, keys=[0.0, 0.267, 0.267, 0.367, 0.45, 1.2], strike=0.09,
+                      hold=0.0, settle_fraction=0.1, blend_in=0.08, blend_out=0.15),
     # a two-fisted ground pound bursts frost around the caster
-    "cast_nova": dict(clip="m2m_addon/Attack_Ground_Pound", keys=[0.0, 0.25, 0.3, 0.733, 0.783, 1.0], strike=0.1,
-                      hold=0.0, settle_fraction=0.1, blend_in=0.06),
+    "cast_nova": dict(clip="m2m_addon/Attack_Ground_Pound", keys=[0.0, 0.25, 0.3, 0.733, 0.783, 0.933], strike=0.1,
+                      hold=0.0, settle_fraction=0.1, blend_in=0.06, blend_out=0.15),
 }
 
 AIR_MOVES = {
     "leap_start": dict(clip="ual2/NinjaJump_Start", keys=[0.033, 0.45], duration=0.59, blend_in=0.04),
     "leap_air": dict(clip="ual2/NinjaJump_Idle", keys=[0.0, 2.0], blend_in=0.2),
     "leap_fall": dict(clip="ual1/Jump", keys=[0.0, 2.5], blend_in=0.25),
-    "leap_land": dict(clip="ual2/NinjaJump_Land", keys=[0.1, 0.183, 0.8], duration=0.7, blend_in=0.03),
-    "blink": dict(clip="ual2/Shield_Dash", keys=[0.2, 0.467, 0.8], duration=0.3, keep_while_moving=True, blend_in=0.0),
+    # UAL1 Jump_Land starts at touchdown and keeps the sword out of the floor (NinjaJump_Land drives it in)
+    "leap_land": dict(clip="ual1/Jump_Land", keys=[0.0, 0.2, 0.8], duration=0.8, blend_in=0.05, blend_out=0.15),
+    # a crouched arrival; it gives way to running (its planted feet would skate)
+    "blink": dict(clip="ual2/Shield_Dash", keys=[0.1, 0.467, 0.8], duration=0.3, blend_in=0.0, blend_out=0.15),
 }
 
 LOCO_MOVES = {
     "idle": dict(clip="ual1/Sword_Idle", keys=[0.0, 1.667], blend_in=0.2),
     # first key: when the left foot plants, so the blended strides line up
     "walk": dict(clip="ual1/Walk", keys=[0.0, 1.333], ground_speed=1.0),
-    "run": dict(clip="m2m_addon/Run_Female", keys=[0.467, 0.833], ground_speed=3.4, play_at=2.75),
+    # the first 0.042 s is a pose the importer holds before the first 24 fps key: cut, or every loop stutters
+    "run": dict(clip="m2m_addon/Run_Female", clip_from=0.042, keys=[0.425, 0.791], ground_speed=3.47, play_at=2.75),
     "jog": dict(clip="ual1/Jog_Fwd", keys=[0.02, 0.933], ground_speed=6.15, play_at=5.0),
-    "sprint": dict(clip="ual1/Sprint", keys=[0.0, 0.667], ground_speed=9.1, play_at=7.5),
+    "sprint": dict(clip="ual1/Sprint", keys=[0.0, 0.667], ground_speed=9.3, play_at=7.5),
 }
 
 # slash arcs fitted to the measured blade path (see slash_fit.py)
@@ -78,9 +81,9 @@ for group in (LOCO_MOVES, MELEE_MOVES, CAST_MOVES, REACT, AIR_MOVES):
         assert key not in ALL, key
         ALL[key] = value
 
-FIELD_ORDER = ["clip", "keys", "sim_keys", "duration", "mirror", "blend_in", "left_arm_only", "keep_while_moving",
-               "strike", "hold", "settle_fraction", "recover", "ground_speed", "play_at", "loop_from",
-               "chain_clip", "chain_at", "chain_from", "chain_to", "chain_blend",
+FIELD_ORDER = ["clip", "clip_from", "keys", "sim_keys", "duration", "mirror", "blend_in", "blend_out", "left_arm_only",
+               "keep_while_moving", "strike", "hold", "settle_fraction", "recover", "ground_speed", "play_at", "loop_from",
+               "chain_clip", "chain_mirror", "chain_at", "chain_from", "chain_to", "chain_blend",
                "slash_from", "slash_to", "slash_tilt", "slash_height"]
 STRINGNAMES = {"clip", "recover", "chain_clip"}
 

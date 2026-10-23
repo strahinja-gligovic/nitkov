@@ -55,9 +55,11 @@ var _overlay_serial := 0
 
 
 ## Builds the tree under `model` (the node the clips' track paths start
-## from). The filters list the "Skeleton:bone" paths each upper layer owns.
+## from). The filters list the "Skeleton:bone" paths each upper layer owns;
+## `grip_filter` the sword hand's fingers, which always hold the sword fist
+## (clips made without a sword open that hand).
 func build(model: Node3D, player: AnimationPlayer, upper_filter: Array[NodePath], left_arm_filter: Array[NodePath],
-		move_set: MoveSet) -> void:
+		grip_filter: Array[NodePath], move_set: MoveSet) -> void:
 	moves = move_set
 	var root := AnimationNodeBlendTree.new()
 
@@ -92,7 +94,11 @@ func build(model: Node3D, player: AnimationPlayer, upper_filter: Array[NodePath]
 	root.add_node(&"left", _filtered(left_arm_filter))
 	root.connect_node(&"left", 0, &"upper")
 	root.connect_node(&"left", 1, &"left_mix")
-	root.connect_node(&"output", 0, &"left")
+	root.add_node(&"fist", _animation(_move(&"idle")))
+	root.add_node(&"grip", _filtered(grip_filter))
+	root.connect_node(&"grip", 0, &"left")
+	root.connect_node(&"grip", 1, &"fist")
+	root.connect_node(&"output", 0, &"grip")
 
 	tree = AnimationTree.new()
 	tree.name = "AnimationTree"
@@ -111,9 +117,7 @@ func build(model: Node3D, player: AnimationPlayer, upper_filter: Array[NodePath]
 ## The library name of a move's clip: spliced chains and mirrored copies
 ## are baked under their own names (see AnimLibrary).
 static func clip_name(move: AnimMove) -> StringName:
-	var library := String(move.clip).get_base_dir()
-	var baked := move.baked_name() + (AnimLibrary.MIRROR_SUFFIX if move.mirror else "")
-	return StringName("%s/%s" % [library, baked])
+	return StringName("%s/%s" % [String(move.clip).get_base_dir(), move.baked_name()])
 
 
 ## A presentation-only move on its own clock: the parry deflect, a blocked
@@ -151,6 +155,7 @@ func update(fighter: Fighter, delta: float) -> void:
 	tree.set(&"parameters/full/blend_amount", _full.weight)
 	tree.set(&"parameters/upper/blend_amount", _upper.weight)
 	tree.set(&"parameters/left/blend_amount", _left.weight)
+	tree.set(&"parameters/grip/blend_amount", 1.0)
 	tree.advance(dt)
 
 
@@ -187,7 +192,7 @@ func _full_body(fighter: Fighter) -> Array:
 			if s.action_serial != _cast_serial:
 				_cast_serial = s.action_serial
 				var planar := Vector2(fighter.velocity.x, fighter.velocity.z).length()
-				_cast_on_the_move = planar >= CAST_ON_THE_MOVE_SPEED or not s.on_floor
+				_cast_on_the_move = planar >= CAST_ON_THE_MOVE_SPEED or not s.on_floor 						or _move(s.spell.animation).left_arm_only
 			if not _cast_on_the_move:
 				var move := _move(s.spell.animation)
 				return [move, _swing_time(move, s.action_time, s.spell.windup, 0.0, s.spell.recovery), s.action_serial]
@@ -239,7 +244,8 @@ func _update_locomotion(fighter: Fighter, dt: float) -> void:
 	var right := Vector3(-forward.z, 0.0, forward.x)
 	var v := Vector2(fighter.velocity.dot(right), fighter.velocity.dot(forward))
 	var speed := v.length()
-	_moving = move_toward(_moving, smoothstep(0.2, 1.2, speed), dt / 0.12)
+	# the body reaches running speed in about a tenth of a second: keep up
+	_moving = move_toward(_moving, smoothstep(0.2, 1.2, speed), dt / 0.07)
 	var scale := 1.0
 	if speed > 0.3:
 		var angle := atan2(v.x, v.y)  # 0 = ahead, + = to the right
@@ -384,6 +390,7 @@ class SlotPair:
 	var _key := ""
 	var _mix := 0.0
 	var _blend_in := 0.08
+	var _blend_out := 0.0
 
 	func _init(root: AnimationNodeBlendTree, prefix: String, placeholder: AnimMove) -> void:
 		_prefix = prefix
@@ -403,7 +410,10 @@ class SlotPair:
 		var clip := AnimDirector.clip_name(move)
 		var key_text := str(key)
 		if key_text != _key or _slots[_active].animation != clip:
-			_blend_in = maxf(move.blend_in, 0.0)
+			# a move that ends far from what follows asks for a longer crossfade,
+			# but a blow still snaps the body into its reaction
+			_blend_in = move.blend_in if move.blend_in <= SNAP else maxf(move.blend_in, _blend_out if weight > 0.05 else 0.0)
+			_blend_out = move.blend_out
 			if weight > 0.05:
 				_active = 1 - _active  # crossfade from the other slot
 			_slots[_active].animation = clip
@@ -420,4 +430,4 @@ class SlotPair:
 
 	func hide(dt: float) -> void:
 		_key = ""
-		weight = move_toward(weight, 0.0, dt / 0.12)
+		weight = move_toward(weight, 0.0, dt / maxf(_blend_out, 0.12))

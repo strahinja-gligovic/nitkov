@@ -123,6 +123,12 @@ func left_arm_filter() -> Array[NodePath]:
 		return skeleton.get_bone_name(bone) in LEFT_ARM_BONES or _is_or_under(bone, "hand_l"))
 
 
+## The sword hand's fingers (the grip).
+func grip_filter() -> Array[NodePath]:
+	return _paths(func(bone: int) -> bool:
+		return _is_or_under(bone, "hand_r") and skeleton.get_bone_name(bone) != "hand_r")
+
+
 func _paths(wanted: Callable) -> Array[NodePath]:
 	var out: Array[NodePath] = []
 	for bone in skeleton.get_bone_count():
