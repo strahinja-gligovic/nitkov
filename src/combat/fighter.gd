@@ -52,6 +52,7 @@ func simulate(cmd: InputCommand, delta: float) -> void:
 	_advance_action(cmd, delta)
 	if state.is_actionable():
 		_act(cmd)
+	_update_guard(cmd)
 	_update_facing(cmd, delta)
 	_move(cmd, delta)
 
@@ -93,8 +94,32 @@ func _advance_action(cmd: InputCommand, delta: float) -> void:
 
 ## Starts a new action from IDLE, highest priority first.
 func _act(cmd: InputCommand) -> void:
+	_try_parry()
 	if state.on_floor and _try_attack(cmd):
 		return
+
+
+# --- block and parry ----------------------------------------------------------
+
+## A block press opens a short parry window, at most once per parry_cooldown.
+## Presses during cooldown just block.
+func _try_parry() -> void:
+	if not state.has_buffered(InputCommand.BLOCK) or not _can_guard():
+		return
+	state.consume_buffered(InputCommand.BLOCK)
+	if state.parry_cooldown <= 0.0:
+		state.parry_window = tuning.parry_window
+		state.parry_cooldown = tuning.parry_cooldown
+
+
+func _update_guard(cmd: InputCommand) -> void:
+	state.blocking = state.action == FighterState.Action.IDLE and cmd.is_held(InputCommand.BLOCK) and _can_guard()
+	if state.action != FighterState.Action.IDLE:
+		state.parry_window = 0.0
+
+
+func _can_guard() -> bool:
+	return state.on_floor and state.exhausted <= 0.0
 
 
 # --- melee ------------------------------------------------------------------

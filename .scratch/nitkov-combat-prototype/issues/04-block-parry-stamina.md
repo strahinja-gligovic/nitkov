@@ -1,6 +1,6 @@
 # 04 — Block, parry, guard break, stamina, exhaustion
 
-Status: ready-for-agent
+Status: done
 Blocked by: 03
 
 ## What

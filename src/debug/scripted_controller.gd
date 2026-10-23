@@ -39,9 +39,25 @@ func get_command(fighter: Fighter) -> InputCommand:
 		if step.has("press") and not _fired.has(i):
 			_fired[i] = true
 			cmd.pressed |= int(step["press"])
-	camera_rig.rotate_view(turn * dt, pitch * dt)
-	cmd.aim_yaw = camera_rig.yaw
-	var world := Basis(Vector3.UP, camera_rig.yaw) * Vector3(local_move.x, 0.0, -local_move.y)
+	if camera_rig:
+		camera_rig.rotate_view(turn * dt, pitch * dt)
+		cmd.aim_yaw = camera_rig.yaw
+		cmd.aim_target = camera_rig.aim_point(fighter.chest_position(), [fighter.get_rid()])
+	else:
+		# no camera (a scripted bot): face and aim at the nearest enemy
+		var foe := _nearest_enemy(fighter)
+		cmd.aim_yaw = fighter.state.facing_yaw
+		if foe:
+			cmd.aim_yaw = CombatRules.dir_to_yaw(foe.global_position - fighter.global_position)
+			cmd.aim_target = foe.chest_position()
+	var world := Basis(Vector3.UP, cmd.aim_yaw) * Vector3(local_move.x, 0.0, -local_move.y)
 	cmd.move = Vector2(world.x, world.z).limit_length(1.0)
-	cmd.aim_target = camera_rig.aim_point(fighter.chest_position(), [fighter.get_rid()])
 	return cmd
+
+
+static func _nearest_enemy(fighter: Fighter) -> Fighter:
+	var best: Fighter = null
+	for other in fighter.enemies():
+		if best == null or fighter.global_position.distance_to(other.global_position) < fighter.global_position.distance_to(best.global_position):
+			best = other
+	return best

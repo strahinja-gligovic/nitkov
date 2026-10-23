@@ -46,6 +46,8 @@ func _ready() -> void:
 			bot.global_position = player.global_position + player.forward() * distance
 			bot.state.facing_yaw = wrapf(player.state.facing_yaw + PI, -PI, PI)
 			bot.rotation.y = bot.state.facing_yaw
+		if pilot.args.has("bot_drive"):
+			bot.controller = ScriptedController.new(Scenarios.get_timeline(pilot.args["bot_drive"]), null)
 		if pilot.args.has("spectate"):
 			pilot.spectate(player, bot)
 
