@@ -10,6 +10,8 @@ extends Node
 ##   --player_yaw=-90  starting facing in degrees (0 = north/-Z, -90 = east)
 ##   --player_gauntlet=frost / --bot_gauntlet=fire   starting gauntlets
 ##   --player_rune=blink / --bot_rune=leap           starting runes
+##   --player_hp=40    start the player hurt
+##   --menu            open the loadout menu at start
 ##   --spectate        view the duel from the side instead of over the shoulder
 ##   --log             print every resolved hit
 ## Example: godot --path . --fixed-fps 60 -- --drive=walk --shots=1.5 --quit=2
@@ -48,6 +50,8 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	if args.has("log"):
 		CombatEvents.hit_resolved.connect(_log_hit)
+		CombatEvents.fighter_respawned.connect(func(f: Node) -> void: print("[%6.2f] %s respawned" % [time, _name(f)]))
+		CombatEvents.orb_taken.connect(func(f: Node) -> void: print("[%6.2f] %s took an orb (hp %.0f)" % [time, _name(f), (f as Fighter).state.hp]))
 		CombatEvents.status_damage.connect(func(f: Node, amount: float, _e: int) -> void:
 			print("[%6.2f] %s burns for %.1f (hp %.0f)" % [time, _name(f), amount, (f as Fighter).state.hp]))
 		CombatEvents.fighter_died.connect(func(f: Node, k: Node) -> void: print("[%6.2f] %s killed %s" % [time, _name(k), _name(f)]))

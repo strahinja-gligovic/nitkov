@@ -127,6 +127,13 @@ static func apply_burn(state: FighterState, tuning: CombatTuning) -> void:
 	state.burn_time = tuning.burn_duration
 
 
+## Health orb pickup: heal a fraction of max health over a short duration.
+## Any damage taken (FighterState.take_damage) cancels the rest.
+static func start_heal(state: FighterState, tuning: CombatTuning) -> void:
+	state.heal_time = tuning.orb_heal_duration
+	state.heal_rate = state.max_hp * tuning.orb_heal_fraction / maxf(tuning.orb_heal_duration, 0.01)
+
+
 static func apply_slow(state: FighterState, amount: float, duration: float) -> void:
 	if state.slow_time <= 0.0 or amount >= state.slow_amount:
 		state.slow_amount = amount

@@ -80,6 +80,9 @@ static func get_timeline(scenario: String) -> Array:
 			return [
 				{"at": 0.3, "for": 0.2, "move": Vector2(1, 0), "press": R},
 			]
+		"orb":
+			# walk west into the orb (--player_at=-14,0 --player_yaw=90 --player_hp=30)
+			return [{"at": 0.2, "for": 1.0, "move": Vector2(0, 1)}]
 		"melee":
 			# light chain into a heavy against a target ~2m ahead (--bot_at=2.2)
 			return [

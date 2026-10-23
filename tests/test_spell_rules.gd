@@ -165,6 +165,31 @@ func test_nova_style_slow() -> void:
 	assert_almost_eq(CombatRules.move_speed_mult(defender, tuning), 1.0 - tuning.chill_slow, 0.001)
 
 
+func test_orb_heal_restores_half_over_its_duration() -> void:
+	defender.hp = 20.0
+	CombatRules.start_heal(defender, tuning)
+	for i in int(tuning.orb_heal_duration * 60.0) + 5:
+		CombatRules.tick_statuses(defender, 1.0 / 60.0, tuning)
+	assert_almost_eq(defender.hp, 20.0 + tuning.max_hp * tuning.orb_heal_fraction, 0.5)
+
+
+func test_damage_interrupts_the_orb_heal() -> void:
+	defender.hp = 20.0
+	CombatRules.start_heal(defender, tuning)
+	CombatRules.tick_statuses(defender, tuning.orb_heal_duration * 0.5, tuning)
+	defender.take_damage(1.0)
+	var after_hit := defender.hp
+	CombatRules.tick_statuses(defender, tuning.orb_heal_duration, tuning)
+	assert_eq(defender.hp, after_hit, "no more healing after the hit")
+
+
+func test_heal_never_overfills() -> void:
+	defender.hp = defender.max_hp - 5.0
+	CombatRules.start_heal(defender, tuning)
+	CombatRules.tick_statuses(defender, tuning.orb_heal_duration + 0.1, tuning)
+	assert_eq(defender.hp, defender.max_hp)
+
+
 func test_slows_take_the_strongest_not_the_sum() -> void:
 	defender.slow_amount = 0.4
 	defender.slow_time = 1.0

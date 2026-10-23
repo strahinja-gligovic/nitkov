@@ -20,6 +20,8 @@ const BUTTONS := {
 @export var stick_speed := 3.4
 
 var camera_rig: CameraRig
+## The fighter this input drives (for the debug quick-swap).
+var fighter: Fighter
 ## False while a menu is open: the fighter idles and the mouse is free.
 var enabled := true
 var using_gamepad := false
@@ -42,6 +44,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed(&"release_mouse"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		return
+	if event.is_action_pressed(&"swap_gauntlet") and fighter:
+		# debug shortcut that edits the loadout directly; online it would be a request to the server
+		fighter.cycle_gauntlet()
 		return
 	if event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

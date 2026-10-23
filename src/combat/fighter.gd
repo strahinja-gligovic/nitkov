@@ -40,6 +40,16 @@ func set_loadout(gauntlet_id: StringName, rune_id := &"") -> void:
 	loadout_changed.emit()
 
 
+## Back to full health at a spawn point, with a clean slate.
+func respawn(at: Transform3D) -> void:
+	state.reset(tuning)
+	global_transform = at
+	velocity = Vector3.ZERO
+	state.facing_yaw = rotation.y
+	collision_layer = 2
+	CombatEvents.fighter_respawned.emit(self)
+
+
 ## Debug quick-swap (T / D-pad right): the next gauntlet in GameData order.
 ## Lets one player test Frost -> Fire Shatter alone.
 func cycle_gauntlet() -> void:
@@ -70,6 +80,8 @@ func _physics_process(delta: float) -> void:
 
 func simulate(cmd: InputCommand, delta: float) -> void:
 	state.on_floor = is_on_floor()
+	# the dead don't block anyone's path
+	collision_layer = 0 if state.is_dead() else 2
 	state.buffer_presses(cmd.pressed, tuning)
 	if state.hitstop > 0.0:
 		# frozen by a melee impact: time stands still for this fighter

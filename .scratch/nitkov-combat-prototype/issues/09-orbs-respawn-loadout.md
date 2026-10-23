@@ -1,6 +1,6 @@
 # 09 — Health orbs, death/respawn, loadout menu
 
-Status: ready-for-agent
+Status: done
 Blocked by: 07, 08
 
 ## What
