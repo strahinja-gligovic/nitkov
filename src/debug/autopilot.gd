@@ -5,6 +5,7 @@ extends Node
 ##   --out=screenshots folder for screenshots (inside the project)
 ##   --quit=4.0        quit at this game-time second
 ##   --drive=walk      replace the player's input with a Scenarios timeline
+##   --player_at=0,6   move the player to this x,z first (open ground)
 ##   --bot_at=2.2      place the bot this far in front of the player
 ##   --spectate        view the duel from the side instead of over the shoulder
 ##   --log             print every resolved hit
@@ -44,6 +45,8 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	if args.has("log"):
 		CombatEvents.hit_resolved.connect(_log_hit)
+		CombatEvents.status_damage.connect(func(f: Node, amount: float, _e: int) -> void:
+			print("[%6.2f] %s burns for %.1f (hp %.0f)" % [time, _name(f), amount, (f as Fighter).state.hp]))
 		CombatEvents.fighter_died.connect(func(f: Node, k: Node) -> void: print("[%6.2f] %s killed %s" % [time, _name(k), _name(f)]))
 
 

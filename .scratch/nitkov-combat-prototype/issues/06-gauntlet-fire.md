@@ -1,6 +1,6 @@
 # 06 — Gauntlet framework and Fire kit
 
-Status: ready-for-agent
+Status: done
 Blocked by: 05
 
 ## What

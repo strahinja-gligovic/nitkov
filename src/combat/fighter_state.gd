@@ -63,6 +63,8 @@ var heal_rate := 0.0
 var signature_cd := 0.0
 var rune_cd := 0.0
 var dead_time := 0.0
+## Instance id of whoever last dealt damage (burn kills credit them).
+var last_attacker_id := 0
 
 
 func reset(tuning: CombatTuning) -> void:

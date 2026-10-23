@@ -13,3 +13,5 @@ var killed := false
 ## Id of the attack or spell that caused it.
 var source := &""
 var element := SpellData.Element.NONE
+## Repeating area damage (e.g. Flame Wall ticks).
+var periodic := false

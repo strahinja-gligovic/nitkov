@@ -12,11 +12,15 @@ const RADIUS := 0.4
 ## Which character model FighterVisual shows (see FighterVisual.SKINS).
 @export var skin := &"knight"
 
+## The loadout changed (FighterVisual rebuilds the gauntlet glow).
+signal loadout_changed
+
 var state := FighterState.new()
 ## Anything with get_command(fighter: Fighter) -> InputCommand.
 var controller: Object
-var tuning: CombatTuning
-var weapon: WeaponData
+var tuning: CombatTuning = GameData.tuning
+var weapon: WeaponData = GameData.weapons[&"longsword"]
+var gauntlet: GauntletData = GameData.gauntlets[&"fire"]
 
 ## Enemy the current swing is homing on (recomputed every tick of the wind-up).
 var _magnet: Fighter
@@ -24,11 +28,25 @@ var _magnet: Fighter
 
 func _ready() -> void:
 	add_to_group(&"fighters")
-	tuning = GameData.tuning
-	weapon = GameData.weapons[&"longsword"]
 	state.reset(tuning)
 	state.team = team
 	state.facing_yaw = rotation.y
+
+
+func set_loadout(gauntlet_id: StringName) -> void:
+	gauntlet = GameData.gauntlets.get(gauntlet_id, gauntlet)
+	loadout_changed.emit()
+
+
+## Publishes a resolved hit and remembers who dealt damage (for burn kill credit).
+static func report_hit(attacker: Fighter, target: Fighter, result: HitResult, at: Vector3) -> void:
+	if result.outcome == HitResult.Outcome.IGNORED:
+		return
+	if attacker and result.damage > 0.0:
+		target.state.last_attacker_id = attacker.get_instance_id()
+	CombatEvents.hit_resolved.emit(attacker, target, result, at)
+	if result.killed:
+		CombatEvents.fighter_died.emit(target, attacker)
 
 
 func _physics_process(delta: float) -> void:
@@ -49,6 +67,7 @@ func simulate(cmd: InputCommand, delta: float) -> void:
 		state.hitstop = maxf(state.hitstop - delta, 0.0)
 		return
 	state.tick(delta, tuning)
+	_tick_statuses(delta)
 	_advance_action(cmd, delta)
 	if state.is_actionable():
 		_act(cmd)
@@ -59,6 +78,14 @@ func simulate(cmd: InputCommand, delta: float) -> void:
 
 func chest_position() -> Vector3:
 	return global_position + Vector3.UP * CHEST_HEIGHT
+
+
+## Where spells leave the gauntlet (left hand, chest height). Fixed relative
+## to the body rather than read from the animation, so it's deterministic.
+func cast_origin() -> Vector3:
+	var f := forward()
+	var left := Vector3(f.z, 0.0, -f.x)
+	return global_position + Vector3.UP * 1.2 + f * 0.55 + left * 0.25
 
 
 func forward() -> Vector3:
@@ -80,10 +107,23 @@ func enemies() -> Array[Fighter]:
 
 # --- action state machine -------------------------------------------------
 
+func _tick_statuses(delta: float) -> void:
+	var burn := CombatRules.tick_statuses(state, delta, tuning)
+	if burn <= 0.0:
+		return
+	var killed := state.take_damage(burn)
+	CombatEvents.status_damage.emit(self, burn, SpellData.Element.FIRE)
+	if killed:
+		var killer: Object = instance_from_id(state.last_attacker_id) if is_instance_id_valid(state.last_attacker_id) else null
+		CombatEvents.fighter_died.emit(self, killer)
+
+
 func _advance_action(cmd: InputCommand, delta: float) -> void:
 	match state.action:
 		FighterState.Action.ATTACK:
 			_advance_attack(cmd, delta)
+		FighterState.Action.CAST:
+			_advance_cast(cmd, delta)
 		FighterState.Action.FLINCH, FighterState.Action.STAGGER, FighterState.Action.DASH:
 			state.action_time += delta
 			if state.action_time >= state.action_duration:
@@ -99,6 +139,46 @@ func _act(cmd: InputCommand) -> void:
 	_try_parry()
 	if state.on_floor and _try_attack(cmd):
 		return
+	if _try_cast():
+		return
+
+
+# --- casting ------------------------------------------------------------------
+
+## Primaries cost stamina; signatures wait for their cooldown. Casting works
+## on the move and in the air, but not while exhausted.
+func _try_cast() -> bool:
+	if gauntlet == null or state.exhausted > 0.0:
+		return false
+	if state.can_spend() and state.consume_buffered(InputCommand.PRIMARY):
+		_start_cast(gauntlet.primary)
+		return true
+	if state.signature_cd <= 0.0 and state.consume_buffered(InputCommand.SIGNATURE):
+		_start_cast(gauntlet.signature)
+		return true
+	return false
+
+
+func _start_cast(spell: SpellData) -> void:
+	state.start_action(FighterState.Action.CAST)
+	state.spell = spell
+	if spell.stamina_cost > 0.0:
+		state.spend_stamina(spell.stamina_cost, tuning)
+
+
+func _advance_cast(cmd: InputCommand, delta: float) -> void:
+	var spell := state.spell
+	state.action_time += delta
+	if not state.spell_released and state.action_time >= spell.windup:
+		state.spell_released = true
+		if spell.cooldown > 0.0:
+			state.signature_cd = spell.cooldown
+		spell.release(self, cmd.aim_target)
+		CombatEvents.spell_cast.emit(self, spell)
+	if state.spell_released and _try_dash(cmd):
+		return
+	if state.action_time >= spell.windup + spell.recovery:
+		state.end_action()
 
 
 # --- dash ---------------------------------------------------------------------
@@ -257,11 +337,7 @@ func _apply_melee_impact(target: Fighter, attack: AttackData, result: HitResult)
 		HitResult.Outcome.PARRIED:
 			state.knockback = -push * 2.5
 			_freeze(target, 0.12)
-	if result.outcome != HitResult.Outcome.IGNORED:
-		var contact := target.chest_position() - push * 0.35
-		CombatEvents.hit_resolved.emit(self, target, result, contact)
-	if result.killed:
-		CombatEvents.fighter_died.emit(target, self)
+	report_hit(self, target, result, target.chest_position() - push * 0.35)
 
 
 func _freeze(target: Fighter, seconds: float) -> void:
@@ -273,7 +349,7 @@ func _freeze(target: Fighter, seconds: float) -> void:
 
 func _update_facing(cmd: InputCommand, delta: float) -> void:
 	match state.action:
-		FighterState.Action.IDLE:
+		FighterState.Action.IDLE, FighterState.Action.CAST:
 			_turn_toward(cmd.aim_yaw, tuning.turn_rate, delta)
 		FighterState.Action.ATTACK:
 			if state.action_time < state.attack.windup:
@@ -296,6 +372,8 @@ func _move(cmd: InputCommand, delta: float) -> void:
 	match state.action:
 		FighterState.Action.IDLE:
 			target = _locomotion_velocity(cmd, delta)
+		FighterState.Action.CAST:
+			target = cmd.move_3d() * tuning.walk_speed * tuning.cast_move_mult * CombatRules.move_speed_mult(state, tuning)
 		FighterState.Action.ATTACK:
 			target = _lunge_velocity()
 			accel = 80.0
@@ -322,7 +400,7 @@ func _locomotion_velocity(cmd: InputCommand, delta: float) -> Vector3:
 	var speed := tuning.sprint_speed if sprinting else tuning.walk_speed
 	if state.blocking:
 		speed *= tuning.block_move_mult
-	return wish * speed
+	return wish * speed * CombatRules.move_speed_mult(state, tuning)
 
 
 ## Swings carry you forward through wind-up and active frames, homing on the

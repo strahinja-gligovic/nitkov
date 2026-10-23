@@ -4,10 +4,13 @@ extends Node
 
 const TUNING_PATH := "res://data/combat_tuning.tres"
 const WEAPON_PATHS: Array[String] = ["res://data/weapons/longsword.tres"]
+const GAUNTLET_PATHS: Array[String] = ["res://data/gauntlets/fire.tres"]
 
 var tuning: CombatTuning
 ## id -> WeaponData
 var weapons := {}
+## id -> GauntletData
+var gauntlets := {}
 
 
 func _ready() -> void:
@@ -15,3 +18,6 @@ func _ready() -> void:
 	for path in WEAPON_PATHS:
 		var weapon: WeaponData = load(path)
 		weapons[weapon.id] = weapon
+	for path in GAUNTLET_PATHS:
+		var gauntlet: GauntletData = load(path)
+		gauntlets[gauntlet.id] = gauntlet

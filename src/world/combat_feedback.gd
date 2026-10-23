@@ -18,6 +18,8 @@ func _ready() -> void:
 
 
 func _on_hit_resolved(attacker: Node, defender: Node, result: HitResult, at: Vector3) -> void:
+	if result.periodic and result.reaction == &"":
+		return  # ground-fire ticks: the burning tint on the body says enough
 	var color := HIT_COLOR
 	var size := 0.8 + result.damage / 25.0
 	var trauma := 0.22 + result.damage / 70.0

@@ -47,6 +47,14 @@ static func get_timeline(scenario: String) -> Array:
 				{"at": 1.12, "for": 0.3, "move": Vector2(1, 0), "press": D},
 				{"at": 2.45, "press": D},
 			]
+		"fire":
+			# two Firebolts, then a Flame Wall under the target (--bot_at=8)
+			return [
+				{"at": 0.0, "for": 30.0, "track": true},
+				{"at": 0.3, "press": P},
+				{"at": 1.0, "press": P},
+				{"at": 2.0, "press": G},
+			]
 		"melee":
 			# light chain into a heavy against a target ~2m ahead (--bot_at=2.2)
 			return [

@@ -56,6 +56,9 @@ var _flash := 0.0
 var _last_hp := -1.0
 var _time := 0.0
 var _clip_lengths := {}
+var _gauntlet_root: Node3D
+var _gauntlet_core: MeshInstance3D
+var _gauntlet_light: OmniLight3D
 
 
 func _ready() -> void:
@@ -85,6 +88,8 @@ func _ready() -> void:
 	for clip in LOOPING:
 		anim_player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	_build_tree()
+	_build_gauntlet()
+	fighter.loadout_changed.connect(_build_gauntlet)
 
 
 func _process(delta: float) -> void:
@@ -97,6 +102,8 @@ func _process(delta: float) -> void:
 	tree.set(&"parameters/full_mix/blend_amount", _slot_mix)
 	tree.set(&"parameters/upper_blend/blend_amount", _upper_weight)
 	tree.advance(delta)
+	_update_status_tint(s)
+	_update_gauntlet(s)
 	_update_flash(s, delta)
 	_update_tells(s)
 	model.position.x = sin(_time * 90.0) * 0.03 if s.hitstop > 0.0 else 0.0
@@ -261,7 +268,84 @@ static func _clip(clip: StringName) -> AnimationNodeAnimation:
 	return node
 
 
+# --- gauntlet ---------------------------------------------------------------
+
+## A glowing elemental orb, bracer and light on the left fist.
+func _build_gauntlet() -> void:
+	if _gauntlet_root:
+		_gauntlet_root.queue_free()
+		_gauntlet_root = null
+	if fighter.gauntlet == null or hand_slot_left == null:
+		return
+	var color := SpellData.element_color(fighter.gauntlet.element)
+	_gauntlet_root = Node3D.new()
+	_gauntlet_root.name = "Gauntlet"
+	hand_slot_left.add_child(_gauntlet_root)
+
+	var bracer := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.12
+	torus.outer_radius = 0.24
+	bracer.mesh = torus
+	bracer.position = Vector3(0.0, -0.12, 0.0)
+	bracer.material_override = ToonMaterials.make(Color(0.24, 0.19, 0.3), {&"glow_color": color, &"glow_energy": 0.7})
+	_gauntlet_root.add_child(bracer)
+
+	_gauntlet_core = MeshInstance3D.new()
+	var orb := SphereMesh.new()
+	orb.radius = 0.15
+	orb.height = 0.3
+	_gauntlet_core.mesh = orb
+	_gauntlet_core.position = Vector3(0.0, 0.08, 0.0)
+	_gauntlet_core.material_override = ToonMaterials.make_vfx(color.lightened(0.3), 3.5, false)
+	_gauntlet_core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_gauntlet_root.add_child(_gauntlet_core)
+
+	var halo := MeshInstance3D.new()
+	var halo_mesh := SphereMesh.new()
+	halo_mesh.radius = 0.3
+	halo_mesh.height = 0.6
+	halo.mesh = halo_mesh
+	var halo_material := ToonMaterials.make_vfx(color, 1.5)
+	halo_material.albedo_color.a = 0.3
+	halo.material_override = halo_material
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_gauntlet_core.add_child(halo)
+
+	_gauntlet_light = OmniLight3D.new()
+	_gauntlet_light.light_color = color
+	_gauntlet_light.omni_range = 2.5
+	_gauntlet_core.add_child(_gauntlet_light)
+
+
+## The orb swells while a spell winds up and flares while guarding.
+func _update_gauntlet(s: FighterState) -> void:
+	if _gauntlet_core == null:
+		return
+	var boost := 1.0
+	if s.action == FighterState.Action.CAST and not s.spell_released:
+		boost = 1.0 + 2.5 * clampf(s.action_time / maxf(s.spell.windup, 0.01), 0.0, 1.0)
+	elif s.blocking:
+		boost = 1.7
+	_gauntlet_core.scale = Vector3.ONE * (1.0 + 0.3 * (boost - 1.0))
+	_gauntlet_light.light_energy = 0.7 * boost
+
+
 # --- flashes and tells ------------------------------------------------------
+
+## Burning bodies flicker orange; chilled ones glow colder with each stack.
+func _update_status_tint(s: FighterState) -> void:
+	var energy := 0.0
+	var color := Color.BLACK
+	if s.chill_stacks > 0:
+		color = SpellData.element_color(SpellData.Element.FROST)
+		energy = 0.22 * s.chill_stacks
+	if s.burn_time > 0.0:
+		color = SpellData.element_color(SpellData.Element.FIRE)
+		energy = maxf(energy, 0.45 + 0.3 * sin(_time * 26.0))
+	for material in materials:
+		material.set_shader_parameter(&"glow_color", color)
+		material.set_shader_parameter(&"glow_energy", energy)
 
 func _update_flash(s: FighterState, delta: float) -> void:
 	if _last_hp >= 0.0 and s.hp < _last_hp:
@@ -274,12 +358,14 @@ func _update_flash(s: FighterState, delta: float) -> void:
 		material.set_shader_parameter(&"flash_amount", _flash * 0.85)
 
 
-## Heavy wind-ups make the blade glow brighter until it swings.
+## Heavy wind-ups make the blade glow brighter until it swings. (Runs after
+## the status tint, so the blade's glow wins.)
 func _update_tells(s: FighterState) -> void:
-	var glow := 0.0
-	if s.action == FighterState.Action.ATTACK and s.attack.hyperarmor and s.action_time < s.attack.windup + s.attack.active:
-		glow = 1.0 + 4.0 * clampf(s.action_time / s.attack.windup, 0.0, 1.0)
+	if not (s.action == FighterState.Action.ATTACK and s.attack.hyperarmor and s.action_time < s.attack.windup + s.attack.active):
+		return
+	var glow := 1.0 + 4.0 * clampf(s.action_time / s.attack.windup, 0.0, 1.0)
 	for material in sword_materials:
+		material.set_shader_parameter(&"glow_color", Color(1.0, 0.45, 0.1))
 		material.set_shader_parameter(&"glow_energy", glow)
 
 

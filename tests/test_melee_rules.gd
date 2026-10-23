@@ -134,6 +134,15 @@ func test_parry_fails_from_behind() -> void:
 	assert_eq(result.outcome, HitResult.Outcome.HIT)
 
 
+func test_segment_capsule_sweep() -> void:
+	var a := Vector3(0, 0.35, -5)
+	var b := Vector3(0, 1.45, -5)
+	var t := CombatRules.segment_hits_capsule(Vector3(0, 1, 0), Vector3(0, 1, -10), a, b, 0.6)
+	assert_almost_eq(t, 0.5, 0.01, "a bolt flying straight through hits at the capsule")
+	assert_eq(CombatRules.segment_hits_capsule(Vector3(2, 1, 0), Vector3(2, 1, -10), a, b, 0.6), -1.0, "a wide miss")
+	assert_eq(CombatRules.segment_hits_capsule(Vector3(0, 3, 0), Vector3(0, 3, -10), a, b, 0.6), -1.0, "over the head")
+
+
 func test_front_arc_geometry() -> void:
 	var at := Vector3.ZERO
 	# facing yaw 0 looks down -Z
