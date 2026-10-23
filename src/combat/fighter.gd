@@ -21,6 +21,7 @@ var controller: Object
 var tuning: CombatTuning = GameData.tuning
 var weapon: WeaponData = GameData.weapons[&"longsword"]
 var gauntlet: GauntletData = GameData.gauntlets[&"fire"]
+var rune: RuneData = GameData.runes[&"leap"]
 
 ## Enemy the current swing is homing on (recomputed every tick of the wind-up).
 var _magnet: Fighter
@@ -33,8 +34,9 @@ func _ready() -> void:
 	state.facing_yaw = rotation.y
 
 
-func set_loadout(gauntlet_id: StringName) -> void:
+func set_loadout(gauntlet_id: StringName, rune_id := &"") -> void:
 	gauntlet = GameData.gauntlets.get(gauntlet_id, gauntlet)
+	rune = GameData.runes.get(rune_id, rune)
 	loadout_changed.emit()
 
 
@@ -141,13 +143,31 @@ func _advance_action(cmd: InputCommand, delta: float) -> void:
 
 ## Starts a new action from IDLE, highest priority first.
 func _act(cmd: InputCommand) -> void:
-	if _try_dash(cmd):
+	if _try_dash(cmd) or _try_rune(cmd):
 		return
 	_try_parry()
 	if state.on_floor and _try_attack(cmd):
 		return
 	if _try_cast():
 		return
+
+
+# --- runes ------------------------------------------------------------------
+
+## Mobility rune: its own cooldown, no stamina, blocked by exhaustion. Can
+## also cancel late attack or cast recovery, like a dash.
+func _try_rune(cmd: InputCommand) -> bool:
+	if rune == null or state.rune_cd > 0.0 or state.exhausted > 0.0:
+		return false
+	if not state.on_floor and not rune.air_use:
+		return false
+	if not state.consume_buffered(InputCommand.RUNE):
+		return false
+	if state.action != FighterState.Action.IDLE:
+		state.end_action()
+	rune.activate(self, cmd)
+	state.rune_cd = rune.cooldown
+	return true
 
 
 # --- casting ------------------------------------------------------------------
@@ -182,7 +202,7 @@ func _advance_cast(cmd: InputCommand, delta: float) -> void:
 			state.signature_cd = spell.cooldown
 		spell.release(self, cmd.aim_target)
 		CombatEvents.spell_cast.emit(self, spell)
-	if state.spell_released and _try_dash(cmd):
+	if state.spell_released and (_try_dash(cmd) or _try_rune(cmd)):
 		return
 	if state.action_time >= spell.windup + spell.recovery:
 		state.end_action()
@@ -268,7 +288,7 @@ func _advance_attack(cmd: InputCommand, delta: float) -> void:
 		if state.action != FighterState.Action.ATTACK:
 			return  # parried mid-swing
 	var into_recovery := now - attack.windup - attack.active
-	if into_recovery >= attack.dodge_cancel_after and _try_dash(cmd):
+	if into_recovery >= attack.dodge_cancel_after and (_try_dash(cmd) or _try_rune(cmd)):
 		return
 	if into_recovery >= attack.chain_after and _try_attack(cmd):
 		return
@@ -387,6 +407,9 @@ func _move(cmd: InputCommand, delta: float) -> void:
 		FighterState.Action.DASH:
 			target = state.dash_dir * _dash_speed()
 			accel = 1000.0
+	if state.leaping and state.action in [FighterState.Action.IDLE, FighterState.Action.CAST]:
+		target = _air_velocity(cmd)
+		accel = tuning.air_accel
 	target += state.knockback
 	state.knockback = state.knockback.move_toward(Vector3.ZERO, 14.0 * delta)
 	var planar := Vector3(velocity.x, 0.0, velocity.z).move_toward(target, accel * delta)
@@ -394,8 +417,28 @@ func _move(cmd: InputCommand, delta: float) -> void:
 	velocity.z = planar.z
 	if state.on_floor and velocity.y < 0.0:
 		velocity.y = 0.0
-	velocity.y -= tuning.gravity * delta
+	var leap := rune as LeapRune if state.leaping else null
+	var gravity := tuning.gravity
+	if leap and velocity.y < 0.0:
+		gravity *= leap.fall_gravity_mult
+	velocity.y -= gravity * delta
+	if leap:
+		velocity.y = maxf(velocity.y, -leap.max_fall_speed)
 	move_and_slide()
+	if state.leaping and is_on_floor() and velocity.y <= 0.0:
+		state.leaping = false
+		CombatEvents.landed.emit(self)
+
+
+## Airborne steering after a leap: no drag when you let go, and you can steer
+## at the leap's air speed (or faster if you launched faster).
+func _air_velocity(cmd: InputCommand) -> Vector3:
+	var planar := Vector3(velocity.x, 0.0, velocity.z)
+	var wish := cmd.move_3d()
+	if wish.length() < 0.1:
+		return planar
+	var leap := rune as LeapRune
+	return wish * maxf(leap.air_speed if leap else tuning.walk_speed, planar.length())
 
 
 func _locomotion_velocity(cmd: InputCommand, delta: float) -> Vector3:

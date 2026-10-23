@@ -69,6 +69,17 @@ static func get_timeline(scenario: String) -> Array:
 				{"at": 4.6, "swap": true},
 				{"at": 4.7, "press": P},
 			]
+		"leap":
+			# run at the ledge and Leap onto it (--player_at=9.5,-1 --player_yaw=-90)
+			return [
+				{"at": 0.0, "for": 1.6, "move": Vector2(0, 1)},
+				{"at": 0.25, "press": R},
+			]
+		"blink":
+			# Blink sideways, then forward (--player_rune=blink)
+			return [
+				{"at": 0.3, "for": 0.2, "move": Vector2(1, 0), "press": R},
+			]
 		"melee":
 			# light chain into a heavy against a target ~2m ahead (--bot_at=2.2)
 			return [

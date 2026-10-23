@@ -1,6 +1,6 @@
 # 08 — Runes: Leap and Blink
 
-Status: ready-for-agent
+Status: done
 Blocked by: 05
 
 ## What

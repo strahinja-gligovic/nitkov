@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BlinkRune" format=3]
+
+[ext_resource type="Script" path="res://src/spells/blink_rune.gd" id="1_blink"]
+
+[resource]
+script = ExtResource("1_blink")
+id = &"blink"
+display_name = "Blink"
+cooldown = 10.0
+air_use = true

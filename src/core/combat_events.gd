@@ -11,3 +11,5 @@ signal fighter_died(fighter: Node, killer: Node)
 signal fighter_respawned(fighter: Node)
 signal spell_cast(fighter: Node, spell: Resource)
 signal orb_taken(fighter: Node)
+## A leap came down.
+signal landed(fighter: Node)

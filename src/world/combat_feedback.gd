@@ -15,6 +15,13 @@ var focus: Fighter
 
 func _ready() -> void:
 	CombatEvents.hit_resolved.connect(_on_hit_resolved)
+	CombatEvents.landed.connect(_on_landed)
+
+
+func _on_landed(fighter: Node) -> void:
+	Vfx.ring(self, (fighter as Fighter).global_position, Color(0.75, 0.95, 1.0), 1.8, 0.3)
+	if camera_rig and fighter == focus:
+		camera_rig.add_trauma(0.18)
 
 
 func _on_hit_resolved(attacker: Node, defender: Node, result: HitResult, at: Vector3) -> void:

@@ -148,6 +148,62 @@ func test_dash_cancels_late_recovery_but_not_windup() -> void:
 	assert_eq(fighter.state.action, FighterState.Action.DASH)
 
 
+func _add_wall(x: float) -> void:
+	var wall := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(1, 6, 20)
+	shape.shape = box
+	wall.add_child(shape)
+	wall.position = Vector3(x, 3, 0)
+	add_child_autofree(wall)
+
+
+func test_leap_reaches_ledge_height_and_lands() -> void:
+	fighter.rune = GameData.runes[&"leap"]
+	await _tick_physics(_cmd(0, InputCommand.RUNE))
+	assert_true(fighter.state.leaping)
+	assert_eq(fighter.state.rune_cd, fighter.rune.cooldown)
+	var peak := 0.0
+	for i in 240:
+		await _tick_physics(_cmd())
+		peak = maxf(peak, fighter.global_position.y)
+		if not fighter.state.leaping:
+			break
+	assert_between(peak, 3.3, 4.3, "peak %.2fm clears the 3m ledge" % peak)
+	assert_false(fighter.state.leaping, "landed")
+
+
+func test_runes_respect_their_cooldown() -> void:
+	fighter.rune = GameData.runes[&"blink"]
+	_tick(_cmd(0, InputCommand.RUNE))
+	var after_first := fighter.global_position
+	_tick(_cmd(0, InputCommand.RUNE))
+	assert_eq(fighter.global_position, after_first, "second blink is on cooldown")
+
+
+func test_blink_teleports_forward_and_stops_at_walls() -> void:
+	fighter.rune = GameData.runes[&"blink"]
+	_add_wall(5.0)  # wall face at x = 4.5
+	_tick(_move_cmd(Vector2(1, 0), InputCommand.RUNE))
+	assert_lt(fighter.global_position.x, 4.5 - Fighter.RADIUS + 0.05, "stopped short of the wall")
+	assert_gt(fighter.global_position.x, 3.0, "but went most of the way")
+	assert_gt(fighter.state.invulnerable, 0.0)
+
+
+func test_blink_in_open_ground_covers_its_distance() -> void:
+	fighter.rune = GameData.runes[&"blink"]
+	_tick(_move_cmd(Vector2(0, -1), InputCommand.RUNE))
+	assert_almost_eq(fighter.global_position.z, -(GameData.runes[&"blink"] as BlinkRune).distance, 0.1)
+
+
+func test_exhausted_fighters_cannot_use_runes() -> void:
+	fighter.rune = GameData.runes[&"blink"]
+	fighter.state.exhausted = 1.0
+	_tick(_move_cmd(Vector2(1, 0), InputCommand.RUNE))
+	assert_almost_eq(fighter.global_position.x, 0.0, 0.01)
+
+
 func test_presses_during_a_flinch_are_buffered() -> void:
 	fighter.state.apply_flinch(0.1)
 	_tick(_cmd(0, InputCommand.LIGHT))

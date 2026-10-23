@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="LeapRune" format=3]
+
+[ext_resource type="Script" path="res://src/spells/leap_rune.gd" id="1_leap"]
+
+[resource]
+script = ExtResource("1_leap")
+id = &"leap"
+display_name = "Leap"
+cooldown = 12.0

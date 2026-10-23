@@ -40,10 +40,14 @@ func _ready() -> void:
 		add_child(pilot)
 		if pilot.args.has("drive"):
 			player.controller = ScriptedController.new(Scenarios.get_timeline(pilot.args["drive"]), camera_rig)
-		if pilot.args.has("player_gauntlet"):
-			player.set_loadout(StringName(pilot.args["player_gauntlet"]))
-		if pilot.args.has("bot_gauntlet"):
-			bot.set_loadout(StringName(pilot.args["bot_gauntlet"]))
+		if pilot.args.has("player_gauntlet") or pilot.args.has("player_rune"):
+			player.set_loadout(StringName(pilot.args.get("player_gauntlet", "")), StringName(pilot.args.get("player_rune", "")))
+		if pilot.args.has("bot_gauntlet") or pilot.args.has("bot_rune"):
+			bot.set_loadout(StringName(pilot.args.get("bot_gauntlet", "")), StringName(pilot.args.get("bot_rune", "")))
+		if pilot.args.has("player_yaw"):
+			player.state.facing_yaw = deg_to_rad(String(pilot.args["player_yaw"]).to_float())
+			player.rotation.y = player.state.facing_yaw
+			camera_rig.yaw = player.state.facing_yaw
 		if pilot.args.has("player_at"):
 			var xz := String(pilot.args["player_at"]).split(",")
 			player.global_position = Vector3(xz[0].to_float(), 0.0, xz[1].to_float())
