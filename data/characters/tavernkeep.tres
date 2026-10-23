@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/combat/character_data.gd" id="1_character"]
+[ext_resource type="PackedScene" path="res://assets/characters/outfits/Female_Peasant.gltf" id="2_outfit"]
+[ext_resource type="PackedScene" path="res://assets/characters/ubc/Superhero_Female_FullBody.gltf" id="3_head"]
+[ext_resource type="PackedScene" path="res://assets/characters/ubc/Hair_Buns.gltf" id="4_hair"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"tavernkeep"
+display_name = "Tavernkeep"
+blurb = "Closes fights the way she closes the bar: suddenly."
+outfit = ExtResource("2_outfit")
+head_from = ExtResource("3_head")
+head_mesh = "Superhero_Female"
+collar_fill = true
+female = true
+hair = Array[PackedScene]([ExtResource("4_hair")])
+hair_color = Color(0.42, 0.14, 0.08, 1)
+grip = Vector3(-0.023, 0.069, 0.001)
+orb_anchor = Vector3(0.003, 0.151, 0)

@@ -1,0 +1,2286 @@
+[
+ {
+  "id": "A",
+  "sample": "ual2_Sword_Regular_A",
+  "window": [
+   0.0,
+   0.4333
+  ],
+  "clip_length": 0.4333,
+  "peak_tip_speed": 57.7,
+  "peak_t": 0.2333,
+  "peak_hand_speed_window": 26.7,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.1667,
+   "go": 0.1667,
+   "settle": 0.3167,
+   "end": 0.4333,
+   "contact": 0.2495
+  },
+  "auto": {
+   "antic": 0.1667,
+   "go": 0.1667,
+   "valley": 0.1667,
+   "settle": 0.3333
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "rising",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 42.0,
+   "tip_go": [
+    -1.0,
+    0.65,
+    1.01
+   ],
+   "tip_contact": [
+    1.55,
+    -0.0,
+    0.8
+   ],
+   "tip_settle": [
+    0.53,
+    -0.16,
+    2.17
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.554,
+   -0.0,
+   0.8
+  ],
+  "hand_at_contact_FRU": [
+   0.682,
+   -0.29,
+   1.026
+  ],
+  "chest_crossings": [
+   0.2598
+  ],
+  "az_sweep_go_to_settle_deg": -152.0,
+  "tip_height_range_go_settle": [
+   0.27,
+   2.18
+  ],
+  "tip_at_antic_FRU": [
+   -0.996,
+   0.646,
+   1.015
+  ],
+  "hand_at_antic_FRU": [
+   -0.169,
+   0.337,
+   0.651
+  ],
+  "tip_at_w0_FRU": [
+   0.767,
+   0.206,
+   1.276
+  ],
+  "tip_at_w1_FRU": [
+   0.076,
+   -0.083,
+   2.176
+  ],
+  "rootF": {
+   "w0": -0.066,
+   "antic": 0.415,
+   "go": 0.415,
+   "settle": 0.737,
+   "end": 0.758,
+   "contact": 0.636,
+   "w1": 0.758
+  },
+  "root_travel": {
+   "window": 0.825,
+   "w0_to_contact": 0.702,
+   "antic_to_contact": 0.221,
+   "go_to_contact": 0.221,
+   "contact_to_settle": 0.101,
+   "settle_to_end": 0.021,
+   "whole_clip": 0.825
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.15,
+      "to": 0.283,
+      "dF": -0.029,
+      "dR": -0.157,
+      "max_ball_h": 0.021,
+      "max_heel_h": 0.158
+     }
+    ],
+    "start_F": 0.273,
+    "end_F": 0.169
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.0,
+      "to": 0.183,
+      "dF": 1.182,
+      "dR": -0.065,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.104
+     }
+    ],
+    "start_F": -0.159,
+    "end_F": 1.018
+   }
+  }
+ },
+ {
+  "id": "B",
+  "sample": "ual2_Sword_Regular_B",
+  "window": [
+   0.0,
+   0.5333
+  ],
+  "clip_length": 0.5333,
+  "peak_tip_speed": 69.2,
+  "peak_t": 0.25,
+  "peak_hand_speed_window": 27.9,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.1333,
+   "go": 0.1667,
+   "settle": 0.3667,
+   "end": 0.5333,
+   "contact": 0.2534
+  },
+  "auto": {
+   "antic": 0.0,
+   "go": 0.1667,
+   "valley": 0.1333,
+   "settle": 0.4
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "rising",
+   "plane": "horizontal",
+   "elev_deg_at_contact": 10.6,
+   "tip_go": [
+    -0.34,
+    0.48,
+    1.06
+   ],
+   "tip_contact": [
+    1.48,
+    0.0,
+    0.57
+   ],
+   "tip_settle": [
+    -0.4,
+    1.39,
+    1.57
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.481,
+   0.0,
+   0.565
+  ],
+  "hand_at_contact_FRU": [
+   0.821,
+   0.468,
+   0.838
+  ],
+  "chest_crossings": [
+   0.2881
+  ],
+  "az_sweep_go_to_settle_deg": 327.0,
+  "tip_height_range_go_settle": [
+   0.49,
+   1.57
+  ],
+  "tip_at_antic_FRU": [
+   -0.23,
+   0.481,
+   1.277
+  ],
+  "hand_at_antic_FRU": [
+   -0.152,
+   -0.374,
+   0.859
+  ],
+  "tip_at_w0_FRU": [
+   -0.105,
+   0.073,
+   2.074
+  ],
+  "tip_at_w1_FRU": [
+   -0.421,
+   1.462,
+   1.368
+  ],
+  "rootF": {
+   "w0": 0.75,
+   "antic": 0.678,
+   "go": 0.673,
+   "settle": 0.727,
+   "end": 0.697,
+   "contact": 0.703,
+   "w1": 0.697
+  },
+  "root_travel": {
+   "window": -0.053,
+   "w0_to_contact": -0.047,
+   "antic_to_contact": 0.025,
+   "go_to_contact": 0.03,
+   "contact_to_settle": 0.024,
+   "settle_to_end": -0.03,
+   "whole_clip": -0.053
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.2,
+      "to": 0.317,
+      "dF": -0.066,
+      "dR": 0.154,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.173
+     }
+    ],
+    "start_F": 0.169,
+    "end_F": 0.104
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.217,
+      "to": 0.283,
+      "dF": 0.01,
+      "dR": 0.044,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.104
+     }
+    ],
+    "start_F": 1.018,
+    "end_F": 1.019
+   }
+  }
+ },
+ {
+  "id": "C",
+  "sample": "ual2_Sword_Regular_C",
+  "window": [
+   0.0,
+   2.0
+  ],
+  "clip_length": 2.0,
+  "peak_tip_speed": 65.0,
+  "peak_t": 0.65,
+  "peak_hand_speed_window": 30.1,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.45,
+   "go": 0.5,
+   "settle": 0.8333,
+   "end": 2.0,
+   "contact": 0.6927
+  },
+  "auto": {
+   "antic": 0.35,
+   "go": 0.5,
+   "valley": 0.45,
+   "settle": 0.8833
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 28.4,
+   "tip_go": [
+    0.42,
+    -0.8,
+    1.51
+   ],
+   "tip_contact": [
+    1.62,
+    -0.0,
+    0.54
+   ],
+   "tip_settle": [
+    0.49,
+    -1.12,
+    0.36
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.623,
+   -0.0,
+   0.538
+  ],
+  "hand_at_contact_FRU": [
+   0.691,
+   -0.062,
+   0.564
+  ],
+  "chest_crossings": [
+   0.661
+  ],
+  "az_sweep_go_to_settle_deg": -364.0,
+  "tip_height_range_go_settle": [
+   0.33,
+   2.03
+  ],
+  "tip_at_antic_FRU": [
+   0.555,
+   -0.775,
+   1.565
+  ],
+  "hand_at_antic_FRU": [
+   -0.316,
+   -0.396,
+   1.472
+  ],
+  "tip_at_w0_FRU": [
+   -0.329,
+   1.443,
+   1.523
+  ],
+  "tip_at_w1_FRU": [
+   0.766,
+   0.185,
+   1.299
+  ],
+  "rootF": {
+   "w0": 0.719,
+   "antic": 1.623,
+   "go": 1.659,
+   "settle": 2.175,
+   "end": 2.275,
+   "contact": 2.073,
+   "w1": 2.275
+  },
+  "root_travel": {
+   "window": 1.556,
+   "w0_to_contact": 1.354,
+   "antic_to_contact": 0.449,
+   "go_to_contact": 0.414,
+   "contact_to_settle": 0.102,
+   "settle_to_end": 0.1,
+   "whole_clip": 1.556
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.017,
+      "to": 0.617,
+      "dF": 2.484,
+      "dR": 0.29,
+      "max_ball_h": 0.434,
+      "max_heel_h": 0.576
+     },
+     {
+      "from": 1.3,
+      "to": 1.35,
+      "dF": 0.009,
+      "dR": -0.03,
+      "max_ball_h": 0.043,
+      "max_heel_h": 0.128
+     },
+     {
+      "from": 1.35,
+      "to": 1.55,
+      "dF": 0.004,
+      "dR": -0.231,
+      "max_ball_h": 0.036,
+      "max_heel_h": 0.145
+     }
+    ],
+    "start_F": 0.134,
+    "end_F": 2.628
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.033,
+      "to": 0.167,
+      "dF": 0.01,
+      "dR": -0.175,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.104
+     },
+     {
+      "from": 0.217,
+      "to": 0.35,
+      "dF": 0.051,
+      "dR": 0.077,
+      "max_ball_h": 0.03,
+      "max_heel_h": 0.141
+     },
+     {
+      "from": 0.367,
+      "to": 1.333,
+      "dF": 1.097,
+      "dR": 0.114,
+      "max_ball_h": 0.146,
+      "max_heel_h": 0.294
+     }
+    ],
+    "start_F": 1.028,
+    "end_F": 2.223
+   }
+  }
+ },
+ {
+  "id": "C_cut_1.333",
+  "sample": "ual2_Sword_Regular_C",
+  "window": [
+   0.0,
+   1.3333
+  ],
+  "clip_length": 2.0,
+  "peak_tip_speed": 65.0,
+  "peak_t": 0.65,
+  "peak_hand_speed_window": 30.1,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.45,
+   "go": 0.5,
+   "settle": 0.8333,
+   "end": 1.3333,
+   "contact": 0.6927
+  },
+  "auto": {
+   "antic": 0.35,
+   "go": 0.5,
+   "valley": 0.45,
+   "settle": 0.8833
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 28.4,
+   "tip_go": [
+    0.42,
+    -0.8,
+    1.51
+   ],
+   "tip_contact": [
+    1.62,
+    -0.0,
+    0.54
+   ],
+   "tip_settle": [
+    0.49,
+    -1.12,
+    0.36
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.623,
+   -0.0,
+   0.538
+  ],
+  "hand_at_contact_FRU": [
+   0.691,
+   -0.062,
+   0.564
+  ],
+  "chest_crossings": [
+   0.661
+  ],
+  "az_sweep_go_to_settle_deg": -364.0,
+  "tip_height_range_go_settle": [
+   0.33,
+   2.03
+  ],
+  "tip_at_antic_FRU": [
+   0.555,
+   -0.775,
+   1.565
+  ],
+  "hand_at_antic_FRU": [
+   -0.316,
+   -0.396,
+   1.472
+  ],
+  "tip_at_w0_FRU": [
+   -0.329,
+   1.443,
+   1.523
+  ],
+  "tip_at_w1_FRU": [
+   1.381,
+   -0.175,
+   0.662
+  ],
+  "rootF": {
+   "w0": 0.719,
+   "antic": 1.623,
+   "go": 1.659,
+   "settle": 2.175,
+   "end": 2.183,
+   "contact": 2.073,
+   "w1": 2.183
+  },
+  "root_travel": {
+   "window": 1.464,
+   "w0_to_contact": 1.354,
+   "antic_to_contact": 0.449,
+   "go_to_contact": 0.414,
+   "contact_to_settle": 0.102,
+   "settle_to_end": 0.008,
+   "whole_clip": 1.556
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.017,
+      "to": 0.617,
+      "dF": 2.484,
+      "dR": 0.29,
+      "max_ball_h": 0.434,
+      "max_heel_h": 0.576
+     },
+     {
+      "from": 1.3,
+      "to": 1.35,
+      "dF": 0.009,
+      "dR": -0.03,
+      "max_ball_h": 0.043,
+      "max_heel_h": 0.128
+     }
+    ],
+    "start_F": 0.134,
+    "end_F": 2.627
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.033,
+      "to": 0.167,
+      "dF": 0.01,
+      "dR": -0.175,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.104
+     },
+     {
+      "from": 0.217,
+      "to": 0.35,
+      "dF": 0.051,
+      "dR": 0.077,
+      "max_ball_h": 0.03,
+      "max_heel_h": 0.141
+     },
+     {
+      "from": 0.367,
+      "to": 1.333,
+      "dF": 1.097,
+      "dR": 0.114,
+      "max_ball_h": 0.146,
+      "max_heel_h": 0.294
+     }
+    ],
+    "start_F": 1.028,
+    "end_F": 2.223
+   }
+  }
+ },
+ {
+  "id": "C_first_pass",
+  "sample": "ual2_Sword_Regular_C",
+  "window": [
+   0.0,
+   0.45
+  ],
+  "clip_length": 2.0,
+  "peak_tip_speed": 26.5,
+  "peak_t": 0.0833,
+  "peak_hand_speed_window": 12.5,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.0,
+   "go": 0.0167,
+   "settle": 0.2333,
+   "end": 0.45,
+   "contact": 0.1729
+  },
+  "auto": {
+   "antic": 0.0,
+   "go": 0.0167,
+   "valley": 0.0167,
+   "settle": 0.45
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "rising",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 52.9,
+   "tip_go": [
+    -0.26,
+    1.5,
+    1.42
+   ],
+   "tip_contact": [
+    1.54,
+    0.0,
+    0.58
+   ],
+   "tip_settle": [
+    1.59,
+    -0.23,
+    1.36
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.54,
+   0.0,
+   0.58
+  ],
+  "hand_at_contact_FRU": [
+   0.645,
+   0.278,
+   0.719
+  ],
+  "chest_crossings": [
+   0.2101
+  ],
+  "az_sweep_go_to_settle_deg": -105.0,
+  "tip_height_range_go_settle": [
+   0.18,
+   1.36
+  ],
+  "tip_at_antic_FRU": [
+   -0.329,
+   1.443,
+   1.523
+  ],
+  "hand_at_antic_FRU": [
+   -0.123,
+   0.555,
+   1.241
+  ],
+  "tip_at_w0_FRU": [
+   -0.329,
+   1.443,
+   1.523
+  ],
+  "tip_at_w1_FRU": [
+   0.555,
+   -0.775,
+   1.565
+  ],
+  "rootF": {
+   "w0": 0.719,
+   "antic": 0.719,
+   "go": 0.719,
+   "settle": 1.169,
+   "end": 1.623,
+   "contact": 0.943,
+   "w1": 1.623
+  },
+  "root_travel": {
+   "window": 0.905,
+   "w0_to_contact": 0.224,
+   "antic_to_contact": 0.224,
+   "go_to_contact": 0.224,
+   "contact_to_settle": 0.226,
+   "settle_to_end": 0.454,
+   "whole_clip": 1.556
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.017,
+      "to": 0.617,
+      "dF": 2.484,
+      "dR": 0.29,
+      "max_ball_h": 0.434,
+      "max_heel_h": 0.576
+     }
+    ],
+    "start_F": 0.134,
+    "end_F": 1.231
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.033,
+      "to": 0.167,
+      "dF": 0.01,
+      "dR": -0.175,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.104
+     },
+     {
+      "from": 0.217,
+      "to": 0.35,
+      "dF": 0.051,
+      "dR": 0.077,
+      "max_ball_h": 0.03,
+      "max_heel_h": 0.141
+     },
+     {
+      "from": 0.367,
+      "to": 1.333,
+      "dF": 1.097,
+      "dR": 0.114,
+      "max_ball_h": 0.146,
+      "max_heel_h": 0.294
+     }
+    ],
+    "start_F": 1.028,
+    "end_F": 1.107
+   }
+  }
+ },
+ {
+  "id": "Combo_3",
+  "sample": "ual2_Sword_Regular_Combo",
+  "window": [
+   1.0,
+   3.0
+  ],
+  "clip_length": 3.0,
+  "peak_tip_speed": 63.5,
+  "peak_t": 1.55,
+  "peak_hand_speed_window": 29.5,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 1.4167,
+   "go": 1.45,
+   "settle": 1.75,
+   "end": 3.0,
+   "contact": 1.5979
+  },
+  "auto": {
+   "antic": 1.3167,
+   "go": 1.4333,
+   "valley": 1.4167,
+   "settle": 1.85
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 33.4,
+   "tip_go": [
+    0.08,
+    -0.91,
+    1.39
+   ],
+   "tip_contact": [
+    1.62,
+    -0.0,
+    0.48
+   ],
+   "tip_settle": [
+    0.47,
+    -1.04,
+    0.07
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.624,
+   -0.0,
+   0.485
+  ],
+  "hand_at_contact_FRU": [
+   0.679,
+   -0.07,
+   0.528
+  ],
+  "chest_crossings": [
+   1.5607
+  ],
+  "az_sweep_go_to_settle_deg": -341.0,
+  "tip_height_range_go_settle": [
+   0.07,
+   1.98
+  ],
+  "tip_at_antic_FRU": [
+   0.305,
+   -0.843,
+   1.462
+  ],
+  "hand_at_antic_FRU": [
+   -0.36,
+   -0.169,
+   1.586
+  ],
+  "tip_at_w0_FRU": [
+   -0.421,
+   1.462,
+   1.368
+  ],
+  "tip_at_w1_FRU": [
+   0.764,
+   0.186,
+   1.299
+  ],
+  "rootF": {
+   "w0": 0.697,
+   "antic": 1.676,
+   "go": 1.727,
+   "settle": 2.167,
+   "end": 2.276,
+   "contact": 2.083,
+   "w1": 2.276
+  },
+  "root_travel": {
+   "window": 1.579,
+   "w0_to_contact": 1.386,
+   "antic_to_contact": 0.407,
+   "go_to_contact": 0.356,
+   "contact_to_settle": 0.084,
+   "settle_to_end": 0.109,
+   "whole_clip": 2.343
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 1.083,
+      "to": 1.583,
+      "dF": 2.51,
+      "dR": 0.197,
+      "max_ball_h": 0.425,
+      "max_heel_h": 0.556
+     },
+     {
+      "from": 2.283,
+      "to": 2.45,
+      "dF": 0.008,
+      "dR": -0.178,
+      "max_ball_h": 0.032,
+      "max_heel_h": 0.145
+     }
+    ],
+    "start_F": 0.104,
+    "end_F": 2.628
+   },
+   "r": {
+    "events": [
+     {
+      "from": 1.083,
+      "to": 2.233,
+      "dF": 1.18,
+      "dR": 0.001,
+      "max_ball_h": 0.146,
+      "max_heel_h": 0.294
+     }
+    ],
+    "start_F": 1.019,
+    "end_F": 2.223
+   }
+  }
+ },
+ {
+  "id": "Heavy_1",
+  "sample": "ual2_Sword_Heavy_Combo",
+  "window": [
+   0.0,
+   0.7667
+  ],
+  "clip_length": 4.3333,
+  "peak_tip_speed": 60.7,
+  "peak_t": 0.4833,
+  "peak_hand_speed_window": 33.8,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.3,
+   "go": 0.3333,
+   "settle": 0.65,
+   "end": 0.7667,
+   "contact": 0.4844
+  },
+  "auto": {
+   "antic": 0.3,
+   "go": 0.3167,
+   "valley": 0.3167,
+   "settle": 0.7167
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "horizontal",
+   "elev_deg_at_contact": 2.8,
+   "tip_go": [
+    -0.31,
+    -1.19,
+    0.77
+   ],
+   "tip_contact": [
+    1.76,
+    0.0,
+    0.59
+   ],
+   "tip_settle": [
+    -0.79,
+    -1.47,
+    0.99
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.764,
+   0.0,
+   0.586
+  ],
+  "hand_at_contact_FRU": [
+   0.975,
+   -0.477,
+   0.742
+  ],
+  "chest_crossings": [],
+  "az_sweep_go_to_settle_deg": -373.0,
+  "tip_height_range_go_settle": [
+   0.58,
+   1.01
+  ],
+  "tip_at_antic_FRU": [
+   -0.295,
+   -1.169,
+   0.784
+  ],
+  "hand_at_antic_FRU": [
+   -0.468,
+   -0.25,
+   0.59
+  ],
+  "tip_at_w0_FRU": [
+   0.76,
+   0.202,
+   1.299
+  ],
+  "tip_at_w1_FRU": [
+   -0.854,
+   -1.432,
+   1.062
+  ],
+  "rootF": {
+   "w0": -0.076,
+   "antic": 0.306,
+   "go": 0.359,
+   "settle": 1.284,
+   "end": 1.314,
+   "contact": 0.507,
+   "w1": 1.314
+  },
+  "root_travel": {
+   "window": 1.39,
+   "w0_to_contact": 0.583,
+   "antic_to_contact": 0.2,
+   "go_to_contact": 0.147,
+   "contact_to_settle": 0.778,
+   "settle_to_end": 0.03,
+   "whole_clip": 5.324
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.017,
+      "to": 0.333,
+      "dF": 0.47,
+      "dR": 0.11,
+      "max_ball_h": 0.028,
+      "max_heel_h": 0.11
+     },
+     {
+      "from": 0.35,
+      "to": 0.55,
+      "dF": -0.084,
+      "dR": -0.281,
+      "max_ball_h": 0.028,
+      "max_heel_h": 0.111
+     },
+     {
+      "from": 0.683,
+      "to": 0.733,
+      "dF": 0.021,
+      "dR": -0.002,
+      "max_ball_h": 0.022,
+      "max_heel_h": 0.111
+     }
+    ],
+    "start_F": 0.275,
+    "end_F": 0.714
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.15,
+      "to": 0.283,
+      "dF": -0.09,
+      "dR": 0.021,
+      "max_ball_h": 0.015,
+      "max_heel_h": 0.103
+     },
+     {
+      "from": 0.35,
+      "to": 0.583,
+      "dF": 1.912,
+      "dR": -0.51,
+      "max_ball_h": 0.091,
+      "max_heel_h": 0.175
+     }
+    ],
+    "start_F": -0.159,
+    "end_F": 1.637
+   }
+  }
+ },
+ {
+  "id": "Heavy_2",
+  "sample": "ual2_Sword_Heavy_Combo",
+  "window": [
+   0.7667,
+   1.3
+  ],
+  "clip_length": 4.3333,
+  "peak_tip_speed": 52.1,
+  "peak_t": 1.15,
+  "peak_hand_speed_window": 21.4,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.9333,
+   "go": 0.95,
+   "settle": 1.3,
+   "end": 1.3,
+   "contact": 1.1371
+  },
+  "auto": {
+   "antic": 0.7833,
+   "go": 1.0833,
+   "valley": 1.0833,
+   "settle": 1.3
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "rising",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 41.4,
+   "tip_go": [
+    -0.23,
+    0.06,
+    1.57
+   ],
+   "tip_contact": [
+    1.05,
+    -0.0,
+    1.11
+   ],
+   "tip_settle": [
+    -0.92,
+    -0.66,
+    0.51
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.05,
+   -0.0,
+   1.113
+  ],
+  "hand_at_contact_FRU": [
+   0.282,
+   0.251,
+   1.485
+  ],
+  "chest_crossings": [
+   1.1398
+  ],
+  "az_sweep_go_to_settle_deg": 411.0,
+  "tip_height_range_go_settle": [
+   0.46,
+   1.82
+  ],
+  "tip_at_antic_FRU": [
+   -0.196,
+   0.013,
+   1.614
+  ],
+  "hand_at_antic_FRU": [
+   -0.387,
+   -0.385,
+   0.767
+  ],
+  "tip_at_w0_FRU": [
+   -0.854,
+   -1.432,
+   1.062
+  ],
+  "tip_at_w1_FRU": [
+   -0.916,
+   -0.66,
+   0.507
+  ],
+  "rootF": {
+   "w0": 1.314,
+   "antic": 1.229,
+   "go": 1.223,
+   "settle": 2.129,
+   "end": 2.129,
+   "contact": 1.505,
+   "w1": 2.129
+  },
+  "root_travel": {
+   "window": 0.815,
+   "w0_to_contact": 0.191,
+   "antic_to_contact": 0.276,
+   "go_to_contact": 0.282,
+   "contact_to_settle": 0.624,
+   "settle_to_end": 0.0,
+   "whole_clip": 5.324
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.967,
+      "to": 1.217,
+      "dF": 1.7,
+      "dR": 0.345,
+      "max_ball_h": 0.117,
+      "max_heel_h": 0.245
+     },
+     {
+      "from": 1.25,
+      "to": 1.45,
+      "dF": -0.161,
+      "dR": -0.015,
+      "max_ball_h": 0.04,
+      "max_heel_h": 0.126
+     }
+    ],
+    "start_F": 0.714,
+    "end_F": 2.381
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.983,
+      "to": 1.233,
+      "dF": -0.037,
+      "dR": 0.432,
+      "max_ball_h": 0.046,
+      "max_heel_h": 0.157
+     },
+     {
+      "from": 1.233,
+      "to": 1.617,
+      "dF": 1.736,
+      "dR": -0.038,
+      "max_ball_h": 0.089,
+      "max_heel_h": 0.254
+     }
+    ],
+    "start_F": 1.637,
+    "end_F": 1.658
+   }
+  }
+ },
+ {
+  "id": "Heavy_3",
+  "sample": "ual2_Sword_Heavy_Combo",
+  "window": [
+   1.3,
+   2.0
+  ],
+  "clip_length": 4.3333,
+  "peak_tip_speed": 62.2,
+  "peak_t": 1.8333,
+  "peak_hand_speed_window": 25.2,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 1.6333,
+   "go": 1.6667,
+   "settle": 1.9667,
+   "end": 2.0,
+   "contact": 1.7928
+  },
+  "auto": {
+   "antic": 1.6,
+   "go": 1.6667,
+   "valley": 1.65,
+   "settle": 2.0
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "descending",
+   "plane": "horizontal",
+   "elev_deg_at_contact": 5.6,
+   "tip_go": [
+    -0.75,
+    0.33,
+    0.83
+   ],
+   "tip_contact": [
+    1.54,
+    0.0,
+    0.91
+   ],
+   "tip_settle": [
+    -0.75,
+    -1.0,
+    1.08
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.541,
+   0.0,
+   0.906
+  ],
+  "hand_at_contact_FRU": [
+   0.971,
+   0.664,
+   0.896
+  ],
+  "chest_crossings": [],
+  "az_sweep_go_to_settle_deg": 432.0,
+  "tip_height_range_go_settle": [
+   0.61,
+   1.09
+  ],
+  "tip_at_antic_FRU": [
+   -0.764,
+   0.353,
+   0.816
+  ],
+  "hand_at_antic_FRU": [
+   -0.201,
+   -0.385,
+   1.041
+  ],
+  "tip_at_w0_FRU": [
+   -0.916,
+   -0.66,
+   0.507
+  ],
+  "tip_at_w1_FRU": [
+   -0.731,
+   -1.027,
+   1.109
+  ],
+  "rootF": {
+   "w0": 2.129,
+   "antic": 2.786,
+   "go": 2.795,
+   "settle": 3.869,
+   "end": 3.837,
+   "contact": 3.046,
+   "w1": 3.837
+  },
+  "root_travel": {
+   "window": 1.708,
+   "w0_to_contact": 0.916,
+   "antic_to_contact": 0.26,
+   "go_to_contact": 0.251,
+   "contact_to_settle": 0.823,
+   "settle_to_end": -0.032,
+   "whole_clip": 5.324
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 1.25,
+      "to": 1.45,
+      "dF": -0.161,
+      "dR": -0.015,
+      "max_ball_h": 0.04,
+      "max_heel_h": 0.126
+     },
+     {
+      "from": 1.717,
+      "to": 1.917,
+      "dF": 1.959,
+      "dR": 0.104,
+      "max_ball_h": 0.036,
+      "max_heel_h": 0.124
+     }
+    ],
+    "start_F": 2.381,
+    "end_F": 4.243
+   },
+   "r": {
+    "events": [
+     {
+      "from": 1.233,
+      "to": 1.617,
+      "dF": 1.736,
+      "dR": -0.038,
+      "max_ball_h": 0.089,
+      "max_heel_h": 0.254
+     },
+     {
+      "from": 1.65,
+      "to": 1.883,
+      "dF": 0.02,
+      "dR": 0.228,
+      "max_ball_h": 0.04,
+      "max_heel_h": 0.129
+     }
+    ],
+    "start_F": 1.658,
+    "end_F": 3.369
+   }
+  }
+ },
+ {
+  "id": "Heavy_4",
+  "sample": "ual2_Sword_Heavy_Combo",
+  "window": [
+   2.0,
+   3.2333
+  ],
+  "clip_length": 4.3333,
+  "peak_tip_speed": 51.9,
+  "peak_t": 2.6167,
+  "peak_hand_speed_window": 29.8,
+  "contact_mode": "height",
+  "keys": {
+   "antic": 2.45,
+   "go": 2.5,
+   "settle": 2.6667,
+   "end": 3.2333,
+   "contact": 2.6173
+  },
+  "auto": {
+   "antic": 2.5833,
+   "go": 2.5833,
+   "valley": 2.5833,
+   "settle": 2.7333
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "descending",
+   "plane": "vertical",
+   "elev_deg_at_contact": 85.7,
+   "tip_go": [
+    -0.96,
+    -0.28,
+    1.66
+   ],
+   "tip_contact": [
+    1.62,
+    -0.04,
+    1.2
+   ],
+   "tip_settle": [
+    1.61,
+    -0.06,
+    0.09
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.618,
+   -0.037,
+   1.2
+  ],
+  "hand_at_contact_FRU": [
+   0.939,
+   0.084,
+   0.56
+  ],
+  "chest_crossings": [
+   2.6173
+  ],
+  "az_sweep_go_to_settle_deg": 161.0,
+  "tip_height_range_go_settle": [
+   0.08,
+   2.15
+  ],
+  "tip_at_antic_FRU": [
+   -1.05,
+   -0.485,
+   1.77
+  ],
+  "hand_at_antic_FRU": [
+   -0.146,
+   -0.179,
+   1.793
+  ],
+  "tip_at_w0_FRU": [
+   -0.731,
+   -1.027,
+   1.109
+  ],
+  "tip_at_w1_FRU": [
+   1.49,
+   0.059,
+   0.046
+  ],
+  "rootF": {
+   "w0": 3.837,
+   "antic": 3.968,
+   "go": 4.099,
+   "settle": 4.742,
+   "end": 4.742,
+   "contact": 4.64,
+   "w1": 4.742
+  },
+  "root_travel": {
+   "window": 0.905,
+   "w0_to_contact": 0.803,
+   "antic_to_contact": 0.672,
+   "go_to_contact": 0.541,
+   "contact_to_settle": 0.101,
+   "settle_to_end": 0.0,
+   "whole_clip": 5.324
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 2.117,
+      "to": 2.2,
+      "dF": 0.0,
+      "dR": 0.045,
+      "max_ball_h": 0.035,
+      "max_heel_h": 0.123
+     },
+     {
+      "from": 2.417,
+      "to": 2.617,
+      "dF": -0.021,
+      "dR": -0.229,
+      "max_ball_h": 0.039,
+      "max_heel_h": 0.124
+     }
+    ],
+    "start_F": 4.243,
+    "end_F": 4.241
+   },
+   "r": {
+    "events": [
+     {
+      "from": 2.25,
+      "to": 2.65,
+      "dF": 1.791,
+      "dR": -0.246,
+      "max_ball_h": 0.403,
+      "max_heel_h": 0.552
+     }
+    ],
+    "start_F": 3.369,
+    "end_F": 5.118
+   }
+  }
+ },
+ {
+  "id": "Heavy_4_full",
+  "sample": "ual2_Sword_Heavy_Combo",
+  "window": [
+   2.0,
+   4.3333
+  ],
+  "clip_length": 4.3333,
+  "peak_tip_speed": 51.9,
+  "peak_t": 2.6167,
+  "peak_hand_speed_window": 29.8,
+  "contact_mode": "height",
+  "keys": {
+   "antic": 2.45,
+   "go": 2.5,
+   "settle": 2.6667,
+   "end": 4.3333,
+   "contact": 2.6173
+  },
+  "auto": {
+   "antic": 2.5833,
+   "go": 2.5833,
+   "valley": 2.5833,
+   "settle": 2.7333
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "descending",
+   "plane": "vertical",
+   "elev_deg_at_contact": 85.7,
+   "tip_go": [
+    -0.96,
+    -0.28,
+    1.66
+   ],
+   "tip_contact": [
+    1.62,
+    -0.04,
+    1.2
+   ],
+   "tip_settle": [
+    1.61,
+    -0.06,
+    0.09
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.618,
+   -0.037,
+   1.2
+  ],
+  "hand_at_contact_FRU": [
+   0.939,
+   0.084,
+   0.56
+  ],
+  "chest_crossings": [
+   2.6173
+  ],
+  "az_sweep_go_to_settle_deg": 161.0,
+  "tip_height_range_go_settle": [
+   0.08,
+   2.15
+  ],
+  "tip_at_antic_FRU": [
+   -1.05,
+   -0.485,
+   1.77
+  ],
+  "hand_at_antic_FRU": [
+   -0.146,
+   -0.179,
+   1.793
+  ],
+  "tip_at_w0_FRU": [
+   -0.731,
+   -1.027,
+   1.109
+  ],
+  "tip_at_w1_FRU": [
+   0.75,
+   0.242,
+   1.286
+  ],
+  "rootF": {
+   "w0": 3.837,
+   "antic": 3.968,
+   "go": 4.099,
+   "settle": 4.742,
+   "end": 5.248,
+   "contact": 4.64,
+   "w1": 5.248
+  },
+  "root_travel": {
+   "window": 1.411,
+   "w0_to_contact": 0.803,
+   "antic_to_contact": 0.672,
+   "go_to_contact": 0.541,
+   "contact_to_settle": 0.101,
+   "settle_to_end": 0.507,
+   "whole_clip": 5.324
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 2.117,
+      "to": 2.2,
+      "dF": 0.0,
+      "dR": 0.045,
+      "max_ball_h": 0.035,
+      "max_heel_h": 0.123
+     },
+     {
+      "from": 2.417,
+      "to": 2.617,
+      "dF": -0.021,
+      "dR": -0.229,
+      "max_ball_h": 0.039,
+      "max_heel_h": 0.124
+     },
+     {
+      "from": 3.233,
+      "to": 3.667,
+      "dF": 1.348,
+      "dR": -0.098,
+      "max_ball_h": 0.094,
+      "max_heel_h": 0.223
+     }
+    ],
+    "start_F": 4.243,
+    "end_F": 5.602
+   },
+   "r": {
+    "events": [
+     {
+      "from": 2.25,
+      "to": 2.65,
+      "dF": 1.791,
+      "dR": -0.246,
+      "max_ball_h": 0.403,
+      "max_heel_h": 0.552
+     },
+     {
+      "from": 3.5,
+      "to": 3.633,
+      "dF": 0.076,
+      "dR": 0.014,
+      "max_ball_h": 0.029,
+      "max_heel_h": 0.126
+     }
+    ],
+    "start_F": 3.369,
+    "end_F": 5.154
+   }
+  }
+ },
+ {
+  "id": "UAL1_Sword_Attack",
+  "sample": "ual1_Sword_Attack",
+  "window": [
+   0.0,
+   1.5333
+  ],
+  "clip_length": 1.5333,
+  "peak_tip_speed": 45.5,
+  "peak_t": 0.4,
+  "peak_hand_speed_window": 31.0,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.3,
+   "go": 0.3167,
+   "settle": 0.5167,
+   "end": 1.5333,
+   "contact": 0.4352
+  },
+  "auto": {
+   "antic": 0.35,
+   "go": 0.35,
+   "valley": 0.35,
+   "settle": 0.5667
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 41.9,
+   "tip_go": [
+    -0.28,
+    0.28,
+    2.37
+   ],
+   "tip_contact": [
+    1.69,
+    0.0,
+    1.06
+   ],
+   "tip_settle": [
+    0.52,
+    -1.35,
+    0.12
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.693,
+   0.0,
+   1.055
+  ],
+  "hand_at_contact_FRU": [
+   0.768,
+   -0.016,
+   0.863
+  ],
+  "chest_crossings": [
+   0.4294
+  ],
+  "az_sweep_go_to_settle_deg": -227.0,
+  "tip_height_range_go_settle": [
+   0.12,
+   2.41
+  ],
+  "tip_at_antic_FRU": [
+   -0.277,
+   0.444,
+   2.267
+  ],
+  "hand_at_antic_FRU": [
+   -0.779,
+   0.095,
+   1.533
+  ],
+  "tip_at_w0_FRU": [
+   0.133,
+   0.973,
+   1.184
+  ],
+  "tip_at_w1_FRU": [
+   0.133,
+   0.973,
+   1.184
+  ],
+  "rootF": {
+   "w0": 0.0,
+   "antic": 0.0,
+   "go": 0.111,
+   "settle": 0.884,
+   "end": 1.501,
+   "contact": 0.884,
+   "w1": 1.501
+  },
+  "root_travel": {
+   "window": 1.501,
+   "w0_to_contact": 0.884,
+   "antic_to_contact": 0.884,
+   "go_to_contact": 0.773,
+   "contact_to_settle": 0.0,
+   "settle_to_end": 0.617,
+   "whole_clip": 1.501
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.75,
+      "to": 1.3,
+      "dF": 1.488,
+      "dR": 0.055,
+      "max_ball_h": 0.148,
+      "max_heel_h": 0.321
+     }
+    ],
+    "start_F": 0.275,
+    "end_F": 1.776
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.283,
+      "to": 0.45,
+      "dF": 1.47,
+      "dR": -0.134,
+      "max_ball_h": 0.047,
+      "max_heel_h": 0.169
+     },
+     {
+      "from": 1.033,
+      "to": 1.167,
+      "dF": -0.01,
+      "dR": 0.105,
+      "max_ball_h": 0.017,
+      "max_heel_h": 0.104
+     }
+    ],
+    "start_F": -0.16,
+    "end_F": 1.341
+   }
+  }
+ },
+ {
+  "id": "UAL1_Sword_Attack_cut",
+  "sample": "ual1_Sword_Attack",
+  "window": [
+   0.0,
+   0.7667
+  ],
+  "clip_length": 1.5333,
+  "peak_tip_speed": 45.5,
+  "peak_t": 0.4,
+  "peak_hand_speed_window": 31.0,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.3,
+   "go": 0.3167,
+   "settle": 0.5167,
+   "end": 0.7667,
+   "contact": 0.4352
+  },
+  "auto": {
+   "antic": 0.35,
+   "go": 0.35,
+   "valley": 0.35,
+   "settle": 0.5667
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 41.9,
+   "tip_go": [
+    -0.28,
+    0.28,
+    2.37
+   ],
+   "tip_contact": [
+    1.69,
+    0.0,
+    1.06
+   ],
+   "tip_settle": [
+    0.52,
+    -1.35,
+    0.12
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.693,
+   0.0,
+   1.055
+  ],
+  "hand_at_contact_FRU": [
+   0.768,
+   -0.016,
+   0.863
+  ],
+  "chest_crossings": [
+   0.4294
+  ],
+  "az_sweep_go_to_settle_deg": -227.0,
+  "tip_height_range_go_settle": [
+   0.12,
+   2.41
+  ],
+  "tip_at_antic_FRU": [
+   -0.277,
+   0.444,
+   2.267
+  ],
+  "hand_at_antic_FRU": [
+   -0.779,
+   0.095,
+   1.533
+  ],
+  "tip_at_w0_FRU": [
+   0.133,
+   0.973,
+   1.184
+  ],
+  "tip_at_w1_FRU": [
+   0.816,
+   -1.326,
+   0.335
+  ],
+  "rootF": {
+   "w0": 0.0,
+   "antic": 0.0,
+   "go": 0.111,
+   "settle": 0.884,
+   "end": 0.884,
+   "contact": 0.884,
+   "w1": 0.884
+  },
+  "root_travel": {
+   "window": 0.884,
+   "w0_to_contact": 0.884,
+   "antic_to_contact": 0.884,
+   "go_to_contact": 0.773,
+   "contact_to_settle": 0.0,
+   "settle_to_end": 0.0,
+   "whole_clip": 1.501
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.75,
+      "to": 1.3,
+      "dF": 1.488,
+      "dR": 0.055,
+      "max_ball_h": 0.148,
+      "max_heel_h": 0.321
+     }
+    ],
+    "start_F": 0.275,
+    "end_F": 0.292
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.283,
+      "to": 0.45,
+      "dF": 1.47,
+      "dR": -0.134,
+      "max_ball_h": 0.047,
+      "max_heel_h": 0.169
+     }
+    ],
+    "start_F": -0.16,
+    "end_F": 1.313
+   }
+  }
+ },
+ {
+  "id": "Melee_Hook",
+  "sample": "ual2_Melee_Hook",
+  "window": [
+   0.0,
+   0.4667
+  ],
+  "clip_length": 0.4667,
+  "peak_tip_speed": 62.7,
+  "peak_t": 0.25,
+  "peak_hand_speed_window": 41.1,
+  "contact_mode": "lateral",
+  "keys": {
+   "antic": 0.1167,
+   "go": 0.1333,
+   "settle": 0.2833,
+   "end": 0.4667,
+   "contact": 0.2482
+  },
+  "auto": {
+   "antic": 0.1167,
+   "go": 0.1333,
+   "valley": 0.1167,
+   "settle": 0.2833
+  },
+  "direction": {
+   "lateral": "right-to-left",
+   "vertical": "descending",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 52.7,
+   "tip_go": [
+    -0.73,
+    -0.36,
+    1.47
+   ],
+   "tip_contact": [
+    1.48,
+    0.0,
+    1.58
+   ],
+   "tip_settle": [
+    1.3,
+    -0.99,
+    0.68
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.478,
+   0.0,
+   1.58
+  ],
+  "hand_at_contact_FRU": [
+   0.898,
+   0.534,
+   1.079
+  ],
+  "chest_crossings": [
+   0.2564
+  ],
+  "az_sweep_go_to_settle_deg": -244.0,
+  "tip_height_range_go_settle": [
+   0.68,
+   2.14
+  ],
+  "tip_at_antic_FRU": [
+   -0.717,
+   -0.289,
+   1.462
+  ],
+  "hand_at_antic_FRU": [
+   -0.262,
+   -0.133,
+   0.637
+  ],
+  "tip_at_w0_FRU": [
+   -0.575,
+   -0.038,
+   1.673
+  ],
+  "tip_at_w1_FRU": [
+   -0.015,
+   -0.018,
+   0.857
+  ],
+  "rootF": {
+   "w0": 0.0,
+   "antic": 0.129,
+   "go": 0.145,
+   "settle": 0.281,
+   "end": 0.355,
+   "contact": 0.256,
+   "w1": 0.355
+  },
+  "root_travel": {
+   "window": 0.355,
+   "w0_to_contact": 0.256,
+   "antic_to_contact": 0.127,
+   "go_to_contact": 0.111,
+   "contact_to_settle": 0.025,
+   "settle_to_end": 0.074,
+   "whole_clip": 0.355
+  },
+  "feet": {
+   "l": {
+    "events": [
+     {
+      "from": 0.0,
+      "to": 0.283,
+      "dF": 0.817,
+      "dR": -0.044,
+      "max_ball_h": 0.069,
+      "max_heel_h": 0.219
+     }
+    ],
+    "start_F": 0.275,
+    "end_F": 1.126
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.0,
+      "to": 0.067,
+      "dF": 0.026,
+      "dR": 0.029,
+      "max_ball_h": 0.016,
+      "max_heel_h": 0.109
+     },
+     {
+      "from": 0.083,
+      "to": 0.467,
+      "dF": 0.356,
+      "dR": -0.094,
+      "max_ball_h": 0.026,
+      "max_heel_h": 0.182
+     }
+    ],
+    "start_F": -0.16,
+    "end_F": 0.228
+   }
+  }
+ },
+ {
+  "id": "M2M_Air_Vertical",
+  "sample": "m2m_Sword_Attack_Air_Vertical",
+  "window": [
+   0.0,
+   1.2
+  ],
+  "clip_length": 4.8333,
+  "peak_tip_speed": 36.4,
+  "peak_t": 0.8833,
+  "peak_hand_speed_window": 12.0,
+  "contact_mode": "height",
+  "keys": {
+   "antic": 0.8333,
+   "go": 0.85,
+   "settle": 1.0667,
+   "end": 1.2,
+   "contact": 1.0
+  },
+  "auto": {
+   "antic": 0.8,
+   "go": 0.8333,
+   "valley": 0.8167,
+   "settle": 1.1
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "descending",
+   "plane": "vertical",
+   "elev_deg_at_contact": 89.4,
+   "tip_go": [
+    -0.86,
+    0.02,
+    1.15
+   ],
+   "tip_contact": [
+    1.25,
+    0.02,
+    1.61
+   ],
+   "tip_settle": [
+    1.3,
+    0.02,
+    1.42
+   ]
+  },
+  "tip_at_contact_FRU": [
+   1.25,
+   0.021,
+   1.611
+  ],
+  "hand_at_contact_FRU": [
+   0.376,
+   0.03,
+   1.228
+  ],
+  "chest_crossings": [],
+  "az_sweep_go_to_settle_deg": 182.0,
+  "tip_height_range_go_settle": [
+   1.15,
+   2.58
+  ],
+  "tip_at_antic_FRU": [
+   -0.957,
+   0.029,
+   1.111
+  ],
+  "hand_at_antic_FRU": [
+   -0.331,
+   0.041,
+   1.832
+  ],
+  "tip_at_w0_FRU": [
+   -0.862,
+   0.065,
+   0.545
+  ],
+  "tip_at_w1_FRU": [
+   1.297,
+   0.017,
+   1.4
+  ],
+  "pelvisF": {
+   "w0": -0.054,
+   "w1": -0.018
+  },
+  "feet_clip_space": {
+   "l": {
+    "events": [
+     {
+      "from": 0.0,
+      "to": 4.833,
+      "dF": 0.413,
+      "dR": -0.293,
+      "max_ball_h": 1.386,
+      "max_heel_h": 1.215
+     }
+    ],
+    "start_F": 0.034,
+    "end_F": 0.566
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.0,
+      "to": 4.833,
+      "dF": 0.798,
+      "dR": 0.16,
+      "max_ball_h": 1.415,
+      "max_heel_h": 1.282
+     }
+    ],
+    "start_F": -0.212,
+    "end_F": 0.662
+   }
+  }
+ },
+ {
+  "id": "M2M_Ground_Pound",
+  "sample": "m2m_Attack_Ground_Pound",
+  "window": [
+   0.0,
+   2.7083
+  ],
+  "clip_length": 2.7083,
+  "peak_tip_speed": 33.0,
+  "peak_t": 1.55,
+  "peak_hand_speed_window": 4.8,
+  "contact_mode": "height",
+  "keys": {
+   "antic": 0.2667,
+   "go": 0.3,
+   "settle": 0.7667,
+   "end": 2.7083,
+   "contact": 0.7
+  },
+  "auto": {
+   "antic": 1.35,
+   "go": 1.4167,
+   "valley": 1.3833,
+   "settle": 1.6333
+  },
+  "direction": {
+   "lateral": "left-to-right",
+   "vertical": "rising",
+   "plane": "diagonal",
+   "elev_deg_at_contact": 41.2,
+   "tip_go": [
+    0.13,
+    -0.38,
+    1.62
+   ],
+   "tip_contact": [
+    -0.1,
+    -0.45,
+    0.7
+   ],
+   "tip_settle": [
+    -0.02,
+    -0.4,
+    0.81
+   ]
+  },
+  "tip_at_contact_FRU": [
+   -0.103,
+   -0.445,
+   0.7
+  ],
+  "hand_at_contact_FRU": [
+   0.429,
+   0.192,
+   0.227
+  ],
+  "chest_crossings": [],
+  "az_sweep_go_to_settle_deg": -18.0,
+  "tip_height_range_go_settle": [
+   0.69,
+   1.62
+  ],
+  "tip_at_antic_FRU": [
+   0.149,
+   -0.364,
+   1.665
+  ],
+  "hand_at_antic_FRU": [
+   0.056,
+   0.585,
+   1.639
+  ],
+  "tip_at_w0_FRU": [
+   0.705,
+   0.213,
+   1.488
+  ],
+  "tip_at_w1_FRU": [
+   0.815,
+   0.512,
+   0.571
+  ],
+  "pelvisF": {
+   "w0": -0.05,
+   "w1": -0.063
+  },
+  "feet_clip_space": {
+   "l": {
+    "events": [
+     {
+      "from": 0.75,
+      "to": 0.933,
+      "dF": -0.128,
+      "dR": -0.005,
+      "max_ball_h": 0.054,
+      "max_heel_h": 0.187
+     }
+    ],
+    "start_F": 0.156,
+    "end_F": -0.087
+   },
+   "r": {
+    "events": [
+     {
+      "from": 0.0,
+      "to": 0.517,
+      "dF": 0.319,
+      "dR": 0.153,
+      "max_ball_h": 0.638,
+      "max_heel_h": 0.65
+     },
+     {
+      "from": 0.917,
+      "to": 1.6,
+      "dF": 0.096,
+      "dR": -0.138,
+      "max_ball_h": 0.425,
+      "max_heel_h": 0.497
+     }
+    ],
+    "start_F": 0.039,
+    "end_F": 0.453
+   }
+  }
+ }
+]

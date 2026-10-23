@@ -22,9 +22,8 @@ enum Slot { PRIMARY, SIGNATURE }
 @export var recovery := 0.25
 
 @export_group("Animation")
-@export var animation := &"Spellcast_Shoot"
-## Second in the clip where the spell leaves the hand.
-@export var release_time := 0.35
+## Move id in the MoveSet; its contact key is when the spell leaves the hand.
+@export var animation := &"cast_bolt"
 
 
 ## Spawns the spell's effect toward `target` (the caster's aim point).

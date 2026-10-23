@@ -15,14 +15,13 @@ chain_after = 0.13
 dodge_cancel_after = 0.1
 reach = 2.0
 arc = 110.0
-lunge_speed = 2.5
+lunge_profile = PackedFloat32Array(0, 0, 0.0773, 0.1795, 0.286, 0.3941, 0.4992, 0.5953, 0.6677, 0.7277, 0.7557, 0.7788, 0.8006, 0.8197, 0.8333, 0.8404, 0.8474, 0.8519, 0.8552, 0.8584, 0.8617, 0.8649, 0.8659, 0.8644, 0.8628, 0.8613, 0.8599, 0.8585, 0.8574, 0.8564, 0.8561, 0.8561, 0.8561)
 flinch = 0.25
 hitstop = 0.06
 knockback = 2.0
 block_stamina_cost = 10.0
 parry_stagger = 1.0
-animation = &"1H_Melee_Attack_Slice_Diagonal"
-strike_time = 0.38
+animation = &"light_1"
 
 [sub_resource type="Resource" id="Resource_light2"]
 script = ExtResource("2_attack")
@@ -36,35 +35,33 @@ chain_after = 0.13
 dodge_cancel_after = 0.1
 reach = 2.0
 arc = 120.0
-lunge_speed = 2.5
+lunge_profile = PackedFloat32Array(0, -0.0128, -0.0291, -0.0468, -0.0629, -0.0748, -0.079, -0.0747, -0.064, -0.0501, -0.038, -0.0284, -0.0243, -0.023, -0.0238, -0.0249, -0.0261, -0.0272, -0.0286, -0.03, -0.0315, -0.033, -0.0348, -0.0366, -0.0383, -0.0402, -0.0422, -0.0442, -0.0462, -0.0483, -0.0504, -0.0505, -0.0505)
 flinch = 0.25
 hitstop = 0.06
 knockback = 2.0
 block_stamina_cost = 10.0
 parry_stagger = 1.0
-animation = &"1H_Melee_Attack_Slice_Horizontal"
-strike_time = 0.4
+animation = &"light_2"
 
 [sub_resource type="Resource" id="Resource_light3"]
 script = ExtResource("2_attack")
 id = &"light_3"
 damage = 10.0
 stamina_cost = 10.0
-windup = 0.2
+windup = 0.3
 active = 0.1
 recovery = 0.4
-chain_after = 0.2
+chain_after = 0.12
 dodge_cancel_after = 0.15
 reach = 2.1
 arc = 90.0
-lunge_speed = 3.0
+lunge_profile = PackedFloat32Array(0, 0.0017, 0.0232, 0.0774, 0.1643, 0.2835, 0.4316, 0.5905, 0.7309, 0.8244, 0.8805, 0.9132, 0.9362, 0.9662, 1.0167, 1.1023, 1.2076, 1.3135, 1.4017, 1.4377, 1.4657, 1.4846, 1.4958, 1.503, 1.5066, 1.5073, 1.5058, 1.5016, 1.496, 1.4897, 1.4838, 1.4794, 1.4774, 1.478, 1.4809, 1.4855, 1.4914, 1.4982, 1.5055, 1.5129, 1.52, 1.5264, 1.5316, 1.5354, 1.5378, 1.5392, 1.5401, 1.5408, 1.5418)
 flinch = 0.3
 hitstop = 0.08
 knockback = 3.0
 block_stamina_cost = 12.0
 parry_stagger = 1.0
-animation = &"1H_Melee_Attack_Chop"
-strike_time = 0.6
+animation = &"light_3"
 
 [sub_resource type="Resource" id="Resource_heavy"]
 script = ExtResource("2_attack")
@@ -78,7 +75,7 @@ chain_after = 0.3
 dodge_cancel_after = 0.25
 reach = 2.3
 arc = 100.0
-lunge_speed = 3.5
+lunge_profile = PackedFloat32Array(0, -0.0099, -0.02, -0.0248, -0.0298, -0.0312, -0.0324, -0.0317, -0.0311, -0.0331, -0.0352, -0.0397, -0.0443, -0.0487, -0.0532, -0.055, -0.0567, -0.0541, -0.0514, -0.045, -0.0386, -0.0249, -0.0113, 0.0113, 0.0337, 0.0649, 0.0962, 0.1358, 0.149, 0.1622, 0.1753, 0.1914, 0.2074, 0.2234, 0.2394, 0.2553, 0.2712, 0.3366, 0.4046, 0.4783, 0.599, 0.7531, 0.8302, 0.8537, 0.8773, 0.8923, 0.9029, 0.9134, 0.9239, 0.9344, 0.9364, 0.9367, 0.9371, 0.9373, 0.9372, 0.9371, 0.937, 0.937, 0.9369, 0.9369, 0.9368, 0.9367, 0.9366, 0.9366, 0.9365, 0.9365, 0.9364, 0.9363, 0.9362, 0.9362, 0.9362, 0.9362, 0.9362, 0.9362, 0.9362, 0.9362, 0.9362, 0.9361, 0.9361, 0.9361, 0.9361)
 windup_turn_rate = 240.0
 flinch = 0.4
 hitstop = 0.11
@@ -87,8 +84,7 @@ block_stamina_cost = 25.0
 parry_stagger = 1.5
 hyperarmor = true
 breaks_block = true
-animation = &"2H_Melee_Attack_Chop"
-strike_time = 0.75
+animation = &"heavy"
 
 [resource]
 script = ExtResource("1_weapon")

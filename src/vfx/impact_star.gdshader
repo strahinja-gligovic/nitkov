@@ -9,6 +9,8 @@ uniform float points = 8.0;
 uniform float progress = 0.0;
 uniform float energy = 2.5;
 uniform float spin = 0.0;
+// Effects animate in held beats (~15-20 fps), like hand-drawn effects.
+uniform float steps = 5.0;
 
 void vertex() {
 	vec3 scale = vec3(length(MODEL_MATRIX[0].xyz), length(MODEL_MATRIX[1].xyz), length(MODEL_MATRIX[2].xyz));
@@ -24,9 +26,10 @@ float star(vec2 p, float radius) {
 
 void fragment() {
 	vec2 p = UV * 2.0 - 1.0;
-	float grow = 0.45 + 0.55 * sqrt(progress);
+	float beat = floor(progress * steps + 0.5) / steps;
+	float grow = 0.45 + 0.55 * sqrt(beat);
 	float outer = star(p, grow);
 	float inner = star(p, grow * 0.78);
 	ALBEDO = mix(ink.rgb, color.rgb * energy, inner);
-	ALPHA = outer * (1.0 - smoothstep(0.55, 1.0, progress));
+	ALPHA = outer * (1.0 - smoothstep(0.55, 1.0, beat));
 }

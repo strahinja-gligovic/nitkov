@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/combat/character_data.gd" id="1_character"]
+[ext_resource type="PackedScene" path="res://assets/characters/outfits/Female_Ranger.gltf" id="2_outfit"]
+[ext_resource type="PackedScene" path="res://assets/characters/ubc/Superhero_Female_FullBody.gltf" id="3_head"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"huntress"
+display_name = "Huntress"
+blurb = "Tracks you for sport. Finds you for fun."
+outfit = ExtResource("2_outfit")
+head_from = ExtResource("3_head")
+head_mesh = "Superhero_Female"
+female = true
+hair_color = Color(0.16, 0.1, 0.07, 1)
+grip = Vector3(-0.023, 0.069, 0.001)
+orb_anchor = Vector3(0.003, 0.151, 0)

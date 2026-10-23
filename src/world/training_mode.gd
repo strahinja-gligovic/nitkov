@@ -208,4 +208,7 @@ func _apply_autopilot() -> void:
 	if args.has("tuning"):
 		debug.tuning_panel.visible = true
 	if args.has("spectate"):
-		pilot.spectate(player, bot)
+		var distance: String = args["spectate"]
+		var focus: Fighter = bot if args.get("spectate_on", "") == "bot" else player
+		pilot.spectate(player, bot, distance.to_float() if distance.is_valid_float() else 6.0,
+				String(args.get("spectate_angle", "0")).to_float(), focus if args.has("spectate_on") else null)

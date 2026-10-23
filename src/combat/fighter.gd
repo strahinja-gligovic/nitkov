@@ -115,12 +115,13 @@ func chest_position() -> Vector3:
 	return global_position + Vector3.UP * CHEST_HEIGHT
 
 
-## Where spells leave the gauntlet hand (left, chest height). Fixed relative
-## to the body rather than read from the animation, so it's deterministic.
+## Where spells leave the gauntlet hand: the left fist at the full reach of
+## the casting jab. Fixed relative to the body rather than read from the
+## animation, so it's deterministic.
 func cast_origin() -> Vector3:
 	var f := forward()
 	var left := Vector3(f.z, 0.0, -f.x)
-	return global_position + Vector3.UP * 1.2 + f * 0.55 + left * 0.25
+	return global_position + Vector3.UP * 1.3 + f * 0.8 + left * 0.15
 
 
 func forward() -> Vector3:
@@ -428,8 +429,8 @@ func _move(cmd: InputCommand, delta: float) -> void:
 		FighterState.Action.CAST:
 			target = cmd.move_3d() * tuning.walk_speed * tuning.cast_move_mult * CombatRules.move_speed_mult(state, tuning)
 		FighterState.Action.ATTACK:
-			target = _lunge_velocity()
-			accel = 80.0
+			target = _lunge_velocity(delta)
+			accel = 1000.0  # follow the footwork exactly: planted feet
 		FighterState.Action.DASH:
 			target = state.dash_dir * _dash_speed()
 			accel = 1000.0
@@ -479,13 +480,14 @@ func _locomotion_velocity(cmd: InputCommand, delta: float) -> Vector3:
 	return wish * speed * CombatRules.move_speed_mult(state, tuning)
 
 
-## Swings carry you forward through wind-up and active frames, homing on the
-## magnet target and stopping short of it. Recovery is committed: no movement.
-func _lunge_velocity() -> Vector3:
+## Swings step you forward on the attack's lunge profile (the footwork of
+## its animation), homing on the magnet target and stopping short of it.
+## Runs after the action timer advanced, so it covers the tick just begun.
+func _lunge_velocity(delta: float) -> Vector3:
 	var attack := state.attack
-	if state.action_time >= attack.windup + attack.active:
+	var speed := attack.lunge_speed_at(state.action_time - delta, delta)
+	if speed <= 0.0:
 		return Vector3.ZERO
-	var speed := attack.lunge_speed
 	if _magnet:
 		var gap := (_magnet.global_position - global_position) * Vector3(1, 0, 1)
 		var distance := gap.length()

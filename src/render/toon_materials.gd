@@ -4,6 +4,7 @@ extends RefCounted
 ## Builds toon materials, and converts imported models to the toon look.
 
 const TOON := preload("res://src/render/toon.gdshader")
+const TOON_DOUBLE_SIDED := preload("res://src/render/toon_double_sided.gdshader")
 const INK := preload("res://src/render/ink_outline.gdshader")
 
 
@@ -33,10 +34,15 @@ static func make_vfx(color: Color, energy := 2.0, additive := true) -> StandardM
 
 
 ## Replaces every surface material under `root` with a toon material that keeps
-## the original color and texture. Returns the new materials, e.g. for hit flashes.
-static func convert_model(root: Node) -> Array[ShaderMaterial]:
+## the original color, texture and sidedness. `tints` maps a source material's
+## name to a color multiplied in (e.g. greyscale hair). Returns the new
+## materials, e.g. for hit flashes.
+static func convert_model(root: Node, tints := {}) -> Array[ShaderMaterial]:
 	var created: Array[ShaderMaterial] = []
-	for node in root.find_children("*", "MeshInstance3D", true, false):
+	var meshes: Array[Node] = root.find_children("*", "MeshInstance3D", true, false)
+	if root is MeshInstance3D:
+		meshes.append(root)
+	for node in meshes:
 		var mesh_instance := node as MeshInstance3D
 		if mesh_instance.mesh == null:
 			continue
@@ -45,7 +51,10 @@ static func convert_model(root: Node) -> Array[ShaderMaterial]:
 			var material := make(Color.WHITE)
 			if source is BaseMaterial3D:
 				var base := source as BaseMaterial3D
-				material.set_shader_parameter(&"albedo", base.albedo_color)
+				if base.cull_mode == BaseMaterial3D.CULL_DISABLED:
+					material.shader = TOON_DOUBLE_SIDED
+				var tint: Color = tints.get(base.resource_name, Color.WHITE)
+				material.set_shader_parameter(&"albedo", base.albedo_color * tint)
 				if base.albedo_texture:
 					material.set_shader_parameter(&"albedo_texture", base.albedo_texture)
 					material.set_shader_parameter(&"use_texture", true)

@@ -12,6 +12,9 @@ var velocity := Vector3.ZERO
 var _origin := Vector3.ZERO
 var _travelled := 0.0
 var _tuning: CombatTuning
+## The look, drawn between physics ticks (see TickSmoother).
+var _visual: Node3D
+var _smoother: TickSmoother
 
 
 func setup(from: Fighter, data: ProjectileSpell, origin: Vector3, initial_velocity: Vector3) -> void:
@@ -27,6 +30,8 @@ func _ready() -> void:
 	add_to_group(&"projectiles")
 	global_position = _origin
 	_build_visual()
+	_smoother = TickSmoother.new(self)
+	_process(0.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -51,6 +56,7 @@ func _physics_process(delta: float) -> void:
 		_impact(from.lerp(to, hit_t), victim)
 		return
 	global_position = to
+	_smoother.tick()
 	_travelled += step
 	if _travelled >= spell.max_range:
 		Vfx.impact(get_parent(), global_position, SpellData.element_color(spell.element), 0.5, 0.15)
@@ -80,8 +86,15 @@ func _apply(target: Fighter, hit: SpellHit, source: Vector3, contact: Vector3) -
 	Fighter.report_hit(caster, target, result, contact)
 
 
+func _process(_delta: float) -> void:
+	_visual.global_transform = Transform3D(global_basis, _smoother.position())
+
+
 func _build_visual() -> void:
 	var color := SpellData.element_color(spell.element)
+	_visual = Node3D.new()
+	_visual.top_level = true
+	add_child(_visual)
 	var body := MeshInstance3D.new()
 	if spell.element == SpellData.Element.FROST:
 		var shard := CylinderMesh.new()
@@ -109,13 +122,13 @@ func _build_visual() -> void:
 		var halo_material := ToonMaterials.make_vfx(color, 2.0)
 		halo_material.albedo_color.a = 0.45
 		halo.material_override = halo_material
-		add_child(halo)
+		_visual.add_child(halo)
 	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(body)
+	_visual.add_child(body)
 	var light := OmniLight3D.new()
 	light.light_color = color
 	light.light_energy = 1.6
 	light.omni_range = 4.0
-	add_child(light)
+	_visual.add_child(light)
 	if velocity.length() > 0.01:
 		look_at(global_position + velocity, Vector3.UP if absf(velocity.normalized().y) < 0.99 else Vector3.RIGHT)

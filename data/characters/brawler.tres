@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/combat/character_data.gd" id="1_character"]
+[ext_resource type="PackedScene" path="res://assets/characters/outfits/Male_Peasant.gltf" id="2_outfit"]
+[ext_resource type="PackedScene" path="res://assets/characters/ubc/Superhero_Male_FullBody.gltf" id="3_head"]
+[ext_resource type="PackedScene" path="res://assets/characters/ubc/Hair_Buzzed.gltf" id="4_hair"]
+[ext_resource type="PackedScene" path="res://assets/characters/ubc/Hair_Beard.gltf" id="5_hair"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"brawler"
+display_name = "Brawler"
+blurb = "Traded the pitchfork for a sword. Kept the temper."
+outfit = ExtResource("2_outfit")
+head_from = ExtResource("3_head")
+head_mesh = "SuperHero_Male"
+collar_fill = true
+hair = Array[PackedScene]([ExtResource("4_hair"), ExtResource("5_hair")])
+hair_color = Color(0.55, 0.24, 0.09, 1)
+grip = Vector3(-0.029, 0.095, -0.004)
+orb_anchor = Vector3(0.008, 0.177, -0.006)

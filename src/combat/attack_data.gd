@@ -1,8 +1,10 @@
 class_name AttackData
 extends Resource
 ## One melee swing. It runs windup -> active -> recovery; the blade only hits
-## during active. The animation is time-warped so the clip's strike frame
-## (strike_time) lands on the first active frame, whatever the timings.
+## during active. Its look is a move in the MoveSet, time-remapped so the
+## blade connects on the first active frame, whatever the timings.
+
+const LUNGE_STEP := 1.0 / 60.0
 
 @export var id := &"light_1"
 @export var damage := 8.0
@@ -22,8 +24,12 @@ extends Resource
 @export var reach := 2.3
 ## Total degrees of the swing arc, centred on the facing direction.
 @export var arc := 110.0
-## Forward speed during wind-up and active frames (m/s).
-@export var lunge_speed := 2.5
+## Metres stepped forward since the attack began, sampled every
+## LUNGE_STEP seconds. Baked from the animation's own footwork (with its time
+## remap), so the body travels exactly as the feet step: no sliding.
+@export var lunge_profile := PackedFloat32Array()
+## Scales the whole lunge (1 = the animation's footwork).
+@export var lunge_scale := 1.0
 ## Degrees per second the attacker can still turn during wind-up.
 @export var windup_turn_rate := 360.0
 
@@ -39,9 +45,8 @@ extends Resource
 @export var breaks_block := false
 
 @export_group("Animation")
-@export var animation := &"1H_Melee_Attack_Slice_Diagonal"
-## Second in the clip where the blade connects.
-@export var strike_time := 0.38
+## Move id in the MoveSet.
+@export var animation := &"light_1"
 
 
 func duration() -> float:
@@ -50,3 +55,26 @@ func duration() -> float:
 
 func is_active_at(time: float) -> bool:
 	return time >= windup and time < windup + active
+
+
+## Metres stepped forward `time` seconds into the attack.
+func lunge_at(time: float) -> float:
+	var count := lunge_profile.size()
+	if count == 0:
+		return 0.0
+	var at := clampf(time / LUNGE_STEP, 0.0, count - 1.0)
+	var i := mini(int(at), count - 2) if count > 1 else 0
+	if count == 1:
+		return lunge_profile[0] * lunge_scale
+	return lerpf(lunge_profile[i], lunge_profile[i + 1], at - i) * lunge_scale
+
+
+## Forward speed (m/s) of the lunge over the tick starting at `time`.
+func lunge_speed_at(time: float, delta: float) -> float:
+	if delta <= 0.0:
+		return 0.0
+	return (lunge_at(time + delta) - lunge_at(time)) / delta
+
+
+func total_lunge() -> float:
+	return lunge_at(duration())

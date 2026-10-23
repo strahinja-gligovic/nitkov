@@ -28,10 +28,17 @@ var camera: Camera3D
 var _pitch_pivot: Node3D
 var _arm: SpringArm3D
 var _shake_time := 0.0
+## Directional kick (camera-space x/y offset) and FOV punch, each a damped spring.
+var _kick := Vector2.ZERO
+var _kick_velocity := Vector2.ZERO
+var _fov_offset := 0.0
+var _fov_velocity := 0.0
+var _smoother: TickSmoother
 
 
 func _ready() -> void:
 	top_level = true
+	process_physics_priority = 100  # sample the target after it has moved this tick
 	_pitch_pivot = Node3D.new()
 	add_child(_pitch_pivot)
 	_arm = SpringArm3D.new()
@@ -54,6 +61,7 @@ func follow(new_target: Node3D) -> void:
 	if target is CollisionObject3D:
 		_arm.add_excluded_object((target as CollisionObject3D).get_rid())
 	yaw = target.global_rotation.y
+	_smoother = TickSmoother.new(target)
 	global_position = _pivot_point()
 
 
@@ -64,6 +72,20 @@ func rotate_view(d_yaw: float, d_pitch: float) -> void:
 
 func add_trauma(amount: float) -> void:
 	trauma = minf(trauma + amount, 1.0)
+
+
+## A directional shove of the view: "from there", where trauma only says
+## "something happened". `world_dir` is the direction of the force; the part
+## of it along the view becomes a brief dolly (an FOV nudge).
+func kick(world_dir: Vector3, strength: float) -> void:
+	var local := camera.global_basis.inverse() * world_dir.normalized()
+	_kick_velocity += Vector2(local.x, local.y) * strength * 3.5
+	_fov_velocity += local.z * strength * 40.0
+
+
+## A quick zoom-in that springs back: big moments only (heavies, parries, breaks).
+func fov_punch(degrees: float) -> void:
+	_fov_velocity -= degrees * 22.0
 
 
 func forward() -> Vector3:
@@ -94,6 +116,11 @@ func body_yaw(from: Vector3, aim_point: Vector3) -> float:
 	return toward if absf(wrapf(toward - yaw, -PI, PI)) < deg_to_rad(70.0) else yaw
 
 
+func _physics_process(_delta: float) -> void:
+	if _smoother:
+		_smoother.tick()
+
+
 func _process(delta: float) -> void:
 	if target == null:
 		return
@@ -107,13 +134,19 @@ func _process(delta: float) -> void:
 
 
 func _pivot_point() -> Vector3:
-	return target.global_position + Vector3.UP * pivot_height
+	return _smoother.position() + Vector3.UP * pivot_height
 
 
 func _apply_shake(delta: float) -> void:
 	trauma = maxf(trauma - delta * 1.8, 0.0)
 	_shake_time += delta
 	var s := trauma * trauma
-	camera.h_offset = sin(_shake_time * 61.0) * cos(_shake_time * 23.0) * max_shake_offset * s
-	camera.v_offset = sin(_shake_time * 47.0 + 1.3) * max_shake_offset * s
+	# springs: kick returns over ~0.15s, the FOV punch over ~0.25s
+	_kick_velocity += (-900.0 * _kick - 48.0 * _kick_velocity) * delta
+	_kick += _kick_velocity * delta
+	_fov_velocity += (-324.0 * _fov_offset - 30.0 * _fov_velocity) * delta
+	_fov_offset += _fov_velocity * delta
+	camera.h_offset = sin(_shake_time * 61.0) * cos(_shake_time * 23.0) * max_shake_offset * s + _kick.x
+	camera.v_offset = sin(_shake_time * 47.0 + 1.3) * max_shake_offset * s + _kick.y
 	camera.rotation.z = deg_to_rad(sin(_shake_time * 37.0 + 0.7) * max_shake_roll * s)
+	camera.fov = fov + _fov_offset

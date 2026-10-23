@@ -3,6 +3,7 @@ extends Node
 ## these same instances, so changes take effect immediately everywhere.
 
 const TUNING_PATH := "res://data/combat_tuning.tres"
+const MOVES_PATH := "res://data/moves/humanoid.tres"
 const WEAPON_PATHS: Array[String] = ["res://data/weapons/longsword.tres"]
 const SPELL_PATHS: Array[String] = [
 	"res://data/spells/firebolt.tres", "res://data/spells/shard_volley.tres",
@@ -10,12 +11,13 @@ const SPELL_PATHS: Array[String] = [
 ]
 const RUNE_PATHS: Array[String] = ["res://data/runes/leap.tres", "res://data/runes/blink.tres"]
 const CHARACTER_PATHS: Array[String] = [
-	"res://data/characters/knight.tres", "res://data/characters/barbarian.tres",
-	"res://data/characters/mage.tres", "res://data/characters/rogue.tres",
-	"res://data/characters/rogue_hooded.tres",
+	"res://data/characters/warden.tres", "res://data/characters/huntress.tres",
+	"res://data/characters/brawler.tres", "res://data/characters/tavernkeep.tres",
 ]
 
 var tuning: CombatTuning
+## How every move looks (presentation only).
+var moves: MoveSet
 ## id -> WeaponData
 var weapons := {}
 ## id -> SpellData (primaries and signatures, every element)
@@ -28,6 +30,7 @@ var characters := {}
 
 func _ready() -> void:
 	tuning = load(TUNING_PATH)
+	moves = load(MOVES_PATH)
 	for path in WEAPON_PATHS:
 		var weapon: WeaponData = load(path)
 		weapons[weapon.id] = weapon

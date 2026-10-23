@@ -21,6 +21,23 @@ static func get_timeline(scenario: String) -> Array:
 				{"at": 1.3, "for": 1.0, "move": Vector2(0, 1), "hold": S},
 				{"at": 2.3, "for": 1.2, "move": Vector2(1, 0), "turn": 1.2},
 			]
+		"strafe":
+			# strafe right, strafe left, backpedal, then the back diagonals, facing ahead
+			return [
+				{"at": 0.3, "for": 1.0, "move": Vector2(1, 0)},
+				{"at": 1.3, "for": 1.0, "move": Vector2(-1, 0)},
+				{"at": 2.3, "for": 1.0, "move": Vector2(0, -1)},
+				{"at": 3.3, "for": 0.8, "move": Vector2(0.7, -0.7)},
+				{"at": 4.1, "for": 0.8, "move": Vector2(-0.7, -0.7)},
+			]
+		"move_layers":
+			# walk forward guarding, then run sideways casting (upper-body layers over the legs)
+			return [
+				{"at": 0.3, "for": 1.4, "move": Vector2(0, 1), "hold": B},
+				{"at": 1.9, "for": 1.6, "move": Vector2(1, 0)},
+				{"at": 2.3, "press": P},
+				{"at": 2.9, "press": P},
+			]
 		"bot_pressure":
 			# for the bot: two lights, then two heavies
 			return [

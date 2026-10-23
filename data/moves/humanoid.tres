@@ -1,0 +1,354 @@
+[gd_resource type="Resource" script_class="MoveSet" load_steps=40 format=3]
+
+[ext_resource type="Script" path="res://src/animation/anim_move.gd" id="1_move"]
+[ext_resource type="Script" path="res://src/animation/move_set.gd" id="2_set"]
+
+[sub_resource type="Resource" id="Move_idle"]
+script = ExtResource("1_move")
+clip = &"ual1/Sword_Idle"
+keys = PackedFloat32Array(0, 1.667)
+blend_in = 0.2
+
+[sub_resource type="Resource" id="Move_walk"]
+script = ExtResource("1_move")
+clip = &"ual1/Walk"
+keys = PackedFloat32Array(0, 1.333)
+ground_speed = 1
+
+[sub_resource type="Resource" id="Move_run"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Run_Female"
+keys = PackedFloat32Array(0.467, 0.833)
+ground_speed = 3.4
+play_at = 2.75
+
+[sub_resource type="Resource" id="Move_jog"]
+script = ExtResource("1_move")
+clip = &"ual1/Jog_Fwd"
+keys = PackedFloat32Array(0.02, 0.933)
+ground_speed = 6.15
+play_at = 5
+
+[sub_resource type="Resource" id="Move_sprint"]
+script = ExtResource("1_move")
+clip = &"ual1/Sprint"
+keys = PackedFloat32Array(0, 0.667)
+ground_speed = 9.1
+play_at = 7.5
+
+[sub_resource type="Resource" id="Move_light_1"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Regular_A"
+keys = PackedFloat32Array(0, 0.167, 0.167, 0.25, 0.317, 0.433)
+blend_in = 0.06
+strike = 0.05
+hold = 0
+settle_fraction = 0
+recover = &"light_1_rec"
+slash_from = 105.1
+slash_to = -34.9
+slash_tilt = 68.7
+slash_height = 1.25
+
+[sub_resource type="Resource" id="Move_light_2"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Regular_B"
+keys = PackedFloat32Array(0, 0.133, 0.2, 0.25, 0.367, 0.533)
+blend_in = 0.05
+strike = 0.03
+hold = 0.04
+settle_fraction = 0
+recover = &"light_2_rec"
+slash_from = -95.5
+slash_to = 44.5
+slash_tilt = -12.2
+slash_height = 1.25
+
+[sub_resource type="Resource" id="Move_light_3"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Regular_C"
+keys = PackedFloat32Array(0, 0.45, 0.5, 0.693, 0.833, 1.617)
+blend_in = 0.05
+strike = 0.08
+hold = 0.02
+settle_fraction = 0
+slash_from = 75.7
+slash_to = -64.3
+slash_tilt = -35.7
+slash_height = 1.25
+
+[sub_resource type="Resource" id="Move_heavy"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Heavy_Combo"
+keys = PackedFloat32Array(2, 2.45, 2.5, 2.617, 2.667, 3.233)
+blend_in = 0.15
+strike = 0.1
+hold = 0.15
+settle_fraction = 0
+recover = &"heavy_rec"
+slash_from = -88.3
+slash_to = 51.7
+slash_tilt = 88.3
+slash_height = 1.25
+
+[sub_resource type="Resource" id="Move_light_1_rec"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Regular_A_Rec"
+keys = PackedFloat32Array(0, 0.65)
+duration = 0.65
+blend_in = 0
+
+[sub_resource type="Resource" id="Move_light_2_rec"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Regular_B_Rec"
+keys = PackedFloat32Array(0, 0.833)
+duration = 0.833
+blend_in = 0
+
+[sub_resource type="Resource" id="Move_heavy_rec"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Heavy_Combo"
+keys = PackedFloat32Array(3.233, 3.967)
+duration = 0.733
+blend_in = 0
+
+[sub_resource type="Resource" id="Move_cast_bolt"]
+script = ExtResource("1_move")
+clip = &"ual1/Punch_Jab"
+keys = PackedFloat32Array(0, 0.133, 0.15, 0.2, 0.333, 0.867)
+blend_in = 0.05
+left_arm_only = true
+strike = 0.035
+hold = 0.012
+settle_fraction = 0.3
+
+[sub_resource type="Resource" id="Move_cast_wall"]
+script = ExtResource("1_move")
+clip = &"ual2/OverhandThrow"
+keys = PackedFloat32Array(0, 0.267, 0.283, 0.367, 0.45, 1.2)
+mirror = true
+blend_in = 0.08
+strike = 0.08
+hold = 0.015
+settle_fraction = 0.1
+
+[sub_resource type="Resource" id="Move_cast_nova"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Attack_Ground_Pound"
+keys = PackedFloat32Array(0, 0.25, 0.3, 0.733, 0.783, 1)
+blend_in = 0.06
+strike = 0.1
+hold = 0
+settle_fraction = 0.1
+
+[sub_resource type="Resource" id="Move_block"]
+script = ExtResource("1_move")
+clip = &"ual2/Shield_OneShot"
+keys = PackedFloat32Array(0, 2.617)
+blend_in = 0.08
+loop_from = 0.167
+chain_clip = &"ual2/Idle_Shield"
+chain_at = 0.167
+chain_from = 0
+chain_to = 2.5
+chain_blend = 0.05
+
+[sub_resource type="Resource" id="Move_block_impact"]
+script = ExtResource("1_move")
+clip = &"ual2/Idle_Shield_Break"
+keys = PackedFloat32Array(0, 0.067, 0.067)
+sim_keys = PackedFloat32Array(0, 0.27, 1)
+duration = 0.25
+blend_in = 0
+
+[sub_resource type="Resource" id="Move_parry"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Block"
+keys = PackedFloat32Array(0.067, 0.1, 0.167, 0.333)
+sim_keys = PackedFloat32Array(0, 0.1111, 0.3333, 1)
+duration = 0.27
+blend_in = 0
+
+[sub_resource type="Resource" id="Move_guard_break"]
+script = ExtResource("1_move")
+clip = &"ual2/Idle_Shield_Break"
+keys = PackedFloat32Array(0, 0.133, 0.233, 0.95, 1.067)
+sim_keys = PackedFloat32Array(0, 0.125, 0.3, 0.9, 1)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_flinch"]
+script = ExtResource("1_move")
+clip = &"ual1/Hit_Chest"
+keys = PackedFloat32Array(0, 0.033, 0.3, 0.333)
+sim_keys = PackedFloat32Array(0, 0.12, 0.88, 1)
+blend_in = 0.02
+
+[sub_resource type="Resource" id="Move_flinch_heavy"]
+script = ExtResource("1_move")
+clip = &"ual2/Idle_Shield_Break"
+keys = PackedFloat32Array(0.067, 0.133, 0.233, 0.6)
+sim_keys = PackedFloat32Array(0, 0.15, 0.35, 1)
+blend_in = 0.02
+
+[sub_resource type="Resource" id="Move_stagger"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Death_A"
+keys = PackedFloat32Array(0.075, 0.3, 1.05)
+sim_keys = PackedFloat32Array(0, 0.2, 1)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_stagger_long"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Death_A"
+keys = PackedFloat32Array(0.075, 0.3, 0.6, 1.35)
+sim_keys = PackedFloat32Array(0, 0.1667, 0.4, 1)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_knockdown"]
+script = ExtResource("1_move")
+clip = &"ual2/Hit_Knockback"
+keys = PackedFloat32Array(0, 0.067, 0.3, 0.637, 0.987, 1.637)
+blend_in = 0.02
+chain_clip = &"ual2/LayToIdle"
+chain_at = 0.4
+chain_from = 0.083
+chain_to = 1.4
+chain_blend = 0.08
+
+[sub_resource type="Resource" id="Move_death"]
+script = ExtResource("1_move")
+clip = &"ual1/Hit_Chest"
+keys = PackedFloat32Array(0, 0.52, 1.19)
+duration = 1.19
+blend_in = 0.02
+chain_clip = &"ual1/Death01"
+chain_at = 0.12
+chain_from = 0.45
+chain_to = 1.6
+chain_blend = 0.08
+
+[sub_resource type="Resource" id="Move_death_blast"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Death_C"
+keys = PackedFloat32Array(0, 0.6, 1.9)
+duration = 1.9
+blend_in = 0.05
+
+[sub_resource type="Resource" id="Move_dash_f"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Dash"
+keys = PackedFloat32Array(0.2, 0.233, 0.267, 0.367, 0.45)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_dash_b"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Dodge_back"
+keys = PackedFloat32Array(0.05, 0.1, 0.217, 0.3, 0.45)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_dash_l"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Dodge_left"
+keys = PackedFloat32Array(0.083, 0.133, 0.15, 0.267, 0.5)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_dash_r"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Dodge_right"
+keys = PackedFloat32Array(0.083, 0.133, 0.15, 0.267, 0.5)
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_taunt"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Victory"
+keys = PackedFloat32Array(0, 0.4, 0.5, 0.767, 1.217, 1.667)
+duration = 1.667
+blend_in = 0.15
+
+[sub_resource type="Resource" id="Move_entrance"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Land_Three_Point"
+keys = PackedFloat32Array(0, 0.5, 0.7, 0.95, 1.817)
+duration = 1.817
+blend_in = 0
+chain_clip = &"ual2/NinjaJump_Land"
+chain_at = 1
+chain_from = 0.25
+chain_to = 1.267
+chain_blend = 0.2
+
+[sub_resource type="Resource" id="Move_leap_start"]
+script = ExtResource("1_move")
+clip = &"ual2/NinjaJump_Start"
+keys = PackedFloat32Array(0.033, 0.45)
+duration = 0.59
+blend_in = 0.04
+
+[sub_resource type="Resource" id="Move_leap_air"]
+script = ExtResource("1_move")
+clip = &"ual2/NinjaJump_Idle"
+keys = PackedFloat32Array(0, 2)
+blend_in = 0.2
+
+[sub_resource type="Resource" id="Move_leap_fall"]
+script = ExtResource("1_move")
+clip = &"ual1/Jump"
+keys = PackedFloat32Array(0, 2.5)
+blend_in = 0.25
+
+[sub_resource type="Resource" id="Move_leap_land"]
+script = ExtResource("1_move")
+clip = &"ual2/NinjaJump_Land"
+keys = PackedFloat32Array(0.1, 0.183, 0.8)
+duration = 0.7
+blend_in = 0.03
+
+[sub_resource type="Resource" id="Move_blink"]
+script = ExtResource("1_move")
+clip = &"ual2/Shield_Dash"
+keys = PackedFloat32Array(0.2, 0.467, 0.8)
+duration = 0.3
+blend_in = 0
+keep_while_moving = true
+
+[resource]
+script = ExtResource("2_set")
+moves = Dictionary[StringName, ExtResource("1_move")]({
+&"idle": SubResource("Move_idle"),
+&"walk": SubResource("Move_walk"),
+&"run": SubResource("Move_run"),
+&"jog": SubResource("Move_jog"),
+&"sprint": SubResource("Move_sprint"),
+&"light_1": SubResource("Move_light_1"),
+&"light_2": SubResource("Move_light_2"),
+&"light_3": SubResource("Move_light_3"),
+&"heavy": SubResource("Move_heavy"),
+&"light_1_rec": SubResource("Move_light_1_rec"),
+&"light_2_rec": SubResource("Move_light_2_rec"),
+&"heavy_rec": SubResource("Move_heavy_rec"),
+&"cast_bolt": SubResource("Move_cast_bolt"),
+&"cast_wall": SubResource("Move_cast_wall"),
+&"cast_nova": SubResource("Move_cast_nova"),
+&"block": SubResource("Move_block"),
+&"block_impact": SubResource("Move_block_impact"),
+&"parry": SubResource("Move_parry"),
+&"guard_break": SubResource("Move_guard_break"),
+&"flinch": SubResource("Move_flinch"),
+&"flinch_heavy": SubResource("Move_flinch_heavy"),
+&"stagger": SubResource("Move_stagger"),
+&"stagger_long": SubResource("Move_stagger_long"),
+&"knockdown": SubResource("Move_knockdown"),
+&"death": SubResource("Move_death"),
+&"death_blast": SubResource("Move_death_blast"),
+&"dash_f": SubResource("Move_dash_f"),
+&"dash_b": SubResource("Move_dash_b"),
+&"dash_l": SubResource("Move_dash_l"),
+&"dash_r": SubResource("Move_dash_r"),
+&"taunt": SubResource("Move_taunt"),
+&"entrance": SubResource("Move_entrance"),
+&"leap_start": SubResource("Move_leap_start"),
+&"leap_air": SubResource("Move_leap_air"),
+&"leap_fall": SubResource("Move_leap_fall"),
+&"leap_land": SubResource("Move_leap_land"),
+&"blink": SubResource("Move_blink")
+})

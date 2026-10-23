@@ -4,6 +4,61 @@ extends RefCounted
 ## that need determinism; randomness here is purely visual.
 
 const IMPACT := preload("res://src/vfx/impact_star.gdshader")
+const SLASH := preload("res://src/vfx/slash_arc.gdshader")
+
+static var _slash_meshes := {}
+
+
+## A sweeping slash crescent in the swing plane, synced to a strike.
+## `origin` is the pivot (attacker's chest), `facing_yaw` the attacker's
+## facing. Angles are degrees from straight ahead, positive to the right;
+## `tilt` rolls the swing plane around the facing axis (0 = flat
+## horizontal, 90 = vertical chop).
+static func slash(parent: Node, origin: Vector3, facing_yaw: float, from_deg: float, to_deg: float,
+		tilt_deg: float, radius: float, color: Color, duration := 0.2) -> void:
+	var arc := MeshInstance3D.new()
+	arc.mesh = _slash_mesh(from_deg, to_deg, radius)
+	var material := ShaderMaterial.new()
+	material.shader = SLASH
+	material.set_shader_parameter(&"edge_color", color)
+	material.set_shader_parameter(&"core_color", color.lightened(0.7))
+	arc.material_override = material
+	arc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(arc)
+	var facing := Basis(Vector3.UP, facing_yaw)
+	var roll := Basis(Vector3.FORWARD, deg_to_rad(tilt_deg))
+	arc.global_transform = Transform3D(facing * roll, origin)
+	var tween := arc.create_tween()
+	tween.tween_method(func(p: float) -> void: material.set_shader_parameter(&"progress", p), 0.0, 1.0, duration)
+	tween.tween_callback(arc.queue_free)
+
+
+## Ring segment in the local XZ plane: angle measured from -Z toward +X,
+## UV.x along the sweep, UV.y inner to outer radius. Cached per shape.
+static func _slash_mesh(from_deg: float, to_deg: float, radius: float) -> ArrayMesh:
+	var key := "%d:%d:%d" % [roundi(from_deg), roundi(to_deg), roundi(radius * 100.0)]
+	if _slash_meshes.has(key):
+		return _slash_meshes[key]
+	var segments := 28
+	var inner := radius * 0.7
+	var vertices := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	for i in segments + 1:
+		var u := float(i) / segments
+		var angle := deg_to_rad(lerpf(from_deg, to_deg, u))
+		var dir := Vector3(sin(angle), 0.0, -cos(angle))
+		vertices.append(dir * inner)
+		uvs.append(Vector2(u, 0.0))
+		vertices.append(dir * radius)
+		uvs.append(Vector2(u, 1.0))
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLE_STRIP, arrays)
+	_slash_meshes[key] = mesh
+	return mesh
 
 
 ## A comic impact star that pops and fades at `at`.

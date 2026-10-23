@@ -3,7 +3,7 @@ extends Resource
 ## What a fighter brings into a match: a character, any primary spell, any
 ## signature spell and a mobility rune (mix and match across elements).
 
-@export var character := &"knight"
+@export var character := &"warden"
 @export var primary := &"firebolt"
 @export var signature := &"flame_wall"
 @export var rune := &"leap"
