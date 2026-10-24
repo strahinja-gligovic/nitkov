@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/projectile_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"ice_spike"
+display_name = "Ice Spike"
+description = "One heavy spike of ice: 10 damage and +1 Chill. Three Chill stacks slow the target, and Fire on a Chilled target Shatters it."
+element = 2
+slot = 0
+stamina_cost = 15.0
+windup = 0.15
+recovery = 0.26
+animation = &"cast_dart"
+damage = 10.0
+speed = 50.0
+radius = 0.22
+max_range = 55.0
+chill_stacks = 1
+hitstop = 0.06

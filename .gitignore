@@ -13,3 +13,6 @@ Thumbs.db
 
 # Python bytecode (tools/)
 __pycache__/
+
+# Claude Code local state (worktrees, workflows)
+/.claude/

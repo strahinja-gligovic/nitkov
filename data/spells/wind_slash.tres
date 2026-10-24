@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/projectile_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"wind_slash"
+display_name = "Wind Slash"
+description = "Throws a wide crescent of wind: 8 damage and a shove. Wide enough to catch a sidestep, but it fades after 25 m."
+element = 4
+slot = 0
+stamina_cost = 15.0
+windup = 0.14
+recovery = 0.3
+animation = &"cast_sweep"
+damage = 8.0
+speed = 30.0
+radius = 1.0
+max_range = 25.0
+push = 5.0
+hitstop = 0.04

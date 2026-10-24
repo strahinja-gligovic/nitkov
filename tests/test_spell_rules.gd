@@ -1,5 +1,6 @@
 extends GutTest
-## CombatRules.resolve_spell and status effects: block chip, burn.
+## CombatRules.resolve_spell and status effects: block chip, burn, Chill and
+## Shatter, and the shoves, pops, flinches and stuns of Lightning and Wind.
 
 var tuning: CombatTuning
 var defender: FighterState
@@ -28,7 +29,7 @@ func test_clean_spell_hit_damages_and_burns() -> void:
 	assert_eq(defender.burn_time, tuning.burn_duration)
 
 
-func test_spells_do_not_flinch() -> void:
+func test_spells_without_a_flinch_do_not_interrupt() -> void:
 	defender.start_action(FighterState.Action.CAST)
 	CombatRules.resolve_spell(defender, _fire_hit(), true, tuning)
 	assert_eq(defender.action, FighterState.Action.CAST)
@@ -93,7 +94,7 @@ func _frost_hit(stacks := 1) -> SpellHit:
 	hit.element = SpellData.Element.FROST
 	hit.damage = 5.0
 	hit.chill_stacks = stacks
-	hit.source = &"shard_volley"
+	hit.source = &"ice_spike"
 	return hit
 
 
@@ -198,3 +199,179 @@ func test_slows_take_the_strongest_not_the_sum() -> void:
 	assert_almost_eq(CombatRules.move_speed_mult(defender, tuning), 0.6, 0.001)
 	defender.slow_time = 0.0
 	assert_almost_eq(CombatRules.move_speed_mult(defender, tuning), 1.0 - tuning.chill_slow, 0.001)
+
+
+# --- shoves, pops, flinches and stuns (Lightning and Wind) -----------------------
+
+## A Lightning Bolt's jolt: damage and a flinch.
+func _jolt(flinch := 0.25) -> SpellHit:
+	var hit := SpellHit.new()
+	hit.element = SpellData.Element.LIGHTNING
+	hit.damage = 9.0
+	hit.flinch = flinch
+	hit.source = &"lightning_bolt"
+	return hit
+
+
+## A gust of wind: damage, a shove and a pop up.
+func _gust(push := Vector3(6.0, 0.0, 0.0), launch := 4.0) -> SpellHit:
+	var hit := SpellHit.new()
+	hit.element = SpellData.Element.WIND
+	hit.damage = 8.0
+	hit.push = push
+	hit.launch = launch
+	hit.source = &"wind_spear"
+	return hit
+
+
+## A Lightning Strike: unblockable, a "shock" stun and a pop up.
+func _strike(stun := 1.0) -> SpellHit:
+	var hit := SpellHit.new()
+	hit.element = SpellData.Element.LIGHTNING
+	hit.damage = 24.0
+	hit.blockable = false
+	hit.stagger = stun
+	hit.stagger_kind = &"shock"
+	hit.launch = 2.5
+	hit.source = &"lightning_strike"
+	return hit
+
+
+## The defender halfway through a heavy's wind-up (hyperarmor).
+func _winding_up_a_heavy() -> void:
+	var heavy: AttackData = (load("res://data/weapons/longsword.tres") as WeaponData).heavy
+	defender.start_action(FighterState.Action.ATTACK)
+	defender.attack = heavy
+	defender.action_time = heavy.windup * 0.5
+	assert_true(defender.has_hyperarmor())
+
+
+func test_the_bigger_push_wins_and_the_higher_pop() -> void:
+	CombatRules.apply_push(defender, Vector3(6.0, 0.0, 0.0), 2.0)
+	assert_eq(defender.knockback, Vector3(6.0, 0.0, 0.0))
+	assert_eq(defender.launch, 2.0)
+	CombatRules.apply_push(defender, Vector3(0.0, 0.0, -4.0), 5.0)
+	assert_eq(defender.knockback, Vector3(6.0, 0.0, 0.0), "a weaker shove doesn't cut a stronger one short")
+	assert_eq(defender.launch, 5.0, "the higher pop wins")
+	CombatRules.apply_push(defender, Vector3(0.0, 0.0, -9.0), 1.0)
+	assert_eq(defender.knockback, Vector3(0.0, 0.0, -9.0), "a stronger shove takes over")
+	assert_eq(defender.launch, 5.0, "pops don't add up either")
+
+
+func test_shoves_are_flat() -> void:
+	CombatRules.apply_push(defender, Vector3(3.0, 4.0, 0.0), 0.0)
+	assert_eq(defender.knockback, Vector3(3.0, 0.0, 0.0), "height comes from the pop, not the shove")
+	assert_eq(defender.launch, 0.0)
+
+
+func test_a_jolt_interrupts_a_cast() -> void:
+	defender.start_action(FighterState.Action.CAST)
+	defender.spell = ProjectileSpell.new()
+	var result := CombatRules.resolve_spell(defender, _jolt(0.25), true, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.HIT)
+	assert_eq(defender.action, FighterState.Action.FLINCH)
+	assert_eq(defender.action_duration, 0.25)
+	assert_null(defender.spell, "the cast is gone")
+	assert_eq(defender.hp, tuning.max_hp - 9.0)
+
+
+func test_a_jolt_does_not_flinch_through_hyperarmor() -> void:
+	_winding_up_a_heavy()
+	CombatRules.resolve_spell(defender, _jolt(), true, tuning)
+	assert_eq(defender.action, FighterState.Action.ATTACK, "the heavy carries on")
+	assert_eq(defender.hp, tuning.max_hp - 9.0, "but it still hurts")
+
+
+func test_a_stun_goes_through_hyperarmor_and_says_what_it_was() -> void:
+	_winding_up_a_heavy()
+	CombatRules.resolve_spell(defender, _strike(1.0), true, tuning)
+	assert_eq(defender.action, FighterState.Action.STAGGER, "hyperarmor stops flinches, not stuns")
+	assert_eq(defender.action_duration, 1.0)
+	assert_eq(defender.stagger_kind, &"shock")
+
+
+func test_a_stun_outranks_a_flinch_on_the_same_hit() -> void:
+	var hit := _strike(1.0)
+	hit.flinch = 0.25
+	CombatRules.resolve_spell(defender, hit, true, tuning)
+	assert_eq(defender.action, FighterState.Action.STAGGER)
+	assert_eq(defender.action_duration, 1.0)
+
+
+func test_a_hit_shoves_and_pops_up() -> void:
+	var result := CombatRules.resolve_spell(defender, _gust(Vector3(5.0, 0.0, 0.0), 3.0), true, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.HIT)
+	assert_eq(defender.knockback, Vector3(5.0, 0.0, 0.0))
+	assert_eq(defender.launch, 3.0)
+	assert_eq(defender.action, FighterState.Action.IDLE, "a shove alone doesn't flinch")
+	assert_eq(defender.hp, tuning.max_hp - 8.0)
+
+
+func test_a_blocked_hit_takes_half_the_shove_and_no_flinch_stun_or_pop() -> void:
+	defender.blocking = true
+	var hit := _gust(Vector3(6.0, 0.0, 0.0), 4.0)
+	hit.flinch = 0.25
+	hit.stagger = 1.0
+	hit.stagger_kind = &"shock"
+	var result := CombatRules.resolve_spell(defender, hit, true, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.BLOCKED)
+	assert_eq(defender.knockback, Vector3(3.0, 0.0, 0.0), "the guard slides back half as far")
+	assert_eq(defender.launch, 0.0, "and keeps its feet")
+	assert_eq(defender.action, FighterState.Action.IDLE, "no flinch, no stun")
+	assert_eq(defender.stagger_kind, &"")
+	assert_almost_eq(defender.hp, tuning.max_hp - 8.0 * tuning.spell_block_chip, 0.001)
+
+
+func test_a_guard_broken_by_a_shove_still_slides_only_half() -> void:
+	defender.blocking = true
+	defender.stamina = tuning.spell_block_stamina - 1.0
+	var result := CombatRules.resolve_spell(defender, _gust(Vector3(6.0, 0.0, 0.0), 4.0), true, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.GUARD_BREAK)
+	assert_eq(defender.knockback, Vector3(3.0, 0.0, 0.0))
+	assert_eq(defender.launch, 0.0)
+	assert_eq(defender.stagger_kind, &"guard_break")
+
+
+func test_a_guard_does_not_cover_a_shove_from_behind() -> void:
+	defender.blocking = true
+	var hit := _gust(Vector3(6.0, 0.0, 0.0), 4.0)
+	hit.flinch = 0.25
+	var result := CombatRules.resolve_spell(defender, hit, false, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.HIT)
+	assert_eq(defender.knockback, Vector3(6.0, 0.0, 0.0))
+	assert_eq(defender.launch, 4.0)
+	assert_eq(defender.action, FighterState.Action.FLINCH)
+
+
+func test_an_unblockable_stun_lands_through_a_front_guard() -> void:
+	defender.blocking = true
+	var result := CombatRules.resolve_spell(defender, _strike(), true, tuning)
+	assert_eq(result.outcome, HitResult.Outcome.HIT)
+	assert_eq(defender.action, FighterState.Action.STAGGER)
+	assert_eq(defender.stagger_kind, &"shock")
+	assert_eq(defender.launch, 2.5)
+	assert_eq(defender.stamina, tuning.max_stamina, "no guard stamina spent")
+
+
+func test_invulnerable_and_dead_targets_are_not_moved_flinched_or_stunned() -> void:
+	var hit := _strike()
+	hit.flinch = 0.25
+	hit.push = Vector3(6.0, 0.0, 0.0)
+	defender.invulnerable = 0.1
+	assert_eq(CombatRules.resolve_spell(defender, hit, true, tuning).outcome, HitResult.Outcome.IGNORED)
+	assert_eq(defender.knockback, Vector3.ZERO)
+	assert_eq(defender.launch, 0.0)
+	assert_eq(defender.action, FighterState.Action.IDLE)
+	assert_eq(defender.hp, tuning.max_hp)
+	defender.invulnerable = 0.0
+	defender.take_damage(1000.0)
+	assert_eq(CombatRules.resolve_spell(defender, hit, true, tuning).outcome, HitResult.Outcome.IGNORED)
+	assert_eq(defender.knockback, Vector3.ZERO, "corpses aren't shoved by later hits")
+	assert_eq(defender.action, FighterState.Action.DEAD)
+
+
+func test_a_killing_stun_leaves_the_target_dead() -> void:
+	defender.hp = 10.0
+	var result := CombatRules.resolve_spell(defender, _strike(), true, tuning)
+	assert_true(result.killed)
+	assert_eq(defender.action, FighterState.Action.DEAD, "dead, not stunned")

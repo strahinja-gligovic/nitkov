@@ -20,3 +20,4 @@ max_range = 60.0
 splash_radius = 1.5
 splash_damage = 4.0
 applies_burn = true
+hitstop = 0.05

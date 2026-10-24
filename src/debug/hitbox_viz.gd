@@ -52,7 +52,11 @@ func _process(delta: float) -> void:
 		_circle(bolt.global_position, bolt.spell.radius, Vector3.UP, SpellData.element_color(bolt.spell.element))
 		_circle(bolt.global_position, bolt.spell.radius, Vector3.RIGHT, SpellData.element_color(bolt.spell.element))
 	for node in get_tree().get_nodes_in_group(&"zones"):
-		_draw_wall(node as FlameWall)
+		if node is FlameWall:
+			_draw_wall(node as FlameWall)
+		elif node is LightningStrike:
+			var strike := node as LightningStrike
+			_circle(strike.global_position + Vector3.UP * 0.1, strike.spell.radius, Vector3.UP, ACTIVE)
 	for blast: Array in _blasts:
 		_circle(blast[0] + Vector3.UP * 0.1, blast[1], Vector3.UP, blast[2])
 	_mesh.surface_end()

@@ -6,8 +6,10 @@ const TUNING_PATH := "res://data/combat_tuning.tres"
 const MOVES_PATH := "res://data/moves/humanoid.tres"
 const WEAPON_PATHS: Array[String] = ["res://data/weapons/longsword.tres"]
 const SPELL_PATHS: Array[String] = [
-	"res://data/spells/firebolt.tres", "res://data/spells/shard_volley.tres",
+	"res://data/spells/firebolt.tres", "res://data/spells/ice_spike.tres",
+	"res://data/spells/lightning_bolt.tres", "res://data/spells/wind_slash.tres",
 	"res://data/spells/flame_wall.tres", "res://data/spells/frost_nova.tres",
+	"res://data/spells/lightning_strike.tres", "res://data/spells/wind_spear.tres",
 ]
 const RUNE_PATHS: Array[String] = ["res://data/runes/leap.tres", "res://data/runes/blink.tres"]
 const CHARACTER_PATHS: Array[String] = [

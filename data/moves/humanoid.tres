@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MoveSet" load_steps=40 format=3]
+[gd_resource type="Resource" script_class="MoveSet" load_steps=47 format=3]
 
 [ext_resource type="Script" path="res://src/animation/anim_move.gd" id="1_move"]
 [ext_resource type="Script" path="res://src/animation/move_set.gd" id="2_set"]
@@ -123,6 +123,43 @@ strike = 0.04
 hold = 0
 settle_fraction = 0.3
 
+[sub_resource type="Resource" id="Move_cast_dart"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Throw Object"
+keys = PackedFloat32Array(0.4, 0.5, 0.517, 0.73, 0.8, 0.917)
+mirror = true
+blend_in = 0.06
+left_arm_only = true
+strike = 0.065
+hold = 0.015
+settle_fraction = 0.35
+
+[sub_resource type="Resource" id="Move_cast_point"]
+script = ExtResource("1_move")
+clip = &"ual1/Spell_Simple_Enter"
+keys = PackedFloat32Array(0, 0.05, 0.1, 0.4, 0.533, 0.9)
+blend_in = 0.09
+left_arm_only = true
+strike = 0.07
+hold = 0
+settle_fraction = 0.45
+chain_clip = &"ual1/Spell_Simple_Exit"
+chain_at = 0.533
+chain_from = 0
+chain_to = 0.433
+chain_blend = 0.06
+
+[sub_resource type="Resource" id="Move_cast_sweep"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Regular_A_Rec"
+keys = PackedFloat32Array(0, 0.133, 0.2, 0.383, 0.483, 0.533)
+mirror = true
+blend_in = 0.06
+blend_out = 0.2
+strike = 0.06
+hold = 0
+settle_fraction = 0.35
+
 [sub_resource type="Resource" id="Move_cast_wall"]
 script = ExtResource("1_move")
 clip = &"ual2/OverhandThrow"
@@ -143,6 +180,28 @@ blend_out = 0.15
 strike = 0.1
 hold = 0
 settle_fraction = 0.1
+
+[sub_resource type="Resource" id="Move_cast_call"]
+script = ExtResource("1_move")
+clip = &"ual2/Sword_Heavy_Combo"
+keys = PackedFloat32Array(2.05, 2.267, 2.283, 2.533, 2.667, 3)
+mirror = true
+blend_in = 0.1
+blend_out = 0.25
+strike = 0.3
+hold = 0.03
+settle_fraction = 0.35
+
+[sub_resource type="Resource" id="Move_cast_javelin"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Throw Object"
+keys = PackedFloat32Array(0.22, 0.483, 0.517, 0.7, 0.8, 1)
+mirror = true
+blend_in = 0.1
+blend_out = 0.2
+strike = 0.1
+hold = 0.08
+settle_fraction = 0.3
 
 [sub_resource type="Resource" id="Move_block"]
 script = ExtResource("1_move")
@@ -212,6 +271,23 @@ keys = PackedFloat32Array(0.075, 0.3, 0.6, 1.35)
 sim_keys = PackedFloat32Array(0, 0.1667, 0.4, 1)
 blend_in = 0.03
 blend_out = 0.18
+
+[sub_resource type="Resource" id="Move_stagger_shock"]
+script = ExtResource("1_move")
+clip = &"m2m_addon/Jumping Jacks"
+keys = PackedFloat32Array(0.2, 0.07, 0.1976, 0.0749, 0.1927, 0.0798, 0.1878, 0.0846, 0.1829, 0.0895, 0.1781, 0.0944, 0.1732, 0.0993, 0.1683, 0.1041, 0.1634, 0.109, 0.15)
+sim_keys = PackedFloat32Array(0, 0.0433, 0.0867, 0.13, 0.1733, 0.2167, 0.26, 0.3033, 0.3467, 0.39, 0.4333, 0.4767, 0.52, 0.5633, 0.6067, 0.65, 0.6933, 0.7367, 1)
+blend_in = 0
+blend_out = 0.2
+
+[sub_resource type="Resource" id="Move_blown"]
+script = ExtResource("1_move")
+clip = &"ual2/Hit_Knockback"
+keys = PackedFloat32Array(0.03, 0.09, 0.12, 0.07)
+sim_keys = PackedFloat32Array(0, 0.25, 0.65, 1)
+duration = 0.5
+blend_in = 0.05
+blend_out = 0.2
 
 [sub_resource type="Resource" id="Move_knockdown"]
 script = ExtResource("1_move")
@@ -345,8 +421,13 @@ moves = Dictionary[StringName, ExtResource("1_move")]({
 &"light_2_rec": SubResource("Move_light_2_rec"),
 &"heavy_rec": SubResource("Move_heavy_rec"),
 &"cast_bolt": SubResource("Move_cast_bolt"),
+&"cast_dart": SubResource("Move_cast_dart"),
+&"cast_point": SubResource("Move_cast_point"),
+&"cast_sweep": SubResource("Move_cast_sweep"),
 &"cast_wall": SubResource("Move_cast_wall"),
 &"cast_nova": SubResource("Move_cast_nova"),
+&"cast_call": SubResource("Move_cast_call"),
+&"cast_javelin": SubResource("Move_cast_javelin"),
 &"block": SubResource("Move_block"),
 &"block_impact": SubResource("Move_block_impact"),
 &"parry": SubResource("Move_parry"),
@@ -355,6 +436,8 @@ moves = Dictionary[StringName, ExtResource("1_move")]({
 &"flinch_heavy": SubResource("Move_flinch_heavy"),
 &"stagger": SubResource("Move_stagger"),
 &"stagger_long": SubResource("Move_stagger_long"),
+&"stagger_shock": SubResource("Move_stagger_shock"),
+&"blown": SubResource("Move_blown"),
 &"knockdown": SubResource("Move_knockdown"),
 &"death": SubResource("Move_death"),
 &"death_blast": SubResource("Move_death_blast"),

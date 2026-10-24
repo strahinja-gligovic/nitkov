@@ -4,6 +4,24 @@ clips). Each entry: AnimMove field -> value."""
 def frac(game_times, duration):
     return [round(t / duration, 4) for t in game_times]
 
+
+def twitch(clip_a, clip_b, until, count, end_key):
+    """Keys and fractions for an electrocuted twitch: snap to clip_a, then jerk between clip_a and
+    clip_b `count` times, closing in on the middle, until `until` (a fraction of the move), then
+    ease to end_key by the end."""
+    keys, fractions = [clip_a], [0.0]
+    step = until / (count + 1)
+    for i in range(count):
+        shrink = 1.0 - 0.6 * i / max(count - 1, 1)
+        mid = (clip_a + clip_b) * 0.5
+        target = clip_b if i % 2 == 0 else clip_a
+        keys.append(round(mid + (target - mid) * shrink, 4))
+        fractions.append(round(step * (i + 1), 4))
+    return keys + [end_key], fractions + [1.0]
+
+
+_SHOCK_KEYS, _SHOCK_FRACTIONS = twitch(0.2, 0.07, 0.78, 17, 0.15)
+
 REACT = {
     # guard: raise the gauntlet (Shield_OneShot 0-0.167) then hold Idle_Shield (loop), upper body
     "block": dict(clip="ual2/Shield_OneShot", chain_clip="ual2/Idle_Shield", chain_at=0.167, chain_from=0.0,
@@ -31,6 +49,14 @@ REACT = {
     # parried heavy (1.5 s): the same, stretched; never past the kneel at 1.45
     "stagger_long": dict(clip="m2m_addon/Death_A", keys=[0.075, 0.3, 0.6, 1.35],
                          sim_keys=frac([0.0, 0.25, 0.6, 1.5], 1.5), blend_in=0.03, blend_out=0.18),
+    # Lightning Strike's stun (1.0 s): snapped rigid with the arms flung up and the legs braced, jerking
+    # with the current, the jolts dying away (Jumping Jacks' grounded star, before it jumps)
+    "stagger_shock": dict(clip="m2m_addon/Jumping Jacks", keys=_SHOCK_KEYS, sim_keys=_SHOCK_FRACTIONS, blend_in=0.0,
+                          blend_out=0.2),
+    # thrown through the air by a shove (a wind burst): legs swept up, arms flung, played over the
+    # first half second off the ground (AnimDirector.BLOWN_SPEED)
+    "blown": dict(clip="ual2/Hit_Knockback", keys=[0.03, 0.09, 0.12, 0.07], sim_keys=[0.0, 0.25, 0.65, 1.0],
+                  duration=0.5, blend_in=0.05, blend_out=0.2),
     # Shatter: knocked flat, then back up (Hit_Knockback flowing into LayToIdle)
     # a cut whose get-up keeps the blade out of the floor and the thigh (1.13 s, fits the 1.2 s Shatter)
     "knockdown": dict(clip="ual2/Hit_Knockback", chain_clip="ual2/LayToIdle", chain_at=0.5, chain_from=0.625,

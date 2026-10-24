@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileSpell" format=3]
+
+[ext_resource type="Script" path="res://src/spells/projectile_spell.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+id = &"lightning_bolt"
+display_name = "Lightning Bolt"
+description = "A crack of lightning that flies almost instantly: 9 damage and a jolt that interrupts attacks and casts (not heavies)."
+element = 3
+slot = 0
+stamina_cost = 15.0
+windup = 0.16
+recovery = 0.3
+animation = &"cast_point"
+damage = 9.0
+speed = 80.0
+radius = 0.22
+max_range = 45.0
+flinch = 0.25
+hitstop = 0.07

@@ -73,7 +73,9 @@ static func resolve_melee(attacker: FighterState, defender: FighterState, attack
 
 
 ## Resolves one spell effect reaching `defender`. Blocked spells chip, cost
-## stamina, and apply no statuses or reactions. Spells never flinch.
+## stamina, and apply no statuses, reactions, flinches or stuns; a guard still
+## takes half of any shove. Hits that land can flinch (not through a heavy's
+## hyperarmor), stun, shove and pop the target up.
 static func resolve_spell(defender: FighterState, hit: SpellHit, from_front: bool,
 		tuning: CombatTuning) -> HitResult:
 	var result := HitResult.new()
@@ -92,6 +94,7 @@ static func resolve_spell(defender: FighterState, hit: SpellHit, from_front: boo
 			result.outcome = HitResult.Outcome.BLOCKED
 			defender.spend_stamina(tuning.spell_block_stamina, tuning)
 		result.damage = hit.damage * tuning.spell_block_chip
+		apply_push(defender, hit.push * 0.5, 0.0)
 		result.killed = defender.take_damage(result.damage)
 		return result
 
@@ -110,8 +113,29 @@ static func resolve_spell(defender: FighterState, hit: SpellHit, from_front: boo
 		apply_burn(defender, tuning)
 	if hit.slow_duration > 0.0:
 		apply_slow(defender, hit.slow_amount, hit.slow_duration)
+	if hit.stagger > 0.0:
+		defender.apply_stagger(hit.stagger, hit.stagger_kind)
+	elif hit.flinch > 0.0 and not defender.has_hyperarmor() and defender.spell_flinch_guard <= 0.0:
+		var serial := defender.action_serial
+		defender.apply_flinch(hit.flinch)
+		if defender.action_serial != serial:
+			defender.spell_flinch_guard = hit.flinch + tuning.spell_flinch_immunity
+	var freeze := hit.hitstop + (0.06 if result.reaction == &"shatter" else 0.0)
+	if freeze > 0.0:
+		defender.hitstop = maxf(defender.hitstop, freeze)
+	apply_push(defender, hit.push, hit.launch)
 	result.killed = defender.take_damage(result.damage)
 	return result
+
+
+## A shove: horizontal velocity on top of whatever knockback is running (the
+## stronger shove wins outright, so repeated shoves don't stack up), and
+## an upward pop.
+static func apply_push(state: FighterState, push: Vector3, launch: float) -> void:
+	if push.length() > state.knockback.length():
+		state.knockback = Vector3(push.x, 0.0, push.z)
+		state.shoved = true
+	state.launch = maxf(state.launch, launch)
 
 
 ## Chill stacks up to the cap; every new stack refreshes the timer.

@@ -8,7 +8,8 @@ extends RefCounted
 ##   press: button bits pressed on the step's first tick (also held while it lasts)
 ##   turn: camera yaw speed in rad/s, pitch: camera pitch speed in rad/s
 ##   track: true steers the crosshair onto the nearest enemy, like a player aiming
-##   swap: true quick-swaps the primary spell on the step's first tick (debug key T)
+##   swap: true quick-swaps the primary spell on the step's first tick (debug key T);
+##         a spell id (&"firebolt") swaps to that primary instead
 
 var steps: Array = []
 var camera_rig: CameraRig
@@ -43,7 +44,12 @@ func get_command(fighter: Fighter) -> InputCommand:
 		if (step.has("press") or step.has("swap")) and not _fired.has(i):
 			_fired[i] = true
 			cmd.pressed |= int(step.get("press", 0))
-			if step.get("swap", false):
+			var swap: Variant = step.get("swap", false)
+			if swap is StringName or swap is String:
+				var loadout := fighter.current_loadout()
+				loadout.primary = StringName(swap)
+				fighter.apply_loadout(loadout)
+			elif swap:
 				fighter.cycle_primary()
 	if camera_rig:
 		camera_rig.rotate_view(turn * dt, pitch * dt)

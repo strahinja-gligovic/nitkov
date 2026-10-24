@@ -6,7 +6,7 @@ extends GutTest
 const REQUIRED := [
 	&"idle", &"walk", &"run", &"jog", &"sprint",
 	&"dash_f", &"dash_b", &"dash_l", &"dash_r",
-	&"flinch", &"flinch_heavy", &"stagger", &"guard_break", &"knockdown",
+	&"flinch", &"flinch_heavy", &"stagger", &"guard_break", &"knockdown", &"stagger_shock", &"blown",
 	&"block", &"block_impact", &"parry",
 	&"leap_start", &"leap_air", &"leap_fall", &"leap_land", &"entrance", &"blink", &"taunt",
 ]

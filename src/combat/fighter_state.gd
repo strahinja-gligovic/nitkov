@@ -43,6 +43,12 @@ var invulnerable := 0.0
 ## While > 0 the fighter is frozen mid-swing by a melee impact.
 var hitstop := 0.0
 var knockback := Vector3.ZERO
+## True while the knockback is a spell's shove (moves you at once; melee knockback eases in).
+var shoved := false
+## Upward velocity to give the body on the next movement tick (a shove's pop).
+var launch := 0.0
+## Seconds until a spell can flinch this fighter again.
+var spell_flinch_guard := 0.0
 
 var facing_yaw := 0.0
 var on_floor := true
@@ -84,6 +90,9 @@ func reset(tuning: CombatTuning) -> void:
 	invulnerable = 0.0
 	hitstop = 0.0
 	knockback = Vector3.ZERO
+	shoved = false
+	launch = 0.0
+	spell_flinch_guard = 0.0
 	leaping = false
 	buffer.clear()
 	clear_statuses()
@@ -204,6 +213,7 @@ func tick(delta: float, tuning: CombatTuning) -> void:
 	parry_window = maxf(parry_window - delta, 0.0)
 	parry_cooldown = maxf(parry_cooldown - delta, 0.0)
 	invulnerable = maxf(invulnerable - delta, 0.0)
+	spell_flinch_guard = maxf(spell_flinch_guard - delta, 0.0)
 	signature_cd = maxf(signature_cd - delta, 0.0)
 	rune_cd = maxf(rune_cd - delta, 0.0)
 	since_attack += delta
