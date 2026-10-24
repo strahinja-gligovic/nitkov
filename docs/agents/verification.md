@@ -48,7 +48,7 @@ Each recipe is the arguments after `godot_console --path . --fixed-fps 60 --`.
 - **Shatter in slow motion:** `--drive=shatter --player_at=0,5 --bot_at=6 --bot_mode=0 --slowmo=0.25 --shots=1.27,1.29,1.32,1.36,1.45,1.6 --quit=1.65`. Add `--player_signature=frost_nova` (with `--quit=6`) to see the Nova land at about 4.2 s.
 - **Side view of both fighters:** `--spectate=10 --spectate_angle=20 --hide_hud`. Without `--spectate_on`, the camera is placed once from the start positions and never moves, so a fighter that is shoved or walks away leaves the frame. A bare `--spectate` is 6 m.
 - **Close follow cam:** `--spectate=4 --spectate_angle=30 --spectate_on=player` (or `=bot`). Add `--hide_fx` to judge the cast animation without the effects. Probing poses with `--probe` and `--cast_probe` is covered in `docs/agents/animation.md`.
-- **Menu screenshots:** `--stay_in_menu --shots=1.0 --quit=1.1` shows the title screen. Add `--menu_screen=loadout` for the loadout screen, and `--menu_pick=<spell or rune id>` to click a card (`src/ui/main_menu.gd`).
+- **Menu screenshots:** `--stay_in_menu --shots=1.0 --quit=1.1` shows the title screen. Add `--menu_screen=loadout` for the loadout screen (`--menu_screen=multiplayer` for the Multiplayer "coming soon" notice), and `--menu_pick=<spell or rune id>` to click a card (`src/ui/main_menu.gd`).
 - **Keep runs apart:** `--out=screenshots/<name>` writes into a subfolder. Nothing clears `screenshots/` for you, and same-named shots overwrite while others linger, so `rm -rf screenshots` before each run is the convention.
 
 ### Contact sheets

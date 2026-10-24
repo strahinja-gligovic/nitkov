@@ -31,6 +31,9 @@ func _ready() -> void:
 	_bind(&"debug_slowmo", [_key(KEY_F3), _pad(JOY_BUTTON_DPAD_DOWN)])
 	_bind(&"debug_log", [_key(KEY_F4), _pad(JOY_BUTTON_DPAD_LEFT)])
 
+	# Godot's ui_cancel is Esc only; B backs out of menus and notices too.
+	InputMap.action_add_event(&"ui_cancel", _pad(JOY_BUTTON_B))
+
 
 func _bind(action: StringName, events: Array, deadzone := 0.2) -> void:
 	if InputMap.has_action(action):

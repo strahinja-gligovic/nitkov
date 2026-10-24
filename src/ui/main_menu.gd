@@ -8,7 +8,8 @@ extends Control
 ## to the arena through the MatchConfig autoload.
 ##
 ## Automated runs (any "--" arguments) skip straight to the arena, unless
-## --stay_in_menu is given. Then --menu_screen=loadout opens that screen, and
+## --stay_in_menu is given. Then --menu_screen=loadout opens that screen
+## (--menu_screen=multiplayer opens the "coming soon" notice instead), and
 ## --menu_pick=<spell or rune id> picks it as if its card were clicked.
 
 const ARENA_SCENE := "res://src/world/arena.tscn"
@@ -24,6 +25,7 @@ var _showcase: MenuShowcase
 var _title_screen: Control
 var _loadout_screen: Control
 var _play_button: Button
+var _multiplayer_button: Button
 var _player_cards := {}  # slot name -> Array[PickCard]
 var _player_character_label: Label
 var _player_blurb: Label
@@ -57,8 +59,11 @@ func _ready() -> void:
 	var pilot := Autopilot.from_args()
 	if pilot:
 		add_child(pilot)
-		if pilot.args.get("menu_screen", "") == "loadout":
-			_show_loadout.call_deferred()
+		match pilot.args.get("menu_screen", ""):
+			"loadout":
+				_show_loadout.call_deferred()
+			"multiplayer":
+				_show_multiplayer.call_deferred()
 		if pilot.args.has("slowmo"):
 			Engine.time_scale = String(pilot.args["slowmo"]).to_float()
 		if pilot.args.has("menu_pick"):
@@ -90,6 +95,11 @@ func _show_loadout() -> void:
 			card.grab_focus()
 
 
+## Multiplayer isn't built yet: the button only says so.
+func _show_multiplayer() -> UiNotice:
+	return UiNotice.open(self, "COMING SOON!", _multiplayer_button)
+
+
 func _fight() -> void:
 	MatchConfig.player = _player
 	MatchConfig.bot = _bot
@@ -117,6 +127,10 @@ func _build_title_screen() -> Control:
 	_play_button = _big_button("PLAY", 34)
 	_play_button.pressed.connect(_show_loadout)
 	box.add_child(_play_button)
+	_multiplayer_button = _big_button("MULTIPLAYER", 26)
+	_multiplayer_button.custom_minimum_size = Vector2(340, 56)
+	_multiplayer_button.pressed.connect(_show_multiplayer)
+	box.add_child(_multiplayer_button)
 	var quit := _big_button("QUIT", 26)
 	quit.custom_minimum_size = Vector2(340, 56)
 	quit.pressed.connect(get_tree().quit)
