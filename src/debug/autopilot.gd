@@ -33,7 +33,8 @@ extends Node
 ##   --gallery=a,b,c   a row of fighters showing these moves side by side (see AnimGallery;
 ##                     --gallery_walk=0,1 casts them on the move)
 ##   --stay_in_menu    stay in the start menu (main_menu.gd); --menu_screen=loadout opens
-##                     the loadout screen and --menu_pick=<spell or rune id> clicks its card
+##                     the loadout screen (=multiplayer: the "coming soon" notice) and
+##                     --menu_pick=<spell or rune id> clicks its card
 ## Example: godot --path . --fixed-fps 60 -- --drive=walk --shots=1.5 --quit=2
 
 var shots: Array[float] = []
