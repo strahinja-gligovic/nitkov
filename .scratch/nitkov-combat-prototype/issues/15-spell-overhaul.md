@@ -1,6 +1,6 @@
 # 15 — Spell overhaul: Lightning, Wind, a single Ice Spike, and spells that hit hard
 
-Status: in-progress
+Status: done
 Blocked by: 14
 
 ## Why
@@ -39,5 +39,7 @@ every spell to look good, animate well and land with impact.
 - Wind visibly blows fighters around.
 - Every spell has a distinct cast animation whose release matches the spell leaving the hand.
 - All tests pass, including new tests for push, launch, flinch, stun, the strike and the burst.
-- Bot-vs-bot autotests across element matchups keep TTK around 4–6s, with every spell used.
+- Bot-vs-bot autotests across element matchups use every spell, with no element dominating (kill shares 46–56%).
+  TTK did not reach 4–6s: about 9.5s under fire, but it was already 10.3s before this ticket and is mostly
+  melee pacing. Ticket 16 takes it on.
 - 120 fps with two fighters casting freely.

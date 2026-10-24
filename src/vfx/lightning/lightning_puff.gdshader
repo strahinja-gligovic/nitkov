@@ -72,7 +72,7 @@ void fragment() {
 	float lit = v_glow * (under + rim_view * 0.3);
 	if (hotspot.w > 0.0) {
 		// a ragged patch, not a disc
-		float d = distance(v_local.xz, hotspot.xz) + (noise(v_local * 5.0 + v_seed * 9.0) - 0.5) * hotspot.w * 0.7;
+		float d = distance(v_local.xz, hotspot.xz) + (noise(v_local * 5.0 + v_seed * 9.0) - 0.5) * hotspot.w * 1.3;
 		lit *= 1.0 - smoothstep(0.0, hotspot.w, d);
 		lit *= 1.6;
 	}

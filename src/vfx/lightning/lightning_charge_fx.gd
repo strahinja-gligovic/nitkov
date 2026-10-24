@@ -69,7 +69,7 @@ func _process(delta: float) -> void:
 	_age += delta
 	if _age >= seconds or not is_instance_valid(_hand):
 		# let the last sparks finish their fall in the world
-		var scene := get_tree().current_scene
+		var scene := LightningFx.world_of(self)
 		if scene and _sparks.alive() > 0:
 			_sparks.hold = false
 			_sparks.reparent(scene)

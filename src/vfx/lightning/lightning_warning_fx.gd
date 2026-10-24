@@ -16,7 +16,7 @@ extends Node3D
 ## over its cloud and the leader's path.
 
 const GROUP := &"lightning_warnings"
-const CLOUD_HEIGHT := 8.0
+const CLOUD_HEIGHT := 6.5
 const REFRESH := 1.0 / 30.0
 ## Seconds before the strike that the leader starts down.
 const LEAD := 0.2

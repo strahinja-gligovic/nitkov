@@ -67,8 +67,8 @@ void fragment() {
 		vec3 n = normalize(vec3(p.x, -p.y, sqrt(max(1.0 - d * d, 0.05))));
 		float light = dot(n, normalize(vec3(-0.35, 0.85, 0.4)));
 		color = light > 0.5 ? dust_light.rgb : (light > 0.05 ? dust_mid.rgb : dust_dark.rgb);
-		color = mix(color, ink_color.rgb, wind_band(edge - 0.13, d) * 0.85);
-		alpha = shape * v_alpha;
+		color = mix(color, ink_color.rgb, wind_band(edge - 0.13, d) * 0.45);
+		alpha = shape * v_alpha * 0.55;
 	} else if (kind == 1) {
 		// leaf: a pointed oval with a bent midrib and an ink edge
 		float x = p.x;

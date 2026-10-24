@@ -72,6 +72,14 @@ static func charge(spell: SpellData, hand: Node3D, seconds: float) -> void:
 	pool.play(stream, hand.global_position, _p(&"charge"), hand, Vector3.ZERO, from, 0.03 if from > 0.0 else 0.0, true)
 
 
+## The cast was interrupted before the release: the riser on `hand` fades
+## out instead of peaking on a release that never comes.
+static func cancel_charge(hand: Node3D) -> void:
+	var pool := SfxPool.of(hand) if is_instance_valid(hand) else null
+	if pool:
+		pool.stop_target(hand.get_instance_id(), 0.06)
+
+
 ## The spell leaving the hand at `at`. (Frost Nova's burst is its release.)
 static func release(spell: SpellData, world: Node, at: Vector3) -> void:
 	var element := _element(spell.element)
@@ -192,5 +200,11 @@ static func _one_shot(world: Node, sound: StringName, at: Vector3, kind: StringN
 static func _when_in_tree(node: Node, start: Callable) -> void:
 	if node.is_inside_tree():
 		start.call()
-	else:
-		node.tree_entered.connect(func() -> void: start.call_deferred(), CONNECT_ONE_SHOT)
+		return
+	# `start` captures the node: never call it once the node is gone (a
+	# projectile that ends before the deferred call runs)
+	var id := node.get_instance_id()
+	var guarded := func() -> void:
+		if is_instance_id_valid(id):
+			start.call()
+	node.tree_entered.connect(guarded.call_deferred, CONNECT_ONE_SHOT)

@@ -146,6 +146,17 @@ static func shock(body: Node3D, seconds: float) -> void:
 
 # --- shared pieces ------------------------------------------------------------
 
+## The root of `node`'s 3D world (its ancestor right under the viewport: the
+## arena, or the menu showcase's own world), where an effect riding a body
+## leaves its last sparks. Not current_scene: in the menu that's the menu's
+## Control, outside the showcase's world.
+static func world_of(node: Node) -> Node:
+	var at := node
+	while at and at.get_parent() and not (at.get_parent() is Viewport):
+		at = at.get_parent()
+	return at
+
+
 ## An OmniLight with no shadows.
 static func lamp(color: Color, energy: float, reach: float) -> OmniLight3D:
 	var light := OmniLight3D.new()

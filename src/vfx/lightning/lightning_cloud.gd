@@ -55,7 +55,7 @@ static func make(cloud_radius: float, gather_seconds: float) -> LightningCloud:
 
 func _ready() -> void:
 	# wider than the circle, so it reads as the thing the bolt falls from
-	_width = radius * 1.3
+	_width = radius * 1.05
 	_height = 1.7
 	var material := LightningPuffs.shared_material(&"cloud")
 	_body = _multimesh(_body_mesh(), 1, material)
@@ -119,6 +119,12 @@ static func build_body(seed_value: int) -> ArrayMesh:
 		var angle := TAU * (i + rng.randf_range(-0.25, 0.25)) / 12.0
 		var flat := sqrt(maxf(1.0 - y * y, 0.0))
 		lumps.append(Vector4(cos(angle) * flat, y, sin(angle) * flat, rng.randf_range(0.22, 0.5)))
+	# billows hanging under it, so the belly is ragged rather than a flat plate
+	for i in 7:
+		var y := rng.randf_range(-0.75, -0.35)
+		var angle := rng.randf() * TAU
+		var flat := sqrt(maxf(1.0 - y * y, 0.0))
+		lumps.append(Vector4(cos(angle) * flat, y, sin(angle) * flat, rng.randf_range(0.25, 0.55)))
 	for i in 7:
 		var y := rng.randf_range(0.45, 0.95)
 		var angle := rng.randf() * TAU
@@ -137,8 +143,13 @@ static func build_body(seed_value: int) -> ArrayMesh:
 				var d := dir.dot(Vector3(lump.x, lump.y, lump.z))
 				push += lump.w * pow(maxf(d, 0.0), 18.0)
 			var point := dir * push
-			# a low, flat body: the crown billows on top give the cloud its height
-			point.y = maxf(point.y * (0.36 if point.y > 0.0 else 0.62), -BELLY)
+			# a low body (the crown billows on top give the cloud its height) with
+			# an underside eased flat rather than clamped, so the hanging
+			# billows still sag below it
+			if point.y > 0.0:
+				point.y *= 0.36
+			else:
+				point.y = -BELLY * 1.6 * tanh(-point.y * 0.62 / (BELLY * 1.6))
 			vertices.append(point)
 	var indices := PackedInt32Array()
 	var row := segments + 1
@@ -221,7 +232,7 @@ func _process(delta: float) -> void:
 func _flash() -> void:
 	var angle := randf() * TAU
 	_hot = Vector2(cos(angle), sin(angle)) * randf_range(0.0, 0.7)
-	_hot_reach = randf_range(0.35, 0.6)
+	_hot_reach = randf_range(0.2, 0.36)
 	_glow = randf_range(0.8, 1.0)
 	if randf() < 0.55:
 		_belly_left = REFRESH * 2.0

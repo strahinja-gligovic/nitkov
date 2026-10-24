@@ -301,8 +301,9 @@ func _burst_nearby(at: Vector3, distance: float, radius: float) -> void:
 		return
 	camera_rig.push_from(at, 1.6 * f)
 	camera_rig.add_trauma(0.22 * f)
-	var camera := camera_rig.camera
-	if not camera.is_position_behind(at):
+	# the camera that draws the screen (a --spectate camera replaces the rig's)
+	var camera := get_viewport().get_camera_3d() if get_viewport() else null
+	if camera and not camera.is_position_behind(at):
 		var size := camera.get_viewport().get_visible_rect().size if camera.get_viewport() else Vector2.ZERO
 		if size.x > 0.0 and size.y > 0.0:
 			screen.warp(camera.unproject_position(at) / size, f, 0.45)

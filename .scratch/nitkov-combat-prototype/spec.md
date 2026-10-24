@@ -65,9 +65,9 @@ Each gauntlet has a **primary** (costs stamina) and a **signature** (15s cooldow
 
 | Gauntlet | Primary | Signature |
 |---|---|---|
-| Fire | **Firebolt**: projectile, 12 damage plus Burn (3/s for 3s); 1.5m splash dealing 4 damage plus Burn; 15 stamina | **Flame Wall**: 8m line of burning ground across the aim point, 4s, 8 damage per second to anyone standing in it |
+| Fire | **Firebolt**: projectile, 12 damage plus Burn (3/s for 3s); 1.5m splash dealing 4 damage plus Burn; 15 stamina | **Flame Wall**: 8 × 2m strip of burning ground across the aim point, 4s, 8 damage per second to anyone standing in it |
 | Frost | **Ice Spike** (was Shard Volley, ticket 15): one spike, 10 damage and +1 Chill; 15 stamina | **Frost Nova**: 5m blast around the caster, 10 damage, +3 Chill, 40% slow for 2s |
-| Lightning | **Lightning Bolt**: near-instant bolt (80 m/s), 9 damage and a 0.25s flinch; 15 stamina | **Lightning Strike**: marks a 2.5m circle at the aim point (3–18m); 0.9s later a bolt from the sky deals 24 damage, a 1s stun and a pop up. Unblockable |
+| Lightning | **Lightning Bolt**: near-instant bolt (80 m/s), 9 damage and a 0.25s flinch; 15 stamina | **Lightning Strike**: marks a 3m circle at the aim point (3–18m); 0.9s later a bolt from the sky deals 24 damage, a 1s stun and a pop up. Unblockable |
 | Wind | **Wind Slash**: a wide crescent (1m hit radius, fades at 25m), 8 damage and a shove; 15 stamina | **Wind Spear**: 14 damage to whoever it hits; it bursts where it lands, blowing everyone within 4m away and off their feet (8 damage to enemies, caster and allies only pushed) and knocking enemy spells off course. 14s cooldown |
 
 - **Chill** stacks to 3 and expires 4s after the last stack. At 3 stacks you're slowed 30%. Slows don't add up; the strongest one wins.

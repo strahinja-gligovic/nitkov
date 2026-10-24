@@ -108,6 +108,15 @@ static func impact(world: Node, at: Vector3, normal: Vector3, struck: bool, fizz
 		_mist(world, at + facing * 0.15, facing, 7, Vector2(0.2, 0.34), Vector2(0.45, 0.7), 1.2)
 	_glitter(world, at + facing * 0.1, 12, 3.0, 0.7)
 	if struck:
+		# a bright crack and a star of ice bursting off the body, so a spike
+		# hit lands as hard as the other primaries
+		FrostKit.flash(world, at + facing * 0.2, 1.7, 0.07)
+		FrostKit.light(world, at + facing * 0.4, PALE, 3.6, 4.0, 0.12)
+		var star := FrostCrystals.world_burst(world, 7)
+		for k in 7:
+			var out := (FrostKit.random_cone(facing, 85.0) * 0.6
+					+ Vector3(randf_range(-1.0, 1.0), randf_range(0.2, 1.0), randf_range(-1.0, 1.0)).normalized()).normalized()
+			star.add(FrostCrystals.root_at(at + out * 0.25, out, randf_range(0.6, 0.9), randf_range(0.08, 0.12)), 0.0, 0.04, 0.14, 0.2)
 		_pierce(world, at, -facing, floor_y)
 		var target := _struck_fighter(world, at)
 		var anchor := at

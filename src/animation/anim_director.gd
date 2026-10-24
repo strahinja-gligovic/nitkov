@@ -307,6 +307,11 @@ func _update_shock(s: FighterState, delta: float) -> void:
 		_shock.weight = move_toward(_shock.weight, 0.0, delta / 0.08)
 
 
+## 0..1: how hard a lightning stun is shaking the skeleton right now.
+func shock_weight() -> float:
+	return _shock.weight if _shock else 0.0
+
+
 ## Local rotations of LayerAim's bones in `move`'s clip at `time`.
 func _clip_chest(move: AnimMove, time: float) -> Array[Quaternion]:
 	var clip_id := clip_name(move)

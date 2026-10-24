@@ -51,7 +51,7 @@ func _ready() -> void:
 		outer.mesh = _meshes[&"spiral_big"]
 		outer.material_override = _materials[&"spiral_faint"]
 		outer.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		outer.scale = Vector3(-1.45, 1.45, 1.45)  # mirrored: it turns the other way
+		outer.scale = Vector3(-1.15, 1.15, 1.15)  # mirrored: it turns the other way
 		add_child(outer)
 		_spirals.append(outer)
 		_spear = MeshInstance3D.new()
@@ -95,7 +95,7 @@ func _update(delta: float) -> void:
 	for i in _spirals.size():
 		var spiral := _spirals[i]
 		var mirror := -1.0 if i == 1 else 1.0
-		var size := tighten * (1.45 if i == 1 else 1.0)
+		var size := tighten * (1.15 if i == 1 else 1.0)
 		spiral.scale = Vector3(size * mirror, size, size)
 		spiral.rotation.z = _spin * mirror * (0.7 if i == 1 else 1.0)
 		spiral.set_instance_shader_parameter(&"anim_time", _age)
@@ -112,7 +112,7 @@ func _update(delta: float) -> void:
 ## Motes (and, for the spear, a few leaves) spiralling into the fist.
 func _place_bits(t: float) -> void:
 	var multimesh := _bits.multimesh
-	var reach := 1.1 if signature else 0.55
+	var reach := 0.8 if signature else 0.55
 	for i in _seeds.size():
 		var random := _seeds[i]
 		var leaf := signature and i < 3

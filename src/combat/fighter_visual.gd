@@ -305,9 +305,10 @@ func _tremble(s: FighterState) -> Vector3:
 
 
 ## The whole body twitching through an electric spasm (the joints twitch in
-## HitReactModifier): a new offset about 30 times a second.
+## HitReactModifier for a bolt's jolt, in the director's ShockJitter for a
+## stun): a new offset about 30 times a second.
 func _spasm() -> Vector3:
-	var weight := _hit_react.jitter_weight() if _hit_react else 0.0
+	var weight := maxf(_hit_react.jitter_weight() if _hit_react else 0.0, director.shock_weight() if director else 0.0)
 	if weight <= 0.0:
 		return Vector3.ZERO
 	var step := floorf(_time * 30.0)
@@ -444,8 +445,8 @@ func _take_hit(result: HitResult, push: Vector3, to_skeleton: Basis) -> void:
 		shudder = 0.02
 		_start_flash(Color(0.8, 0.95, 1.0), 0.95, 0.17, Flash.CRISP)
 	elif landed and element == SpellData.Element.LIGHTNING:
-		# rigid spasms for as long as the jolt holds you (the stun's own run
-		# starts in _update_shock)
+		# rigid spasms for as long as the jolt holds you (a stun is the
+		# director's ShockJitter)
 		var hold := s.action_duration - s.action_time if s.action in [FighterState.Action.FLINCH, FighterState.Action.STAGGER] else 0.0
 		_hit_react.jitter(maxf(hold, 0.16), 0.8)
 		strength *= 0.6
@@ -664,9 +665,7 @@ func _update_gauntlet(s: FighterState) -> void:
 		elif s.action_serial != _cast_serial:
 			# interrupted before release (a flinch, a stun, a dodge): an
 			# unfinished charge-up mustn't keep swelling in the hand
-			for node in _charge:
-				if is_instance_valid(node):
-					node.queue_free()
+			SpellFx.cancel_charge(_gauntlet_core, _charge)
 			_charge.clear()
 	var boost := 1.0
 	if s.action == FighterState.Action.CAST and not s.spell_released:
@@ -760,14 +759,15 @@ func _is_shocked(s: FighterState) -> bool:
 	return s.action == FighterState.Action.STAGGER and s.stagger_kind == &"shock"
 
 
-## A lightning stun crackles over the body and locks it in spasms while it lasts.
+## A lightning stun crackles over the body while it lasts (the director's
+## ShockJitter locks the skeleton in spasms; only one layer does, or the two
+## rigid poses and twitches stack).
 func _update_shock(s: FighterState) -> void:
 	if not _is_shocked(s) or s.action_serial == _shock_serial:
 		return
 	_shock_serial = s.action_serial
 	var seconds := s.action_duration - s.action_time
 	SpellFx.shock(_pivot, seconds)
-	_hit_react.jitter(seconds, 1.0)
 
 
 func _start_flash(color: Color, peak: float, seconds: float, style: Flash) -> void:

@@ -9,7 +9,8 @@ extends SkeletonModifier3D
 ##           takes the hit, and a hit from the side rocks you sideways.
 ##   jitter  electric spasms (lightning): the body locks rigid, back arched
 ##           and arms flung out, while every joint twitches to a new angle
-##           about 30 times a second, for as long as the shock lasts.
+##           about 30 times a second, for as long as a bolt's jolt lasts (a
+##           stun's spasms are AnimDirector.ShockJitter's).
 ##   shiver  a short, fine tremble through the spine and arms (frost).
 
 enum Feel { NORMAL, STIFF, HARD }

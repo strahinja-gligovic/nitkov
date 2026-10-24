@@ -82,6 +82,15 @@ static func charge(spell: SpellData, hand: Node3D, seconds: float) -> void:
 	SpellSfx.charge(spell, hand, seconds)
 
 
+## The cast was interrupted before the release: `charge_nodes` are what
+## charge() added under `hand`.
+static func cancel_charge(hand: Node3D, charge_nodes: Array[Node]) -> void:
+	for node in charge_nodes:
+		if is_instance_valid(node):
+			node.queue_free()
+	SpellSfx.cancel_charge(hand)
+
+
 ## The flash as a spell leaves the hand at `at`, toward `direction`.
 static func release(spell: SpellData, world: Node, at: Vector3, direction: Vector3) -> void:
 	var signature := spell.slot == SpellData.Slot.SIGNATURE
@@ -136,3 +145,66 @@ static func shatter(world: Node, at: Vector3) -> void:
 static func shock(body: Node3D, seconds: float) -> void:
 	LightningFx.shock(body, seconds)
 	SpellSfx.shock(body, seconds)
+
+
+## Builds every element's effects once, out of sight far below the arena, so
+## the meshes, materials, shaders and particle systems the modules cache on
+## first use are ready before the first cast (otherwise each element's first
+## charge, release and impact stalls a frame by 5-50 ms). Silent: it skips
+## SpellSfx. The built effects free themselves as usual.
+static func prewarm(world: Node) -> void:
+	var at := Vector3(0.0, -80.0, 0.0)
+	var holder := Node3D.new()
+	holder.name = "SpellFxPrewarm"
+	world.add_child(holder)
+	holder.global_position = at
+	var hand := MeshInstance3D.new()
+	holder.add_child(hand)
+	for signature in [false, true]:
+		FireFx.charge(hand, 0.1, signature)
+		FrostFx.charge(hand, 0.1, signature)
+		LightningFx.charge(hand, 0.1, signature)
+		WindFx.charge(hand, 0.1, signature)
+		FireFx.release(world, at, Vector3.FORWARD, signature)
+		FrostFx.release(world, at, Vector3.FORWARD, signature)
+		LightningFx.release(world, at, Vector3.FORWARD, signature)
+		WindFx.release(world, at, Vector3.FORWARD, signature)
+	for spell in GameData.spells_for(SpellData.Slot.PRIMARY) + GameData.spells_for(SpellData.Slot.SIGNATURE):
+		if spell is ProjectileSpell:
+			var projectile := spell as ProjectileSpell
+			var look: Node3D
+			match spell.element:
+				SpellData.Element.FIRE:
+					look = FireFx.firebolt(projectile)
+				SpellData.Element.FROST:
+					look = FrostFx.ice_spike(projectile)
+				SpellData.Element.LIGHTNING:
+					look = LightningFx.bolt(projectile)
+				SpellData.Element.WIND:
+					look = WindFx.spear(projectile) if projectile.burst_radius > 0.0 else WindFx.slash(projectile)
+			if look:
+				holder.add_child(look)
+			for struck in [true, false]:
+				match spell.element:
+					SpellData.Element.FIRE:
+						FireFx.impact(world, at, Vector3.UP, struck, false, projectile)
+					SpellData.Element.FROST:
+						FrostFx.impact(world, at, Vector3.UP, struck, false, projectile)
+					SpellData.Element.LIGHTNING:
+						LightningFx.impact(world, at, Vector3.UP, struck, false, projectile)
+					SpellData.Element.WIND:
+						if projectile.burst_radius > 0.0:
+							WindFx.burst(world, at, projectile.burst_radius)
+						else:
+							WindFx.impact(world, at, Vector3.UP, struck, false, projectile)
+		elif spell is FlameWallSpell:
+			holder.add_child(FireFx.flame_wall(spell as FlameWallSpell))
+		elif spell is NovaSpell:
+			FrostFx.nova(world, at, (spell as NovaSpell).radius)
+		elif spell is LightningStrikeSpell:
+			var strike := spell as LightningStrikeSpell
+			LightningFx.strike_warning(holder, strike.radius, strike.delay)
+			LightningFx.strike(world, at, strike.radius)
+	FrostFx.shatter(world, at)
+	LightningFx.shock(holder, 0.1)
+	holder.get_tree().create_timer(0.2).timeout.connect(holder.queue_free)

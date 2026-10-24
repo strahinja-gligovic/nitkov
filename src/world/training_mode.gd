@@ -52,6 +52,7 @@ func _ready() -> void:
 	combat_sfx.name = "CombatSfx"
 	add_child(combat_sfx)
 
+	SpellFx.prewarm(self)  # no first-cast stalls
 	menu = LoadoutMenu.new()
 	menu.name = "LoadoutMenu"
 	menu.player = player

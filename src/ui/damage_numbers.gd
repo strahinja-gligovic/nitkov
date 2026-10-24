@@ -191,7 +191,7 @@ func _tick(at: Vector3, damage: float, element: int, victim: int) -> void:
 func _callout(at: Vector3, text: String, fill: Color, rim: Color, size: int, victim: int, life := 1.0) -> Floater:
 	var p := Floater.new()
 	p.kind = Kind.CALLOUT
-	p.anchor = at + Vector3.UP * 0.6
+	p.anchor = at + Vector3.UP * 1.05
 	p.text = text
 	p.fill = fill
 	p.rim = rim
