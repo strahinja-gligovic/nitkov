@@ -25,6 +25,16 @@ The Godot console binary is installed through winget: `godot_console` (`%LOCALAP
 - **Spell presentation.** Every spell's visuals and sounds go through `SpellFx` (`src/vfx/spell_fx.gd`). It routes to one module per element (`src/vfx/<element>/`: `FireFx`, `FrostFx`, `LightningFx`, `WindFx`) and to `SpellSfx` (`src/audio/`). Spell and zone code calls `SpellFx` only and never builds visuals itself.
 - **Conventions.** Yaw follows Godot's convention: forward is -Z (`CombatRules.yaw_to_dir`). Physics layer 1 is world geometry and layer 2 is fighters.
 
+## Area guides
+
+Read the guide for the area before changing it:
+
+- `docs/agents/spells.md`: a spell, zone or element, the cast lifecycle, hit reactions, or the `SpellFx` contract.
+- `docs/agents/vfx.md`: a visual effect, status look, or the camera/screen impact feel.
+- `docs/agents/animation.md`: a move, cast animation or hit reaction, or the move-set build.
+- `docs/agents/audio.md`: a sound, or the synth that generates them.
+- `docs/agents/verification.md`: checking a change in the running game: screenshots and contact sheets, test patterns, bot-vs-bot balance, performance, Windows tooling gotchas.
+
 ## Agent skills
 
 ### Issue tracker

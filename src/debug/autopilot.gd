@@ -5,11 +5,12 @@ extends Node
 ##   --out=screenshots folder for screenshots (inside the project)
 ##   --quit=4.0        quit at this game-time second
 ##   --drive=walk      replace the player's input with a Scenarios timeline
+##   --bot_drive=bot_pressure  the same for the bot (it aims at the player)
 ##   --player_at=0,6   move the player to this x,z first (open ground)
 ##   --bot_at=2.2      place the bot this far in front of the player
 ##   --player_yaw=-90  starting facing in degrees (0 = north/-Z, -90 = east)
 ##   --player_primary=ice_spike / --player_signature=frost_nova / --player_rune=blink
-##   --player_character=mage  (and the same with bot_ for the bot)
+##   --player_character=brawler  (and the same with bot_ for the bot)
 ##   --player_hp=40    start the player hurt
 ##   --slowmo=0.25     run the game at this speed (shots and quit stay in game time)
 ##   --menu            open the loadout menu at start
@@ -22,12 +23,17 @@ extends Node
 ##   --spectate=3.5 --spectate_angle=40   ...from this many metres, turned this many degrees
 ##   --spectate_on=player|bot              ...centred on one fighter instead of between them
 ##   --log             print every resolved hit
+##   --trace           print both fighters' action, stamina and position 4 times a second
+##   --sfx_log         print every sound started (read by SfxPool)
 ##   --perf            print frame-time stats when quitting
 ##   --probe           log every fighter's state, sword tip, feet and gauntlet hand each frame to screenshots/probe.csv
 ##   --cast_probe      print where the gauntlet hand is, against Fighter.cast_origin(), when each spell leaves it
 ##   --hide_fx         hide spell and hit effects (to judge the animation underneath)
 ##   --hide_hud        hide the HUD, name plates and damage numbers
-##   --gallery=a,b,c   a row of fighters showing these moves side by side (see AnimGallery)
+##   --gallery=a,b,c   a row of fighters showing these moves side by side (see AnimGallery;
+##                     --gallery_walk=0,1 casts them on the move)
+##   --stay_in_menu    stay in the start menu (main_menu.gd); --menu_screen=loadout opens
+##                     the loadout screen and --menu_pick=<spell or rune id> clicks its card
 ## Example: godot --path . --fixed-fps 60 -- --drive=walk --shots=1.5 --quit=2
 
 var shots: Array[float] = []
@@ -339,7 +345,9 @@ func _process(delta: float) -> void:
 
 
 func _capture(file_name: String) -> void:
-	var image := get_viewport().get_texture().get_image()
+	var image: Image = null
+	if DisplayServer.get_name() != "headless":
+		image = get_viewport().get_texture().get_image()
 	if image == null:
 		push_warning("Autopilot: no frame to capture (headless?)")
 		return

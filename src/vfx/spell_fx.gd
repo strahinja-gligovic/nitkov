@@ -150,7 +150,7 @@ static func shock(body: Node3D, seconds: float) -> void:
 ## Builds every element's effects once, out of sight far below the arena, so
 ## the meshes, materials, shaders and particle systems the modules cache on
 ## first use are ready before the first cast (otherwise each element's first
-## charge, release and impact stalls a frame by 5-50 ms). Silent: it skips
+## charge, release and impact stalls a frame by 20-76 ms). Silent: it skips
 ## SpellSfx. The built effects free themselves as usual.
 static func prewarm(world: Node) -> void:
 	var at := Vector3(0.0, -80.0, 0.0)

@@ -98,7 +98,7 @@ func simulate(cmd: InputCommand, delta: float) -> void:
 	collision_layer = 0 if state.is_dead() else 2
 	state.buffer_presses(cmd.pressed, tuning)
 	if state.hitstop > 0.0:
-		# frozen by a melee impact: time stands still for this fighter
+		# frozen by an impact (hit-stop): time stands still for this fighter
 		state.hitstop = maxf(state.hitstop - delta, 0.0)
 		return
 	state.tick(delta, tuning)
