@@ -19,6 +19,11 @@ func _init() -> void:
 	var columns := int(args[1])
 	var scale := float(args[2])
 	var files := args.slice(4)
+	for file in files:
+		if not FileAccess.file_exists(file):
+			push_error("no such screenshot: %s" % file)
+			quit(1)
+			return
 	var first := Image.load_from_file(files[0])
 	var rect := Rect2i(Vector2i.ZERO, first.get_size())
 	if args[3] != "full":
@@ -34,6 +39,10 @@ func _init() -> void:
 		var part := image.get_region(rect)
 		part.resize(cell.x, cell.y, Image.INTERPOLATE_LANCZOS)
 		sheet.blit_rect(part, Rect2i(Vector2i.ZERO, cell), Vector2i((i % columns) * (cell.x + 4), (i / columns) * (cell.y + 4)))
-	sheet.save_png(out)
+	var error := sheet.save_png(out)
+	if error != OK:
+		push_error("couldn't save %s (does its folder exist?): %s" % [out, error_string(error)])
+		quit(1)
+		return
 	print("sheet ", out, " ", sheet.get_size())
 	quit()

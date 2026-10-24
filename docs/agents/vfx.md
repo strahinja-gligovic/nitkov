@@ -67,7 +67,7 @@ Effects run in places with nothing to draw. Autotests and servers run `--headles
 - **Guard every static entry point that touches global transforms, `get_tree()` or physics.** A world or hand that isn't in the tree (being torn down, or built by a test) otherwise logs `Condition "!is_inside_tree()" is true` errors, which bury real errors in the logs. Either return early (`FrostFx._usable`, the `hand.is_inside_tree()` check in `FireFx.charge`), or only `add_child` and do the tree work in `_ready()` (`WindChargeFx`, `LightningChargeFx`).
 - **Face the camera in the vertex shader** (`LightningArc`, `FrostTrail`, `wind_face_camera` in `wind_common.gdshaderinc`). Where a script does need a camera (`CombatFeedback._range_scale`, Frost Nova's spike check), it handles `get_camera_3d()` returning null.
 - **Skip pure-render work headless.** `LightningScorch.prepare()` paints nothing when `DisplayServer.get_name() == "headless"`.
-- **Raycast through the viewport's world.** The `world` that effects receive in the arena is `TrainingMode`, a plain `Node`, so a cast to `Node3D` gives null. Use `world.get_viewport().find_world_3d().direct_space_state`, as `FrostKit.floor_below` and `WindFx._floor_below` do (`LightningFx.floor_below` casts, so in the arena it always returns its fallback). In the start menu the world sits in the showcase's `SubViewport`, which has its own World3D, and the same query finds that floor.
+- **Raycast through the viewport's world.** The `world` that effects receive in the arena is `TrainingMode`, a plain `Node`, so a cast to `Node3D` gives null. Use `world.get_viewport().find_world_3d().direct_space_state`, as `FrostKit.floor_below`, `WindFx._floor_below` and `LightningFx.floor_below` do. In the start menu the world sits in the showcase's `SubViewport`, which has its own World3D, and the same query finds that floor.
 - **Cosmetic randomness uses the global `randf()`.** The simulation rolls no dice and the bots roll their own seeded `RandomNumberGenerator` (`BotBrain.rng`), so effects can roll as many as they like without changing a `--seed` run.
 
 ## Prewarm
@@ -117,6 +117,6 @@ The commands and their caveats are in `docs/agents/verification.md`. For each ef
 1. **Player view.** The over-the-shoulder camera with the target at 5, 9 and 20 m (`--bot_at`, from open ground), as a contact sheet of 6–12 frames.
 2. **Side and close views.** `--spectate=... --spectate_on=bot`, plus slow motion (`--slowmo=0.2`), with dense shots through all five beats.
 3. **Every ending.** Hits on a fighter, on a wall and on the floor, a fizzle at max range, and the effect landing on the player's own camera.
-4. **Headless.** A `--headless --drive=spells` run with your loadout prints no errors or warnings. With `--sfx_log` (read by `SfxPool`, not the autopilot), the node count it prints every 60 frames settles back to the baseline after the effects end.
+4. **Headless.** A `--headless --drive=spells` run with your loadout prints no errors or warnings. With `--sfx_log`, the node count it prints every 60 frames settles back to the baseline after the effects end.
 5. **Tests.** The GUT suite stays green.
 6. **Readability against the rules above:** 0.15 s of cover at most, no blow-out, and the element recognizable by shape at 20 m. Then fix the weakest beat.

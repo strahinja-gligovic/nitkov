@@ -447,8 +447,9 @@ func _take_hit(result: HitResult, push: Vector3, to_skeleton: Basis) -> void:
 	elif landed and element == SpellData.Element.LIGHTNING:
 		# rigid spasms for as long as the jolt holds you (a stun is the
 		# director's ShockJitter)
-		var hold := s.action_duration - s.action_time if s.action in [FighterState.Action.FLINCH, FighterState.Action.STAGGER] else 0.0
-		_hit_react.jitter(maxf(hold, 0.16), 0.8)
+		if not (s.action == FighterState.Action.STAGGER and s.stagger_kind == &"shock"):
+			var hold := s.action_duration - s.action_time if s.action == FighterState.Action.FLINCH else 0.0
+			_hit_react.jitter(maxf(hold, 0.16), 0.8)
 		strength *= 0.6
 		feel = HitReactModifier.Feel.STIFF
 		shudder = 0.0

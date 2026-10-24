@@ -1,6 +1,6 @@
 # Verification: seeing and measuring the game
 
-Read this before you check a change by running the game, take screenshots, write tests, run bot-vs-bot balance runs or measure performance. CLAUDE.md lists the basic commands, and the autopilot flags are listed at the top of `src/debug/autopilot.gd` (the few that aren't are named below). This doc covers the recipes that work and the traps. All commands run from the repo root.
+Read this before you check a change by running the game, take screenshots, write tests, run bot-vs-bot balance runs or measure performance. CLAUDE.md lists the basic commands, and every autopilot flag is listed at the top of `src/debug/autopilot.gd`. This doc covers the recipes that work and the traps. All commands run from the repo root.
 
 ## Screenshotting a moment
 
@@ -35,7 +35,7 @@ Times are on the autopilot clock. The scripted press lands within a frame of its
   - `melee`: lights at 0.3, 0.75 and 1.15, then a heavy at 2.2 (`--bot_at=2.2`).
   - `--drive=guard --bot_drive=bot_pressure --bot_at=2.2`: two blocks, a parry at 3.0 s, then a guard break at 5.5 s.
 
-`--bot_drive=<scenario>` gives the bot a timeline, which it plays aiming at the player. `--trace` prints both fighters' action, stamina and position four times a second. Neither flag is in the autopilot header list; they live in `TrainingMode._apply_autopilot` and `Autopilot._trace`.
+`--bot_drive=<scenario>` gives the bot a timeline, which it plays aiming at the player. `--trace` prints both fighters' action, stamina and position four times a second.
 
 ### What a screenshot shows
 `Autopilot._capture` reads the viewport texture during `_process`, so a shot holds the frame rendered on the *previous* frame: 1/60 s earlier at `--fixed-fps 60`. Keep `--fixed-fps 60` on every screenshot run. It fixes each frame at 1/60 s of game time, so shot times match the simulation ticks and repeat run to run. Headless runs can't capture: they warn "no frame to capture" and save nothing, so drop `--shots` there.
@@ -60,8 +60,7 @@ godot_console --headless --path . -s tools/screens/contact_sheet.gd -- screensho
 - **Arguments:** the output path, the number of columns, a scale (0.4 fits four 1600x900 columns on a screen), `full` or an `x,y,w,h` crop, then the inputs.
 - **Crop:** it zooms every frame onto the same region. `640,250,480,300` at scale 1.0 frames a dummy 6 m in front of `--player_at=0,5`.
 - **Paths** are OS paths, relative to the repo root.
-- **The output folder must already exist.** Otherwise the save fails with `Can't save PNG`, and the tool still prints `sheet <path>`.
-- **Every input must exist.** If the glob matches nothing (say, a run already cleared `screenshots/`), the tool hits a script error and hangs instead of quitting, so check `ls screenshots` first or wrap it in `timeout 60`.
+- **The output folder must already exist**, and every input must exist. Otherwise the tool reports which and exits 1. An unmatched glob (say, a run already cleared `screenshots/`) reaches it as a literal `screenshots/*.png`, so check `ls screenshots` first.
 - **Sheets go in a subfolder** like `screenshots/sheets/`, so the next `screenshots/*.png` glob doesn't pick them up.
 
 ### Unit tests

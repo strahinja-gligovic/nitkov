@@ -23,7 +23,7 @@ var action_time := 0.0
 var action_duration := 0.0
 ## Increments on every new action, so viewers can tell two identical swings apart.
 var action_serial := 0
-## Why the fighter is staggered (&"parried", &"guard_break", &"shatter"); display only.
+## Why the fighter is staggered (&"parried", &"guard_break", &"shatter", &"shock"); display only.
 var stagger_kind := &""
 var attack: AttackData
 ## Index into the weapon's light chain of the current (or last) light attack.

@@ -22,6 +22,8 @@ static func firebolt(spell: ProjectileSpell) -> Node3D:
 ## for a fighter hit, scorching a wall or the floor), or at the end of its
 ## range a sputter of smoke.
 static func impact(world: Node, at: Vector3, normal: Vector3, struck: bool, fizzled: bool, spell: ProjectileSpell) -> void:
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return  # the world is being torn down (a match ending mid-flight)
 	if fizzled:
 		FireExplosion.fizzle(world, at, -normal)
 		return
@@ -38,6 +40,8 @@ static func charge(hand: Node3D, seconds: float, signature: bool) -> void:
 
 ## The burst of flame as the spell leaves the fist.
 static func release(world: Node, at: Vector3, direction: Vector3, signature: bool) -> void:
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return  # the world is being torn down (a match ending mid-flight)
 	FireMuzzle.fire(world, at, direction, signature)
 
 

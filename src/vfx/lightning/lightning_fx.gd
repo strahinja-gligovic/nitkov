@@ -35,6 +35,8 @@ static func bolt(spell: ProjectileSpell) -> Node3D:
 
 static func impact(world: Node, at: Vector3, normal: Vector3, struck: bool, fizzled: bool, spell: ProjectileSpell) -> void:
 	_impact = {"frame": Engine.get_physics_frames(), "at": at, "fizzled": fizzled}
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return  # the world is being torn down (a match ending mid-flight)
 	var n := normal.normalized() if normal.length() > 0.01 else Vector3.UP
 	if fizzled:
 		_fizzle(world, at)
@@ -93,6 +95,8 @@ static func release(world: Node, at: Vector3, direction: Vector3, signature: boo
 	var frame := Engine.get_physics_frames()
 	_releases = _releases.filter(func(entry: Array) -> bool: return entry[0] == frame)
 	_releases.append([frame, at])
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return  # the world is being torn down (a match ending mid-flight)
 	var forward := direction.normalized() if direction.length() > 0.01 else Vector3.FORWARD
 	LightningFlare.spawn(world, at, 1.15 if signature else 0.75, 0.05)
 	light_flash(world, at, 4.0, 3.5, 0.08)
@@ -120,6 +124,8 @@ static func strike_warning(parent: Node3D, radius: float, delay: float) -> Node3
 ## LightningStrikeFx. It takes over the warning's storm cloud and leader, so
 ## the bolt comes down the path the leader was stepping along.
 static func strike(world: Node, at: Vector3, radius: float) -> void:
+	if not is_instance_valid(world) or not world.is_inside_tree():
+		return  # the world is being torn down (a match ending mid-flight)
 	var cloud: LightningCloud = null
 	var leader := PackedVector3Array()
 	for node in world.get_tree().get_nodes_in_group(LightningWarningFx.GROUP):
@@ -180,11 +186,12 @@ static func light_flash(world: Node, at: Vector3, energy: float, reach: float, d
 ## The height of the ground under `at` (where sparks bounce), or a guess
 ## `drop` metres below it when there's nothing there to find.
 static func floor_below(world: Node, at: Vector3, drop := 1.3) -> float:
-	var node := world as Node3D
-	if node == null or not node.is_inside_tree():
+	# through the viewport's world: in the arena `world` is a plain Node
+	if not is_instance_valid(world) or not world.is_inside_tree():
 		return at.y - drop
+	var space := world.get_viewport().find_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 0.1, at + Vector3.DOWN * 8.0, 1)
-	var hit := node.get_world_3d().direct_space_state.intersect_ray(query)
+	var hit := space.intersect_ray(query)
 	return (hit["position"] as Vector3).y if hit else at.y - drop
 
 
